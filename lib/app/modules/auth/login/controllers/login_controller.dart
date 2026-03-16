@@ -1,8 +1,11 @@
+import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:halositek/app/data/network/auth_service.dart';
 
 class LoginController extends GetxController {
   final AuthService _authService;
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
 
   LoginController(this._authService);
 
@@ -12,9 +15,12 @@ class LoginController extends GetxController {
     super.onInit();
   }
 
-  Future<void> login(String email, String password) async {
+  Future<void> login() async {
     try {
-      await _authService.login(email: email, password: password);
+      await _authService.login(
+        email: emailController.text.trim(),
+        password: passwordController.text,
+      );
 
       Get.offNamed('/home');
     } catch (e) {

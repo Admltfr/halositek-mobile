@@ -16,6 +16,7 @@ class RegisterController extends GetxController {
     String email,
     String password,
     String passwordConfirmation,
+    String role,
   ) async {
     try {
       await _authService.register(
@@ -23,6 +24,7 @@ class RegisterController extends GetxController {
         email: email,
         password: password,
         passwordConfirmation: passwordConfirmation,
+        role: role,
       );
 
       Get.offNamed('/home');

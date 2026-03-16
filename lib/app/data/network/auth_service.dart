@@ -12,6 +12,7 @@ class AuthService {
     required String email,
     required String password,
     required String passwordConfirmation,
+    required String role,
   }) async {
     final response = await _apiClient.public.post(
       '/register',
@@ -20,6 +21,7 @@ class AuthService {
         'email': email,
         'password': password,
         'password_confirmation': passwordConfirmation,
+        'role': role,
       },
     );
 
