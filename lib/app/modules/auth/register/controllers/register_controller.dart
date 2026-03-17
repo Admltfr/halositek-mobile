@@ -1,8 +1,17 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:halositek/app/core/constants/app_enums.dart';
+import 'package:halositek/app/core/constants/app_extensions.dart';
 import 'package:halositek/app/data/network/auth_service.dart';
 
 class RegisterController extends GetxController {
   final AuthService _authService;
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController passwordConfirmationController =
+      TextEditingController();
+  final RxString role = (UserRole.user.text).obs;
 
   RegisterController(this._authService);
 
@@ -11,20 +20,14 @@ class RegisterController extends GetxController {
     super.onInit();
   }
 
-  Future<void> register(
-    String name,
-    String email,
-    String password,
-    String passwordConfirmation,
-    String role,
-  ) async {
+  Future<void> register() async {
     try {
       await _authService.register(
-        name: name,
-        email: email,
-        password: password,
-        passwordConfirmation: passwordConfirmation,
-        role: role,
+        name: nameController.text.trim(),
+        email: emailController.text.trim(),
+        password: passwordController.text,
+        passwordConfirmation: passwordConfirmationController.text,
+        role: role.value,
       );
 
       Get.offNamed('/home');
@@ -45,5 +48,9 @@ class RegisterController extends GetxController {
   @override
   void onClose() {
     super.onClose();
+    nameController.dispose();
+    emailController.dispose();
+    passwordController.dispose();
+    passwordConfirmationController.dispose();
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:halositek/app/core/constants/app_enums.dart';
 import 'package:halositek/app/core/widgets/custom_text_button.dart';
 import 'package:halositek/app/modules/auth/widgets/form_button.dart';
 import 'package:halositek/app/modules/auth/widgets/form_label.dart';
@@ -107,24 +108,34 @@ class LoginView extends GetView<LoginController> {
               ),
               28.0.sh,
 
-              FormLabel(text: 'Email Address'),
-              8.0.sh,
-              FormTextField(
-                controller: controller.emailController,
-                isObscure: false,
-              ),
-              18.0.sh,
+              Form(
+                autovalidateMode: AutovalidateMode.onUserInteraction,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    FormLabel(text: 'Email Address'),
+                    8.0.sh,
+                    FormTextField(
+                      controller: controller.emailController,
+                      isObscure: false,
+                      fieldType: FormFieldType.email,
+                    ),
+                    18.0.sh,
 
-              FormLabel(text: 'Password'),
-              8.0.sh,
-              FormTextField(
-                controller: controller.passwordController,
-                isObscure: true,
+                    FormLabel(text: 'Password'),
+                    8.0.sh,
+                    FormTextField(
+                      controller: controller.passwordController,
+                      isObscure: true,
+                      fieldType: FormFieldType.password,
+                    ),
+                    10.0.sh,
+                  ],
+                ),
               ),
-              10.0.sh,
 
               CustomTextButton(text: 'Forgot Password', onPressed: () {}),
-              20.0.sh,
+              16.0.sh,
 
               FormButton(text: 'LOGIN', onPressed: controller.login),
               16.0.sh,

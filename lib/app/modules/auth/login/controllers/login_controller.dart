@@ -9,7 +9,6 @@ class LoginController extends GetxController {
 
   LoginController(this._authService);
 
-  final count = 0.obs;
   @override
   void onInit() {
     super.onInit();
@@ -40,5 +39,7 @@ class LoginController extends GetxController {
   @override
   void onClose() {
     super.onClose();
+    emailController.dispose();
+    passwordController.dispose();
   }
 }
