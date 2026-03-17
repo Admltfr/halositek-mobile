@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:halositek/app/constants/app_colors.dart';
+import 'package:halositek/app/core/constants/app_colors.dart';
 
 class HeroBg extends StatelessWidget {
   final Size size;

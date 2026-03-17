@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:halositek/app/modules/auth/login/widgets/hero_bg.dart';
+import 'package:halositek/app/core/widgets/custom_text_button.dart';
+import 'package:halositek/app/modules/auth/widgets/form_button.dart';
+import 'package:halositek/app/modules/auth/widgets/form_label.dart';
+import 'package:halositek/app/modules/auth/widgets/form_text_field.dart';
+import 'package:halositek/app/modules/auth/widgets/hero_bg.dart';
 import '../controllers/login_controller.dart';
-import 'package:halositek/app/constants/app_dimensions.dart';
-import 'package:halositek/app/constants/app_colors.dart';
-import 'package:halositek/app/constants/app_extensions.dart';
-import 'package:halositek/app/constants/app_typography.dart';
+import 'package:halositek/app/core/constants/app_colors.dart';
+import 'package:halositek/app/core/constants/app_extensions.dart';
+import 'package:halositek/app/core/constants/app_typography.dart';
 
 class LoginView extends GetView<LoginController> {
   const LoginView({super.key});
@@ -104,128 +107,26 @@ class LoginView extends GetView<LoginController> {
               ),
               28.0.sh,
 
-              Text(
-                'Username',
-                style: AppTypography.bodyMedium.copyWith(
-                  color: AppColors.textLabelColor,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+              FormLabel(text: 'Email Address'),
               8.0.sh,
-              TextField(
+              FormTextField(
                 controller: controller.emailController,
-                decoration: InputDecoration(
-                  isDense: true,
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 14,
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(0),
-                    borderSide: const BorderSide(
-                      color: AppColors.formBorderColor,
-                    ),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(0),
-                    borderSide: const BorderSide(
-                      color: AppColors.formBorderColor,
-                    ),
-                  ),
-                  focusedBorder: const OutlineInputBorder(
-                    borderSide: BorderSide(
-                      color: AppColors.primaryColor,
-                      width: 1.4,
-                    ),
-                  ),
-                ),
+                isObscure: false,
               ),
               18.0.sh,
 
-              Text(
-                'Password',
-                style: AppTypography.bodyMedium.copyWith(
-                  color: AppColors.textBlackColor,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+              FormLabel(text: 'Password'),
               8.0.sh,
-              TextField(
+              FormTextField(
                 controller: controller.passwordController,
-                obscureText: true,
-                decoration: InputDecoration(
-                  isDense: true,
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 14,
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(0),
-                    borderSide: const BorderSide(
-                      color: AppColors.formBorderColor,
-                    ),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(0),
-                    borderSide: const BorderSide(
-                      color: AppColors.formBorderColor,
-                    ),
-                  ),
-                  focusedBorder: const OutlineInputBorder(
-                    borderSide: BorderSide(
-                      color: AppColors.primaryColor,
-                      width: 1.4,
-                    ),
-                  ),
-                  suffixIcon: Icon(
-                    Icons.remove_red_eye_outlined,
-                    color: AppColors.formBorderColor,
-                    size: 20,
-                  ),
-                ),
+                isObscure: true,
               ),
               10.0.sh,
 
-              TextButton(
-                onPressed: () {},
-                style: TextButton.styleFrom(
-                  padding: EdgeInsets.zero,
-                  minimumSize: const Size(0, 0),
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-                child: Text(
-                  'Forgot Password?',
-                  style: AppTypography.bodyMedium.copyWith(
-                    color: AppColors.secondaryColor,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
+              CustomTextButton(text: 'Forgot Password', onPressed: () {}),
               20.0.sh,
 
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: controller.login,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primaryColor,
-                    foregroundColor: AppColors.whiteColor,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    elevation: 2,
-                  ),
-                  child: Text(
-                    'LOGIN',
-                    style: AppTypography.bodyMedium.copyWith(
-                      letterSpacing: 1,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.whiteColor,
-                    ),
-                  ),
-                ),
-              ),
+              FormButton(text: 'LOGIN', onPressed: controller.login),
               16.0.sh,
 
               Center(
@@ -234,20 +135,14 @@ class LoginView extends GetView<LoginController> {
                   children: [
                     Text(
                       "Don't have any account? ",
-                      style: AppTypography.bodySmall.copyWith(
+                      style: AppTypography.bodyMedium.copyWith(
                         color: AppColors.textBodyColor,
-                        fontSize: 13,
                       ),
                     ),
-                    GestureDetector(
-                      onTap: controller.gotoRegister,
-                      child: Text(
-                        'Register now',
-                        style: AppTypography.bodyMedium.copyWith(
-                          color: AppColors.infoColor,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
+                    CustomTextButton(
+                      text: "Register now",
+                      onPressed: controller.gotoRegister,
+                      color: AppColors.infoColor,
                     ),
                   ],
                 ),
