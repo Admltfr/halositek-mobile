@@ -21,7 +21,7 @@ class LoginController extends GetxController {
         password: passwordController.text,
       );
 
-      Get.offNamed('/home');
+      Get.offAllNamed('/navigation', arguments: 0);
     } catch (e) {
       Get.snackbar('Login Failed', e.toString());
     }
