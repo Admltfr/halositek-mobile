@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/rendering.dart';
 import 'api_client.dart';
 import 'token_service.dart';
 
@@ -31,21 +32,20 @@ class AuthService {
       ),
     );
 
-    if (response.statusCode == 201) {
-      _tokenService.setAccessToken(response.data['data']['access_token']);
-      _tokenService.setRefreshToken(response.data['data']['refresh_token']);
-    } else if (response.statusCode == 422) {
-      throw Exception('Validation error: ${response.data['message']}');
-    } else if (response.statusCode == 500) {
-      throw Exception('Server error: ${response.data['message']}');
-    } else {
-      throw Exception('Failed to register: ${response.statusCode}');
-    }
+    _apiClient.customResponse(
+      response,
+      () {
+        _tokenService.setAccessToken(response.data['data']['access_token']);
+        _tokenService.setRefreshToken(response.data['data']['refresh_token']);
+      },
+      'Register',
+      isCreated: true,
+    );
   }
 
   Future<void> login({required String email, required String password}) async {
     final response = await _apiClient.public.post(
-      '/login',
+      '/auth/login',
       data: {'email': email, 'password': password},
       options: Options(
         validateStatus: (status) {
@@ -54,16 +54,10 @@ class AuthService {
       ),
     );
 
-    if (response.statusCode == 200) {
+    _apiClient.customResponse(response, () {
       _tokenService.setAccessToken(response.data['data']['access_token']);
       _tokenService.setRefreshToken(response.data['data']['refresh_token']);
-    } else if (response.statusCode == 422) {
-      throw Exception('Validation error: ${response.data['message']}');
-    } else if (response.statusCode == 500) {
-      throw Exception('Server error: ${response.data['message']}');
-    } else {
-      throw Exception('Failed to login');
-    }
+    }, 'Login');
   }
 
   Future<String?> refreshToken(String token) async {
@@ -77,7 +71,7 @@ class AuthService {
       ),
     );
 
-    if (response.statusCode == 200) {
+    _apiClient.customResponse(response, () async {
       final newAccessToken = response.data['data']['access_token'];
       final newRefreshToken = response.data['data']['refresh_token'];
 
@@ -85,12 +79,6 @@ class AuthService {
       await _tokenService.setRefreshToken(newRefreshToken);
 
       return newAccessToken;
-    } else if (response.statusCode == 422) {
-      throw Exception('Validation error: ${response.data['message']}');
-    } else if (response.statusCode == 500) {
-      throw Exception('Server error: ${response.data['message']}');
-    } else {
-      throw Exception('Failed to refresh token');
-    }
+    }, 'Refresh token');
   }
 }
