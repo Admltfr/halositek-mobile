@@ -3,6 +3,8 @@ import 'package:get/get.dart';
 import 'package:halositek/app/core/constants/app_colors.dart';
 import 'package:halositek/app/core/constants/app_extensions.dart';
 import 'package:halositek/app/core/constants/app_typography.dart';
+import 'package:halositek/app/data/models/catalog.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
 import '../controllers/design_controller.dart';
 
@@ -18,9 +20,9 @@ class DesignView extends GetView<DesignController> {
     return Scaffold(
       backgroundColor: AppColors.whiteColor,
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: EdgeInsets.symmetric(
-            horizontal: size.width * 0.04,
+            horizontal: size.width * 0.05,
             vertical: size.height * 0.01,
           ),
           child: Column(
@@ -30,39 +32,8 @@ class DesignView extends GetView<DesignController> {
               14.0.sh,
               _searchSection(size),
               14.0.sh,
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      _designCardSection(
-                        size: size,
-                        title: 'Modern Luxury Residential',
-                        label: 'MODERN',
-                        specs: '340m² • 4 Bedrooms',
-                        showFloatingAction: true,
-                        onTap: _openDetailsFromDesign,
-                      ),
-                      12.0.sh,
-                      _designCardSection(
-                        size: size,
-                        title: 'Modern Luxury Residential',
-                        label: 'MODERN',
-                        specs: '340m² • 4 Bedrooms',
-                        onTap: _openDetailsFromDesign,
-                      ),
-                      12.0.sh,
-                      _designCardSection(
-                        size: size,
-                        title: 'Modern Luxury Residential',
-                        label: 'MODERN',
-                        specs: '340m² • 4 Bedrooms',
-                        onTap: _openDetailsFromDesign,
-                      ),
-                      10.0.sh,
-                    ],
-                  ),
-                ),
-              ),
+              _catalogSection(size),
+              10.0.sh,
             ],
           ),
         ),
@@ -131,134 +102,182 @@ class DesignView extends GetView<DesignController> {
     );
   }
 
-  Widget _aiDesignButton(Size size) {
-    return Container(
-      height: size.height * 0.052,
-      padding: EdgeInsets.symmetric(horizontal: size.width * 0.04),
-      decoration: BoxDecoration(
-        color: AppColors.primaryColor,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Row(
+  Widget _catalogSection(Size size) {
+    return Obx(() {
+      final isLoading = controller.isLoadingCatalog.value;
+      final hasError = controller.catalogError.value.isNotEmpty;
+      final hasData = controller.catalogs.isNotEmpty;
+
+      if (hasError && !hasData) {
+        return Column(
+          children: [
+            Text(
+              controller.catalogError.value,
+              style: AppTypography.bodySmall.copyWith(
+                color: AppColors.errorColor,
+              ),
+            ),
+            TextButton(
+              onPressed: controller.fetchCatalogs,
+              child: const Text('Coba Lagi'),
+            ),
+          ],
+        );
+      }
+
+      final catalogs =
+          hasData
+              ? controller.catalogs.take(3).toList()
+              : List.generate(3, (_) => Catalog.dummy());
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'AI Design',
-            style: AppTypography.bodySmall.copyWith(
-              color: AppColors.whiteColor,
-              fontWeight: FontWeight.w600,
+          Skeletonizer(
+            enabled: isLoading,
+            child: Column(
+              children: List.generate(catalogs.length, (index) {
+                final isLast = index == catalogs.length - 1;
+                return Padding(
+                  padding: EdgeInsets.only(bottom: isLast ? 0 : 15),
+                  child: _catalogItem(
+                    size: size,
+                    catalog: catalogs[index],
+                    onTap: hasData ? controller.openDetailsFromDesign : null,
+                  ),
+                );
+              }),
             ),
           ),
-          SizedBox(width: size.width * 0.01),
-          Icon(
-            Icons.auto_awesome_rounded,
-            color: AppColors.whiteColor,
-            size: size.width * 0.038,
-          ),
+
+          if (!isLoading && !hasData)
+            Padding(
+              padding: const EdgeInsets.only(top: 15),
+              child: Text(
+                'Belum ada katalog',
+                style: AppTypography.bodySmall.copyWith(
+                  color: AppColors.textBodyColor,
+                ),
+              ),
+            ),
         ],
-      ),
-    );
+      );
+    });
   }
 
-  Widget _designCardSection({
+  Widget _catalogItem({
     required Size size,
-    required String title,
-    required String label,
-    required String specs,
-    bool showFloatingAction = false,
+    required Catalog catalog,
     VoidCallback? onTap,
   }) {
+    final String label = catalog.style.toUpperCase();
+    final String specs =
+        '${catalog.area.toStringAsFixed(catalog.area % 1 == 0 ? 0 : 1)}m² • ${catalog.estimatedCost}';
+    final String title = catalog.name;
+    final String likesCount = catalog.likesCount.toString();
+    final images =
+        catalog.imageUrls.isNotEmpty ? catalog.imageUrls : catalog.images;
+    final activeIndex = controller.getImageIndex(catalog.id);
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
         width: double.infinity,
         decoration: BoxDecoration(
           color: AppColors.whiteColor,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: AppColors.formBorderColor.withValues(alpha: 0.25),
-          ),
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x11000000),
+              blurRadius: 10,
+              offset: Offset(0, 5),
+            ),
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Stack(
-              clipBehavior: Clip.none,
               children: [
                 ClipRRect(
                   borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(12),
+                    top: Radius.circular(15),
                   ),
                   child: AspectRatio(
-                    aspectRatio: 1.60,
-                    child: Image.asset(_dummyImage, fit: BoxFit.cover),
+                    aspectRatio: 1.50,
+                    child:
+                        images.isNotEmpty
+                            ? PageView.builder(
+                              itemCount: images.length,
+                              onPageChanged: (index) {
+                                controller.setImageIndex(catalog.id, index);
+                              },
+                              itemBuilder: (_, index) {
+                                return Image.network(
+                                  images[index],
+                                  fit: BoxFit.cover,
+                                  errorBuilder:
+                                      (_, __, ___) => Image.asset(
+                                        _dummyImage,
+                                        fit: BoxFit.cover,
+                                      ),
+                                );
+                              },
+                            )
+                            : Image.asset(_dummyImage, fit: BoxFit.cover),
                   ),
                 ),
+                // Positioned(
+                //   top: size.width * 0.02,
+                //   right: size.width * 0.02,
+                //   child: Container(
+                //     width: size.width * 0.085,
+                //     height: size.width * 0.085,
+                //     decoration: const BoxDecoration(
+                //       color: AppColors.whiteColor,
+                //       shape: BoxShape.circle,
+                //     ),
+                //     child: Icon(
+                //       Icons.bookmark_border_rounded,
+                //       size: size.width * 0.05,
+                //       color: AppColors.accentColor,
+                //     ),
+                //   ),
+                // ),
                 Positioned(
-                  top: size.width * 0.02,
-                  right: size.width * 0.02,
-                  child: Container(
-                    width: size.width * 0.07,
-                    height: size.width * 0.07,
-                    decoration: const BoxDecoration(
-                      color: AppColors.whiteColor,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.bookmark_border_rounded,
-                      color: AppColors.accentColor,
-                      size: size.width * 0.042,
-                    ),
-                  ),
-                ),
-                Positioned(
-                  bottom: size.width * 0.024,
+                  bottom: size.width * 0.03,
                   left: 0,
                   right: 0,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: List.generate(
-                      4,
-                      (index) => Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 3),
-                        width: index == 0 ? 7 : 5,
-                        height: index == 0 ? 7 : 5,
-                        decoration: BoxDecoration(
-                          color:
-                              index == 0
-                                  ? AppColors.primaryColor
-                                  : AppColors.whiteColor,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
+                      images.isEmpty ? 1 : images.length,
+                      (index) {
+                        final isActive = index == activeIndex;
+                        return Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 3),
+                          width: isActive ? 8 : 6,
+                          height: isActive ? 8 : 6,
+                          decoration: BoxDecoration(
+                            color:
+                                isActive
+                                    ? AppColors.primaryColor
+                                    : AppColors.whiteColor,
+                            shape: BoxShape.circle,
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ),
-                if (showFloatingAction)
-                  Positioned(
-                    right: -8,
-                    top: size.height * 0.22,
-                    child: Container(
-                      width: size.width * 0.085,
-                      height: size.width * 0.085,
-                      decoration: const BoxDecoration(
-                        color: AppColors.primaryColor,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.business_center_outlined,
-                        color: AppColors.whiteColor,
-                        size: size.width * 0.045,
-                      ),
-                    ),
-                  ),
               ],
             ),
             Padding(
               padding: EdgeInsets.fromLTRB(
-                size.width * 0.025,
-                size.height * 0.008,
-                size.width * 0.025,
+                size.width * 0.03,
                 size.height * 0.010,
+                size.width * 0.03,
+                size.height * 0.012,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -267,21 +286,21 @@ class DesignView extends GetView<DesignController> {
                     children: [
                       Container(
                         padding: EdgeInsets.symmetric(
-                          horizontal: size.width * 0.017,
-                          vertical: size.height * 0.003,
+                          horizontal: size.width * 0.018,
+                          vertical: size.height * 0.0035,
                         ),
                         decoration: BoxDecoration(
                           color: AppColors.secondaryColor.withValues(
-                            alpha: 0.20,
+                            alpha: 0.18,
                           ),
-                          borderRadius: BorderRadius.circular(4),
+                          borderRadius: BorderRadius.circular(5),
                         ),
                         child: Text(
                           label,
                           style: AppTypography.bodySmall.copyWith(
                             color: AppColors.primaryColor,
                             fontWeight: FontWeight.w700,
-                            fontSize: 9,
+                            fontSize: 10,
                           ),
                         ),
                       ),
@@ -290,36 +309,43 @@ class DesignView extends GetView<DesignController> {
                         specs,
                         style: AppTypography.bodySmall.copyWith(
                           color: AppColors.textBodyColor,
-                          fontSize: 10,
+                          fontSize: 11,
                         ),
                       ),
                       const Spacer(),
-                      const Icon(
-                        Icons.favorite_border_rounded,
-                        color: AppColors.formBorderColor,
-                        size: 17,
+                      GestureDetector(
+                        onTap: () => controller.toggleCatalogLike(catalog.id),
+                        child: Icon(
+                          catalog.liked
+                              ? Icons.favorite_rounded
+                              : Icons.favorite_border_rounded,
+                          color:
+                              catalog.liked
+                                  ? AppColors.errorColor
+                                  : AppColors.formBorderColor,
+                          size: 19,
+                        ),
                       ),
                     ],
                   ),
-                  5.0.sh,
+                  8.0.sh,
                   Row(
                     children: [
                       Expanded(
                         child: Text(
                           title,
-                          style: AppTypography.bodyMedium.copyWith(
+                          style: AppTypography.bodyLarge.copyWith(
                             color: AppColors.textHeadingColor,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
                       ),
                       Text(
-                        '2.300',
+                        likesCount,
                         style: AppTypography.bodySmall.copyWith(
                           color: AppColors.textBodyColor.withValues(
                             alpha: 0.75,
                           ),
-                          fontSize: 10,
                         ),
                       ),
                     ],
