@@ -132,10 +132,13 @@ class NavigationView extends GetView<NavigationController> {
         binding: DesignBinding(),
       );
     } else if (settings.name == _TabRoutes.detail) {
+      final arg = settings.arguments;
+      final catalogId = arg is String ? arg : '';
+
       return GetPageRoute(
         routeName: _TabRoutes.detail,
         page: () => const DetailView(),
-        binding: DetailBinding(),
+        binding: DetailBinding(catalogId: catalogId),
       );
     }
 

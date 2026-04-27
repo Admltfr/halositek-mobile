@@ -6,7 +6,6 @@ import 'package:halositek/app/core/constants/app_typography.dart';
 import 'package:halositek/app/core/widgets/custom_text_button.dart';
 import 'package:halositek/app/data/models/architect.dart';
 import 'package:halositek/app/data/models/catalog.dart';
-import 'package:halositek/app/modules/navigation/controllers/navigation_controller.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import '../controllers/home_controller.dart';
 
@@ -229,7 +228,12 @@ class HomeView extends GetView<HomeController> {
                   child: _catalogItem(
                     size: size,
                     catalog: catalogs[index],
-                    onTap: hasData ? controller.openDetailsFromHome : null,
+                    onTap:
+                        hasData
+                            ? () => controller.openDetailsFromHome(
+                              catalogs[index].id,
+                            )
+                            : null,
                   ),
                 );
               }),
@@ -656,9 +660,7 @@ class HomeView extends GetView<HomeController> {
             overflow: TextOverflow.ellipsis,
             style: AppTypography.bodySmall.copyWith(
               color:
-                  isMore
-                      ? AppColors.textBodyColor
-                      : AppColors.textHeadingColor,
+                  isMore ? AppColors.textBodyColor : AppColors.textHeadingColor,
             ),
           ),
         ],

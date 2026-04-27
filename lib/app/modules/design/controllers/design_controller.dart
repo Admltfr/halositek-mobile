@@ -25,9 +25,9 @@ class DesignController extends GetxController {
     imageIndexByCatalog[catalogId] = index;
   }
 
-  void openDetailsFromDesign() {
+  void openDetailsFromDesign(String catalogId) {
     final nav = Get.find<NavigationController>();
-    nav.navigateTo(tabIndex: 1, route: '/detail');
+    nav.navigateTo(tabIndex: 1, route: '/detail', arguments: catalogId);
   }
 
   @override

@@ -33,9 +33,9 @@ class HomeController extends GetxController {
     imageIndexByCatalog[catalogId] = index;
   }
 
-  void openDetailsFromHome() {
+  void openDetailsFromHome(String projectId) {
     final nav = Get.find<NavigationController>();
-    nav.navigateTo(tabIndex: 1, route: '/detail');
+    nav.navigateTo(tabIndex: 1, route: '/detail', arguments: projectId);
   }
 
   void openPortofolioFromHome() {

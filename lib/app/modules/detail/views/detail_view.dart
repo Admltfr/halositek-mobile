@@ -3,7 +3,8 @@ import 'package:get/get.dart';
 import 'package:halositek/app/core/constants/app_colors.dart';
 import 'package:halositek/app/core/constants/app_extensions.dart';
 import 'package:halositek/app/core/constants/app_typography.dart';
-import 'package:halositek/app/modules/navigation/controllers/navigation_controller.dart';
+import 'package:halositek/app/data/models/catalog.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 import '../controllers/detail_controller.dart';
 
 class DetailView extends GetView<DetailController> {
@@ -18,30 +19,60 @@ class DetailView extends GetView<DetailController> {
     return Scaffold(
       backgroundColor: AppColors.whiteColor,
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _topBar(size),
-              _heroImage(size),
-              _mainInfoCard(size),
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: size.width * 0.05),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _priceSection(size),
-                    14.0.sh,
-                    _descriptionSection(size),
-                    14.0.sh,
-                    _layoutSection(size),
-                    20.0.sh,
-                  ],
+        child: Obx(() {
+          final isLoading = controller.isLoading.value;
+          final hasError = controller.errorMessage.value.isNotEmpty;
+          final hasData = controller.catalog.value != null;
+
+          if (hasError && !hasData) {
+            return Column(
+              children: [
+                Text(
+                  'Detail gagal dimuat',
+                  style: AppTypography.bodySmall.copyWith(
+                    color: AppColors.errorColor,
+                  ),
                 ),
+                TextButton(
+                  onPressed: controller.fetchCatalogDetail,
+                  child: const Text('Coba Lagi'),
+                ),
+              ],
+            );
+          }
+
+          final project = controller.catalog.value ?? Catalog.dummy();
+
+          return Skeletonizer(
+            enabled: isLoading,
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _topBar(size),
+                  _heroImage(size),
+                  _mainInfoCard(size, project),
+                  Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: size.width * 0.05,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _priceSection(size),
+                        14.0.sh,
+                        _descriptionSection(project),
+                        14.0.sh,
+                        _layoutSection(size),
+                        20.0.sh,
+                      ],
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
-        ),
+            ),
+          );
+        }),
       ),
     );
   }
@@ -58,11 +89,7 @@ class DetailView extends GetView<DetailController> {
           children: [
             InkWell(
               borderRadius: BorderRadius.circular(20),
-              onTap: () {
-                final nav = Get.find<NavigationController>();
-
-                nav.onPop();
-              },
+              onTap: controller.goBack,
               child: const Padding(
                 padding: EdgeInsets.all(4),
                 child: Icon(
@@ -91,35 +118,60 @@ class DetailView extends GetView<DetailController> {
   }
 
   Widget _heroImage(Size size) {
+    final images = controller.projectImages;
+    final active = controller.activeImageIndex.value;
+
     return Stack(
       children: [
         SizedBox(
           width: double.infinity,
           height: size.height * 0.28,
-          child: Image.asset(_dummyImage, fit: BoxFit.cover),
+          child:
+              images.isNotEmpty
+                  ? PageView.builder(
+                    itemCount: images.length,
+                    onPageChanged: controller.setActiveImageIndex,
+                    itemBuilder: (_, index) {
+                      return Image.network(
+                        images[index],
+                        fit: BoxFit.cover,
+                        errorBuilder:
+                            (_, __, ___) =>
+                                Image.asset(_dummyImage, fit: BoxFit.cover),
+                      );
+                    },
+                  )
+                  : Image.asset(_dummyImage, fit: BoxFit.cover),
         ),
-        Positioned(
-          right: size.width * 0.04,
-          bottom: size.height * 0.014,
-          child: Container(
-            width: size.width * 0.08,
-            height: size.width * 0.08,
-            decoration: const BoxDecoration(
-              color: AppColors.whiteColor,
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.bookmark_border_rounded,
-              size: size.width * 0.045,
-              color: AppColors.accentColor,
+        if (images.length > 1)
+          Positioned(
+            bottom: 10,
+            left: 0,
+            right: 0,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(images.length, (index) {
+                final isActive = index == active;
+                return Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 3),
+                  width: isActive ? 8 : 6,
+                  height: isActive ? 8 : 6,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color:
+                        isActive
+                            ? AppColors.primaryColor
+                            : AppColors.whiteColor,
+                  ),
+                );
+              }),
             ),
           ),
-        ),
       ],
     );
   }
 
-  Widget _mainInfoCard(Size size) {
+  Widget _mainInfoCard(Size size, Catalog p) {
     return Container(
       width: double.infinity,
       margin: EdgeInsets.symmetric(
@@ -149,7 +201,7 @@ class DetailView extends GetView<DetailController> {
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
-                  'MODERN',
+                  p.style.toUpperCase(),
                   style: AppTypography.bodySmall.copyWith(
                     fontSize: 9,
                     color: AppColors.primaryColor,
@@ -159,17 +211,25 @@ class DetailView extends GetView<DetailController> {
               ),
               8.0.sw,
               Text(
-                '340m² • 4 Bedrooms',
+                controller.areaDisplay,
                 style: AppTypography.bodySmall.copyWith(
                   color: AppColors.textBodyColor,
                   fontSize: 10,
                 ),
               ),
               const Spacer(),
-              const Icon(
-                Icons.favorite_border_rounded,
-                size: 17,
-                color: AppColors.formBorderColor,
+              GestureDetector(
+                onTap: controller.toggleLike,
+                child: Icon(
+                  p.liked
+                      ? Icons.favorite_rounded
+                      : Icons.favorite_border_rounded,
+                  size: 17,
+                  color:
+                      p.liked
+                          ? AppColors.errorColor
+                          : AppColors.formBorderColor,
+                ),
               ),
             ],
           ),
@@ -178,7 +238,7 @@ class DetailView extends GetView<DetailController> {
             children: [
               Expanded(
                 child: Text(
-                  'Modern Luxury Residential',
+                  p.name,
                   style: AppTypography.bodyMedium.copyWith(
                     fontWeight: FontWeight.w700,
                     color: AppColors.textHeadingColor,
@@ -186,7 +246,7 @@ class DetailView extends GetView<DetailController> {
                 ),
               ),
               Text(
-                '2.300',
+                p.likesCount.toString(),
                 style: AppTypography.bodySmall.copyWith(
                   fontSize: 10,
                   color: AppColors.textBodyColor.withValues(alpha: 0.75),
@@ -214,44 +274,17 @@ class DetailView extends GetView<DetailController> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'David Larson',
+                      controller.architectName,
                       style: AppTypography.bodySmall.copyWith(
                         color: AppColors.textHeadingColor,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
                     Text(
-                      'ID. 15.000/08/1984',
+                      controller.architectEmail,
                       style: AppTypography.bodySmall.copyWith(
                         color: AppColors.textBodyColor,
                         fontSize: 10,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Container(
-                padding: EdgeInsets.symmetric(
-                  horizontal: size.width * 0.04,
-                  vertical: size.height * 0.008,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.primaryColor,
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.chat_bubble_outline_rounded,
-                      size: size.width * 0.035,
-                      color: AppColors.whiteColor,
-                    ),
-                    4.0.sw,
-                    Text(
-                      'Chat Now',
-                      style: AppTypography.bodySmall.copyWith(
-                        color: AppColors.whiteColor,
-                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ],
@@ -270,15 +303,15 @@ class DetailView extends GetView<DetailController> {
         Expanded(
           child: _priceBox(
             title: 'ESTIMATED COST',
-            value: 'Rp3 B - Rp4.6 M',
+            value: controller.estimatedCostDisplay,
             valueColor: AppColors.primaryColor,
           ),
         ),
         SizedBox(width: size.width * 0.03),
         Expanded(
           child: _priceBox(
-            title: 'ESTIMATED AREA',
-            value: '220 m² - 228 m²',
+            title: 'AREA',
+            value: controller.areaDisplay,
             valueColor: AppColors.textHeadingColor,
           ),
         ),
@@ -314,7 +347,13 @@ class DetailView extends GetView<DetailController> {
     );
   }
 
-  Widget _descriptionSection(Size size) {
+  Widget _descriptionSection(Catalog p) {
+    final hasHighlight = p.highlightFeatures.trim().isNotEmpty;
+    final desc =
+        hasHighlight
+            ? '${p.description}\n\nHighlight Features: ${p.highlightFeatures}'
+            : p.description;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -327,10 +366,7 @@ class DetailView extends GetView<DetailController> {
         ),
         8.0.sh,
         Text(
-          'Modern Luxury Residential is designed to combine contemporary architecture with comfort and functionality. '
-          'This residence features a clean geometric facade, large glass opening for natural lighting, and a harmonious blend '
-          'of concrete, wood, and glass materials. The spacious layout creates a seamless connection between indoor and outdoor area, '
-          'providing a bright and airy living environment.',
+          desc.trim().isEmpty ? '-' : desc,
           style: AppTypography.bodySmall.copyWith(
             color: AppColors.textBodyColor,
             height: 1.45,
@@ -341,6 +377,8 @@ class DetailView extends GetView<DetailController> {
   }
 
   Widget _layoutSection(Size size) {
+    final layouts = controller.projectLayoutImages;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -352,23 +390,49 @@ class DetailView extends GetView<DetailController> {
           ),
         ),
         8.0.sh,
-        Container(
-          width: double.infinity,
-          height: size.height * 0.2,
-          decoration: BoxDecoration(
-            color: const Color(0xFFE9E9E9),
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: AppColors.formBorderColor.withValues(alpha: 0.25),
+        if (layouts.isEmpty)
+          Container(
+            width: double.infinity,
+            height: size.height * 0.2,
+            decoration: BoxDecoration(
+              color: const Color(0xFFE9E9E9),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: AppColors.formBorderColor.withValues(alpha: 0.25),
+              ),
+            ),
+            alignment: Alignment.center,
+            child: Icon(
+              Icons.grid_4x4_rounded,
+              color: AppColors.formBorderColor,
+              size: size.width * 0.12,
+            ),
+          )
+        else
+          SizedBox(
+            height: size.height * 0.2,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: layouts.length,
+              separatorBuilder: (_, __) => SizedBox(width: size.width * 0.03),
+              itemBuilder: (_, index) {
+                return ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.network(
+                    layouts[index],
+                    width: size.width * 0.7,
+                    fit: BoxFit.cover,
+                    errorBuilder:
+                        (_, __, ___) => Image.asset(
+                          _dummyImage,
+                          width: size.width * 0.7,
+                          fit: BoxFit.cover,
+                        ),
+                  ),
+                );
+              },
             ),
           ),
-          alignment: Alignment.center,
-          child: Icon(
-            Icons.grid_4x4_rounded,
-            color: AppColors.formBorderColor,
-            size: size.width * 0.12,
-          ),
-        ),
       ],
     );
   }

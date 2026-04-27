@@ -143,7 +143,12 @@ class DesignView extends GetView<DesignController> {
                   child: _catalogItem(
                     size: size,
                     catalog: catalogs[index],
-                    onTap: hasData ? controller.openDetailsFromDesign : null,
+                    onTap:
+                        hasData
+                            ? () => controller.openDetailsFromDesign(
+                              catalogs[index].id,
+                            )
+                            : null,
                   ),
                 );
               }),
@@ -357,9 +362,5 @@ class DesignView extends GetView<DesignController> {
         ),
       ),
     );
-  }
-
-  void _openDetailsFromDesign() {
-    Get.toNamed('/detail', id: 2);
   }
 }

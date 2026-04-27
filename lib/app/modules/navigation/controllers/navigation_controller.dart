@@ -51,11 +51,14 @@ class NavigationController extends GetxController {
     return true;
   }
 
-  void navigateTo({required int tabIndex, String? route}) {
+  void navigateTo({required int tabIndex, String? route, Object? arguments}) {
     changeIndex(tabIndex);
 
     if (route != null) {
-      navigatorKeys[tabIndex]?.currentState?.pushNamed(route);
+      navigatorKeys[tabIndex]?.currentState?.pushNamed(
+        route,
+        arguments: arguments,
+      );
     }
   }
 

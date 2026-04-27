@@ -39,6 +39,31 @@ class CatalogService {
     }, 'Fetch Catalogs');
   }
 
+  Future<Catalog> getCatalogById(String catalogId) async {
+    final response = await _apiClient.public.get(
+      '/projects/$catalogId',
+      options: Options(
+        validateStatus: (status) => status != null && status < 500,
+      ),
+    );
+
+    return _apiClient.customResponse(response, () async {
+      final rawData = response.data?['data'];
+
+      if (rawData is Map && rawData['project'] is Map) {
+        return Catalog.fromJson(
+          Map<String, dynamic>.from(rawData['project'] as Map),
+        );
+      }
+
+      if (rawData is Map) {
+        return Catalog.fromJson(Map<String, dynamic>.from(rawData));
+      }
+
+      throw Exception('Invalid project detail response format');
+    }, 'Fetch Catalog Detail');
+  }
+
   Future<void> likeCatalog(String catalogId) async {
     final response = await _apiClient.private.post(
       '/projects/$catalogId/like',
