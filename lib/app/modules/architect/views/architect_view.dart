@@ -4,9 +4,7 @@ import 'package:halositek/app/core/constants/app_colors.dart';
 import 'package:halositek/app/core/constants/app_extensions.dart';
 import 'package:halositek/app/core/constants/app_typography.dart';
 import 'package:halositek/app/data/models/architect.dart';
-import 'package:halositek/app/modules/navigation/controllers/navigation_controller.dart';
 import 'package:skeletonizer/skeletonizer.dart';
-
 import '../controllers/architect_controller.dart';
 
 class ArchitectView extends GetView<ArchitectController> {
