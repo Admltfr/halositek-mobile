@@ -1,23 +1,54 @@
 import 'package:get/get.dart';
+import 'package:halositek/app/data/models/architect.dart';
+import 'package:halositek/app/data/network/architect_service.dart';
+import 'package:halositek/app/modules/navigation/controllers/navigation_controller.dart';
 
 class ArchitectController extends GetxController {
-  //TODO: Implement ArchitectController
+  final ArchitectService _architectService;
 
-  final count = 0.obs;
+  ArchitectController(this._architectService);
+
+  final architects = <Architect>[].obs;
+  final _allArchitects = <Architect>[].obs;
+
+  final isLoading = false.obs;
+  final errorMessage = ''.obs;
+  final searchQuery = ''.obs;
+
+  bool get hasData => architects.isNotEmpty;
+
+  void goBack() {
+    final nav = Get.find<NavigationController>();
+    nav.onPop();
+  }
+
   @override
   void onInit() {
     super.onInit();
+    fetchArchitects();
   }
 
-  @override
-  void onReady() {
-    super.onReady();
+  Future<void> fetchArchitects() async {
+    try {
+      isLoading.value = true;
+      errorMessage.value = '';
+
+      final result = await _architectService.getArchitects(perPage: 12);
+      _allArchitects.assignAll(result);
+    } catch (e) {
+      errorMessage.value = e.toString();
+    } finally {
+      isLoading.value = false;
+    }
   }
 
-  @override
-  void onClose() {
-    super.onClose();
+  int projectCompletedCount(Architect architect) {
+    return architect.likesCount;
   }
 
-  void increment() => count.value++;
+  int hiddenProjectsCount(Architect architect) {
+    final total = projectCompletedCount(architect);
+    if (total <= 2) return 0;
+    return total - 2;
+  }
 }

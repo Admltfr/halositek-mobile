@@ -8,10 +8,14 @@ import '../modules/auth/register/bindings/register_binding.dart';
 import '../modules/auth/register/views/register_view.dart';
 import '../modules/design/bindings/design_binding.dart';
 import '../modules/design/views/design_view.dart';
+import '../modules/detail/bindings/detail_binding.dart';
+import '../modules/detail/views/detail_view.dart';
 import '../modules/home/bindings/home_binding.dart';
 import '../modules/home/views/home_view.dart';
 import '../modules/navigation/bindings/navigation_binding.dart';
 import '../modules/navigation/views/navigation_view.dart';
+import '../modules/portofolio/bindings/portofolio_binding.dart';
+import '../modules/portofolio/views/portofolio_view.dart';
 import '../modules/profile/bindings/profile_binding.dart';
 import '../modules/profile/views/profile_view.dart';
 
@@ -60,6 +64,16 @@ class AppPages {
       name: _Paths.ARCHITECT,
       page: () => const ArchitectView(),
       binding: ArchitectBinding(),
+    ),
+    GetPage(
+      name: _Paths.DETAIL,
+      page: () => const DetailView(),
+      binding: DetailBinding(),
+    ),
+    GetPage(
+      name: _Paths.PORTOFOLIO,
+      page: () => const PortofolioView(),
+      binding: PortofolioBinding(),
     ),
   ];
 }

@@ -1,5 +1,4 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/rendering.dart';
 import 'api_client.dart';
 import 'token_service.dart';
 
@@ -32,9 +31,9 @@ class AuthService {
       ),
     );
 
-    _apiClient.customResponse(
+    return _apiClient.customResponse(
       response,
-      () {
+      () async {
         _tokenService.setAccessToken(response.data['data']['access_token']);
         _tokenService.setRefreshToken(response.data['data']['refresh_token']);
       },
@@ -54,7 +53,7 @@ class AuthService {
       ),
     );
 
-    _apiClient.customResponse(response, () {
+    return _apiClient.customResponse(response, () async {
       _tokenService.setAccessToken(response.data['data']['access_token']);
       _tokenService.setRefreshToken(response.data['data']['refresh_token']);
     }, 'Login');
@@ -71,7 +70,7 @@ class AuthService {
       ),
     );
 
-    _apiClient.customResponse(response, () async {
+    return _apiClient.customResponse(response, () async {
       final newAccessToken = response.data['data']['access_token'];
       final newRefreshToken = response.data['data']['refresh_token'];
 

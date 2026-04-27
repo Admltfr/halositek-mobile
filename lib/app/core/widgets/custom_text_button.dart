@@ -6,12 +6,14 @@ class CustomTextButton extends StatelessWidget {
   final String text;
   final VoidCallback onPressed;
   final Color? color;
+  final TextStyle? style;
 
   const CustomTextButton({
     super.key,
     required this.text,
     required this.onPressed,
     this.color,
+    this.style,
   });
 
   @override
@@ -24,10 +26,12 @@ class CustomTextButton extends StatelessWidget {
       ),
       child: Text(
         text,
-        style: AppTypography.bodyMedium.copyWith(
-          color: color ?? AppColors.secondaryColor,
-          fontWeight: FontWeight.w600,
-        ),
+        style:
+            style ??
+            AppTypography.bodyMedium.copyWith(
+              color: color ?? AppColors.secondaryColor,
+              fontWeight: FontWeight.w600,
+            ),
       ),
     );
   }

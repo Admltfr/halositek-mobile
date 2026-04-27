@@ -51,6 +51,14 @@ class NavigationController extends GetxController {
     return true;
   }
 
+  void navigateTo({required int tabIndex, String? route}) {
+    changeIndex(tabIndex);
+
+    if (route != null) {
+      navigatorKeys[tabIndex]?.currentState?.pushNamed(route);
+    }
+  }
+
   @override
   void onClose() {
     super.onClose();

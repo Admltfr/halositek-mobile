@@ -28,7 +28,7 @@ class LoginView extends GetView<LoginController> {
 
           _overlayText(size),
 
-          _loginForm(size, controller),
+          _loginForm(size),
         ],
       ),
     );
@@ -71,7 +71,7 @@ class LoginView extends GetView<LoginController> {
     );
   }
 
-  Widget _loginForm(Size size, LoginController controller) {
+  Widget _loginForm(Size size) {
     return Align(
       alignment: Alignment.bottomCenter,
       child: Container(

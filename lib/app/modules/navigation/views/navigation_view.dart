@@ -5,8 +5,12 @@ import 'package:halositek/app/modules/architect/bindings/architect_binding.dart'
 import 'package:halositek/app/modules/architect/views/architect_view.dart';
 import 'package:halositek/app/modules/design/bindings/design_binding.dart';
 import 'package:halositek/app/modules/design/views/design_view.dart';
+import 'package:halositek/app/modules/detail/bindings/detail_binding.dart';
+import 'package:halositek/app/modules/detail/views/detail_view.dart';
 import 'package:halositek/app/modules/home/bindings/home_binding.dart';
 import 'package:halositek/app/modules/home/views/home_view.dart';
+import 'package:halositek/app/modules/portofolio/views/portofolio_view.dart';
+import 'package:halositek/app/modules/portofolio/bindings/portofolio_binding.dart';
 import 'package:halositek/app/modules/profile/bindings/profile_binding.dart';
 import 'package:halositek/app/modules/profile/views/profile_view.dart';
 import 'package:halositek/app/core/constants/app_colors.dart';
@@ -127,6 +131,12 @@ class NavigationView extends GetView<NavigationController> {
         page: () => const DesignView(),
         binding: DesignBinding(),
       );
+    } else if (settings.name == _TabRoutes.detail) {
+      return GetPageRoute(
+        routeName: _TabRoutes.detail,
+        page: () => const DetailView(),
+        binding: DetailBinding(),
+      );
     }
 
     return _fallbackRoute('Unknown Design route');
@@ -138,6 +148,12 @@ class NavigationView extends GetView<NavigationController> {
         routeName: _TabRoutes.root,
         page: () => const ArchitectView(),
         binding: ArchitectBinding(),
+      );
+    } else if (settings.name == _TabRoutes.portofolio) {
+      return GetPageRoute(
+        routeName: _TabRoutes.portofolio,
+        page: () => const PortofolioView(),
+        binding: PortofolioBinding(),
       );
     }
 
@@ -166,4 +182,5 @@ class NavigationView extends GetView<NavigationController> {
 class _TabRoutes {
   static const root = '/';
   static const detail = '/detail';
+  static const portofolio = '/portofolio';
 }
