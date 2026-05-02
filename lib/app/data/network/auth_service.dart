@@ -80,4 +80,21 @@ class AuthService {
       return newAccessToken;
     }, 'Refresh token');
   }
+
+  Future<void> logout() async {
+    final response = await _apiClient.private.post(
+      '/logout',
+      data: {'refresh_token': await _tokenService.getRefreshToken()},
+      options: Options(
+        validateStatus: (status) {
+          return status != null && status < 500;
+        },
+      ),
+    );
+
+    return _apiClient.customResponse(response, () async {
+      await _tokenService.clearAccessToken();
+      await _tokenService.clearRefreshToken();
+    }, 'Logout');
+  }
 }

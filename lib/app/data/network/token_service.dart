@@ -18,4 +18,12 @@ class TokenService {
   Future<String?> getRefreshToken() async {
     return await _storage.read(key: 'refresh_token');
   }
+
+  Future<void> clearAccessToken() async {
+    await _storage.delete(key: 'access_token');
+  }
+
+  Future<void> clearRefreshToken() async {
+    await _storage.delete(key: 'refresh_token');
+  }
 }

@@ -1,7 +1,10 @@
 import 'package:get/get.dart';
+import 'package:halositek/app/data/network/auth_service.dart';
 
 class ProfileController extends GetxController {
-  //TODO: Implement ProfileController
+  final AuthService _authService;
+
+  ProfileController(this._authService);
 
   final count = 0.obs;
   @override
@@ -9,15 +12,13 @@ class ProfileController extends GetxController {
     super.onInit();
   }
 
-  @override
-  void onReady() {
-    super.onReady();
-  }
+  Future<void> logout() async {
+    try {
+      await _authService.logout();
 
-  @override
-  void onClose() {
-    super.onClose();
+      Get.offAllNamed('/login');
+    } catch (e) {
+      Get.snackbar('Log out Failed', e.toString());
+    }
   }
-
-  void increment() => count.value++;
 }

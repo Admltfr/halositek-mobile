@@ -18,13 +18,15 @@ import '../modules/portofolio/bindings/portofolio_binding.dart';
 import '../modules/portofolio/views/portofolio_view.dart';
 import '../modules/profile/bindings/profile_binding.dart';
 import '../modules/profile/views/profile_view.dart';
+import '../modules/splash/bindings/splash_binding.dart';
+import '../modules/splash/views/splash_view.dart';
 
 part 'app_routes.dart';
 
 class AppPages {
   AppPages._();
 
-  static const INITIAL = Routes.LOGIN;
+  static const INITIAL = Routes.SPLASH;
 
   static final routes = [
     GetPage(
@@ -74,6 +76,11 @@ class AppPages {
       name: _Paths.PORTOFOLIO,
       page: () => const PortofolioView(),
       binding: PortofolioBinding(),
+    ),
+    GetPage(
+      name: _Paths.SPLASH,
+      page: () => const SplashView(),
+      binding: SplashBinding(),
     ),
   ];
 }
