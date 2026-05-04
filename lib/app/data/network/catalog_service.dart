@@ -12,6 +12,7 @@ class CatalogService {
     int perPage = 10,
     String? search,
     String? style,
+    String? architectId,
   }) async {
     final response = await _apiClient.public.get(
       '/projects',
@@ -20,6 +21,8 @@ class CatalogService {
         'per_page': perPage,
         if (search != null && search.trim().isNotEmpty) 'search': search.trim(),
         if (style != null && style.trim().isNotEmpty) 'style': style.trim(),
+        if (architectId != null && architectId.trim().isNotEmpty)
+          'architect_id': architectId.trim(),
       },
       options: Options(
         validateStatus: (status) {

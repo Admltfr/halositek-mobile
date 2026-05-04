@@ -150,102 +150,105 @@ class ArchitectView extends GetView<ArchitectController> {
     final projectsCount = controller.projectCompletedCount(architect);
     final hiddenCount = controller.hiddenProjectsCount(architect);
 
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(size.width * 0.03),
-      decoration: BoxDecoration(
-        color: AppColors.whiteColor,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: AppColors.formBorderColor.withValues(alpha: 0.25),
+    return GestureDetector(
+      onTap: () => controller.openPortofolio(architect),
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.all(size.width * 0.03),
+        decoration: BoxDecoration(
+          color: AppColors.whiteColor,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: AppColors.formBorderColor.withValues(alpha: 0.25),
+          ),
         ),
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              CircleAvatar(
-                radius: size.width * 0.06,
-                backgroundColor: AppColors.whiteColor,
-                child: ClipOval(
-                  child:
-                      architect.profilePicture.isNotEmpty
-                          ? Image.network(
-                            architect.profilePicture,
-                            width: size.width * 0.12,
-                            height: size.width * 0.12,
-                            fit: BoxFit.cover,
-                            errorBuilder:
-                                (_, __, ___) => Image.asset(
-                                  _dummyAvatar,
-                                  width: size.width * 0.12,
-                                  height: size.width * 0.12,
-                                  fit: BoxFit.cover,
-                                ),
-                          )
-                          : Image.asset(
-                            _dummyAvatar,
-                            width: size.width * 0.12,
-                            height: size.width * 0.12,
-                            fit: BoxFit.cover,
-                          ),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: size.width * 0.06,
+                  backgroundColor: AppColors.whiteColor,
+                  child: ClipOval(
+                    child:
+                        architect.profilePicture.isNotEmpty
+                            ? Image.network(
+                              architect.profilePicture,
+                              width: size.width * 0.12,
+                              height: size.width * 0.12,
+                              fit: BoxFit.cover,
+                              errorBuilder:
+                                  (_, __, ___) => Image.asset(
+                                    _dummyAvatar,
+                                    width: size.width * 0.12,
+                                    height: size.width * 0.12,
+                                    fit: BoxFit.cover,
+                                  ),
+                            )
+                            : Image.asset(
+                              _dummyAvatar,
+                              width: size.width * 0.12,
+                              height: size.width * 0.12,
+                              fit: BoxFit.cover,
+                            ),
+                  ),
                 ),
-              ),
-              10.0.sw,
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      architect.name.isNotEmpty ? architect.name : '-',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTypography.bodyLarge.copyWith(
-                        color: AppColors.textHeadingColor,
-                        fontWeight: FontWeight.w700,
+                10.0.sw,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        architect.name.isNotEmpty ? architect.name : '-',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTypography.bodyLarge.copyWith(
+                          color: AppColors.textHeadingColor,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
-                    ),
-                    2.0.sh,
-                    Text(
-                      architect.specialization.isNotEmpty
-                          ? architect.specialization
-                          : (architect.headline.isNotEmpty
-                              ? architect.headline
-                              : 'Architect'),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTypography.bodyMedium.copyWith(
-                        color: AppColors.textBodyColor.withValues(alpha: 0.9),
+                      2.0.sh,
+                      Text(
+                        architect.specialization.isNotEmpty
+                            ? architect.specialization
+                            : (architect.headline.isNotEmpty
+                                ? architect.headline
+                                : 'Architect'),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTypography.bodyMedium.copyWith(
+                          color: AppColors.textBodyColor.withValues(alpha: 0.9),
+                        ),
                       ),
-                    ),
-                    2.0.sh,
-                    Text(
-                      '$projectsCount Projects completed',
-                      style: AppTypography.bodySmall.copyWith(
-                        color: AppColors.textBodyColor.withValues(alpha: 0.8),
+                      2.0.sh,
+                      Text(
+                        '$projectsCount Projects completed',
+                        style: AppTypography.bodySmall.copyWith(
+                          color: AppColors.textBodyColor.withValues(alpha: 0.8),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          ),
-          10.0.sh,
-          Row(
-            children: [
-              Expanded(child: _projectThumb(size, _dummyProject)),
-              6.0.sw,
-              Expanded(child: _projectThumb(size, _dummyProject)),
-              6.0.sw,
-              Expanded(
-                child: _moreThumb(
-                  size: size,
-                  label: hiddenCount > 0 ? '+$hiddenCount' : '+0',
+              ],
+            ),
+            10.0.sh,
+            Row(
+              children: [
+                Expanded(child: _projectThumb(size, _dummyProject)),
+                6.0.sw,
+                Expanded(child: _projectThumb(size, _dummyProject)),
+                6.0.sw,
+                Expanded(
+                  child: _moreThumb(
+                    size: size,
+                    label: hiddenCount > 0 ? '+$hiddenCount' : '+0',
+                  ),
                 ),
-              ),
-            ],
-          ),
-        ],
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

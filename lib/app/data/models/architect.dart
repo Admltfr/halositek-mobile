@@ -7,14 +7,15 @@ class Architect {
   final String role;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+
   final String headline;
   final String bio;
   final String location;
-  final String catalogsFileUrl;
-  final String awardsFileUrl;
   final String status;
   final String specialization;
-  final int likesCount;
+  final int totalProjects;
+  final int totalAwards;
+  final double rating;
 
   const Architect({
     required this.id,
@@ -28,11 +29,11 @@ class Architect {
     required this.headline,
     required this.bio,
     required this.location,
-    required this.catalogsFileUrl,
-    required this.awardsFileUrl,
     required this.status,
     required this.specialization,
-    required this.likesCount,
+    required this.totalProjects,
+    required this.totalAwards,
+    required this.rating,
   });
 
   factory Architect.fromJson(Map<String, dynamic> json) {
@@ -50,11 +51,11 @@ class Architect {
       headline: (json['headline'] ?? '').toString(),
       bio: (json['bio'] ?? '').toString(),
       location: (json['location'] ?? '').toString(),
-      catalogsFileUrl: (json['catalogs_file_url'] ?? '').toString(),
-      awardsFileUrl: (json['awards_file_url'] ?? '').toString(),
       status: (json['status'] ?? '').toString(),
       specialization: (json['specialization'] ?? '').toString(),
-      likesCount: _toInt(json['likes_count']),
+      totalProjects: _toInt(json['total_projects']),
+      totalAwards: _toInt(json['total_awards']),
+      rating: _toDouble(json['rating']),
     );
   }
 
@@ -71,11 +72,11 @@ class Architect {
       headline: '',
       bio: '',
       location: '',
-      catalogsFileUrl: '',
-      awardsFileUrl: '',
       status: 'approved',
       specialization: '',
-      likesCount: 0,
+      totalProjects: 0,
+      totalAwards: 0,
+      rating: 0,
     );
   }
 
@@ -83,5 +84,11 @@ class Architect {
     if (value is int) return value;
     if (value is double) return value.toInt();
     return int.tryParse(value?.toString() ?? '') ?? 0;
+  }
+
+  static double _toDouble(dynamic value) {
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    return double.tryParse(value?.toString() ?? '') ?? 0;
   }
 }

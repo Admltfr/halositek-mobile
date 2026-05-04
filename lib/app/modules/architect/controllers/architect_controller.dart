@@ -9,7 +9,6 @@ class ArchitectController extends GetxController {
   ArchitectController(this._architectService);
 
   final architects = <Architect>[].obs;
-  final _allArchitects = <Architect>[].obs;
 
   final isLoading = false.obs;
   final errorMessage = ''.obs;
@@ -34,7 +33,7 @@ class ArchitectController extends GetxController {
       errorMessage.value = '';
 
       final result = await _architectService.getArchitects(perPage: 12);
-      _allArchitects.assignAll(result);
+      architects.assignAll(result);
     } catch (e) {
       errorMessage.value = e.toString();
     } finally {
@@ -43,7 +42,21 @@ class ArchitectController extends GetxController {
   }
 
   int projectCompletedCount(Architect architect) {
-    return architect.likesCount;
+    return architect.totalProjects;
+  }
+
+  void openPortofolio(Architect architect) {
+    final nav = Get.find<NavigationController>();
+    nav.navigateTo(
+      tabIndex: 2,
+      route: '/portofolio',
+      arguments: {
+        'architectId': architect.id,
+        'name': architect.name,
+        'headline': architect.headline,
+        'profile_picture': architect.profilePicture,
+      },
+    );
   }
 
   int hiddenProjectsCount(Architect architect) {
