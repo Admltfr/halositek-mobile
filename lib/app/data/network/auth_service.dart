@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+// import 'package:flutter/material.dart';
 import 'api_client.dart';
 import 'token_service.dart';
 
@@ -56,6 +57,7 @@ class AuthService {
     return _apiClient.customResponse(response, () async {
       _tokenService.setAccessToken(response.data['data']['access_token']);
       _tokenService.setRefreshToken(response.data['data']['refresh_token']);
+      _tokenService.setRole(response.data['data']['role']);
     }, 'Login');
   }
 
@@ -82,6 +84,8 @@ class AuthService {
   }
 
   Future<void> logout() async {
+    // debugPrint('\x1B[31m ${_tokenService.getAccessToken()}\x1B[0m');
+    // debugPrint('\x1B[31m ${_tokenService.getRefreshToken()}\x1B[0m');
     final response = await _apiClient.private.post(
       '/logout',
       data: {'refresh_token': await _tokenService.getRefreshToken()},

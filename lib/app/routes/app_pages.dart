@@ -1,4 +1,6 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:halositek/app/routes/route_middleware.dart';
 
 import '../modules/architect/bindings/architect_binding.dart';
 import '../modules/architect/views/architect_view.dart';
@@ -28,6 +30,7 @@ class AppPages {
 
   static const INITIAL = Routes.SPLASH;
 
+
   static final routes = [
     GetPage(
       name: _Paths.HOME,
@@ -51,36 +54,43 @@ class AppPages {
       name: _Paths.NAVIGATION,
       page: () => const NavigationView(),
       binding: NavigationBinding(),
+      transition: Transition.fadeIn,
     ),
     GetPage(
       name: _Paths.PROFILE,
       page: () => const ProfileView(),
       binding: ProfileBinding(),
+      transition: Transition.fadeIn,
     ),
     GetPage(
       name: _Paths.DESIGN,
       page: () => const DesignView(),
       binding: DesignBinding(),
+      transition: Transition.fadeIn,
     ),
     GetPage(
       name: _Paths.ARCHITECT,
       page: () => const ArchitectView(),
       binding: ArchitectBinding(),
+      transition: Transition.fadeIn,
     ),
     GetPage(
       name: _Paths.DETAIL,
       page: () => const DetailView(),
       binding: DetailBinding(),
+      transition: Transition.fadeIn,
     ),
     GetPage(
       name: _Paths.PORTOFOLIO,
       page: () => const PortofolioView(),
       binding: PortofolioBinding(),
+      transition: Transition.fadeIn,
     ),
     GetPage(
       name: _Paths.SPLASH,
       page: () => const SplashView(),
       binding: SplashBinding(),
+      transition: Transition.fadeIn,
     ),
   ];
 }

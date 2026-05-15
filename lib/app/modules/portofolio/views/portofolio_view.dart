@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:halositek/app/core/constants/app_colors.dart';
+import 'package:halositek/app/core/constants/app_dimensions.dart';
 import 'package:halositek/app/core/constants/app_extensions.dart';
 import 'package:halositek/app/core/constants/app_typography.dart';
-import 'package:halositek/app/data/models/catalog.dart';
 import 'package:halositek/app/data/models/award.dart';
+import 'package:halositek/app/data/models/catalog.dart';
 import 'package:skeletonizer/skeletonizer.dart';
+
 import '../controllers/portofolio_controller.dart';
 
 class PortofolioView extends GetView<PortofolioController> {
@@ -16,29 +18,27 @@ class PortofolioView extends GetView<PortofolioController> {
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-
     return Scaffold(
       backgroundColor: AppColors.whiteColor,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: EdgeInsets.symmetric(
-            horizontal: size.width * 0.05,
-            vertical: size.height * 0.01,
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppDimensions.pageHorizontalPadding,
+            vertical: AppDimensions.pageVerticalPadding,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _topBar(size),
-              12.0.sh,
-              _profileCard(size),
-              12.0.sh,
-              _priceAndChat(size),
-              14.0.sh,
-              _tabSwitch(size),
-              12.0.sh,
-              _tabContent(size),
-              10.0.sh,
+              _topBar(),
+              AppDimensions.spacingLarge.sh,
+              _profileCard(),
+              AppDimensions.spacingLarge.sh,
+              _priceAndChat(),
+              AppDimensions.spacingXLarge.sh,
+              _tabSwitch(),
+              AppDimensions.spacingLarge.sh,
+              _tabContent(),
+              AppDimensions.spacingSemibold.sh,
             ],
           ),
         ),
@@ -46,19 +46,19 @@ class PortofolioView extends GetView<PortofolioController> {
     );
   }
 
-  Widget _topBar(Size size) {
+  Widget _topBar() {
     return SizedBox(
-      height: size.height * 0.04,
+      height: 32,
       child: Row(
         children: [
           InkWell(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(AppDimensions.radius4XLarge),
             onTap: controller.goBack,
             child: const Padding(
-              padding: EdgeInsets.all(4),
+              padding: EdgeInsets.all(AppDimensions.spacingXSmall),
               child: Icon(
                 Icons.arrow_back_ios_new_rounded,
-                size: 14,
+                size: AppDimensions.iconSizeSmall,
                 color: AppColors.textHeadingColor,
               ),
             ),
@@ -74,28 +74,28 @@ class PortofolioView extends GetView<PortofolioController> {
               ),
             ),
           ),
-          SizedBox(width: size.width * 0.05),
+          const SizedBox(width: AppDimensions.avatarIndicatorSize / 2),
         ],
       ),
     );
   }
 
-  Widget _profileCard(Size size) {
+  Widget _profileCard() {
     return Row(
       children: [
         CircleAvatar(
-          radius: size.width * 0.09,
+          radius: 36,
           backgroundColor: AppColors.whiteColor,
           child: ClipOval(
             child: Image.asset(
               _dummyAvatar,
-              width: size.width * 0.18,
-              height: size.width * 0.18,
+              width: 72,
+              height: 72,
               fit: BoxFit.cover,
             ),
           ),
         ),
-        12.0.sw,
+        AppDimensions.spacingLarge.sw,
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -109,7 +109,7 @@ class PortofolioView extends GetView<PortofolioController> {
                   ),
                 ),
               ),
-              4.0.sh,
+              AppDimensions.spacingXSmall.sh,
               Obx(
                 () => Text(
                   '${controller.architectTitle.value} | ${controller.experienceLabel.value}',
@@ -118,7 +118,7 @@ class PortofolioView extends GetView<PortofolioController> {
                   ),
                 ),
               ),
-              6.0.sh,
+              AppDimensions.spacingSmall.sh,
               Text(
                 'Specializing in sustainable modern residential design.',
                 style: AppTypography.bodySmall.copyWith(
@@ -133,15 +133,15 @@ class PortofolioView extends GetView<PortofolioController> {
     );
   }
 
-  Widget _priceAndChat(Size size) {
+  Widget _priceAndChat() {
     return Row(
       children: [
         Expanded(
           child: Container(
-            padding: EdgeInsets.symmetric(vertical: size.height * 0.014),
+            padding: const EdgeInsets.symmetric(vertical: 12),
             decoration: BoxDecoration(
               color: AppColors.secondaryColor.withValues(alpha: 0.18),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(AppDimensions.radiusLarge),
             ),
             child: Center(
               child: Text(
@@ -154,11 +154,14 @@ class PortofolioView extends GetView<PortofolioController> {
             ),
           ),
         ),
-        10.0.sw,
+        AppDimensions.spacingSemibold.sw,
         Expanded(
           child: ElevatedButton.icon(
             onPressed: () {},
-            icon: Icon(Icons.chat_bubble_outline, size: size.width * 0.045),
+            icon: const Icon(
+              Icons.chat_bubble_outline,
+              size: AppDimensions.iconSizeSmall + 1,
+            ),
             label: Text(
               'Chat Now',
               style: AppTypography.bodySmall.copyWith(
@@ -170,9 +173,9 @@ class PortofolioView extends GetView<PortofolioController> {
               backgroundColor: AppColors.primaryColor,
               foregroundColor: AppColors.whiteColor,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(AppDimensions.radiusLarge),
               ),
-              padding: EdgeInsets.symmetric(vertical: size.height * 0.014),
+              padding: const EdgeInsets.symmetric(vertical: 12),
             ),
           ),
         ),
@@ -180,14 +183,14 @@ class PortofolioView extends GetView<PortofolioController> {
     );
   }
 
-  Widget _tabSwitch(Size size) {
+  Widget _tabSwitch() {
     return Obx(() {
       final active = controller.activeTab.value;
       return Container(
-        padding: const EdgeInsets.all(4),
+        padding: const EdgeInsets.all(AppDimensions.spacingXSmall),
         decoration: BoxDecoration(
           color: AppColors.whiteColor,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppDimensions.radiusXLarge),
           border: Border.all(
             color: AppColors.formBorderColor.withValues(alpha: 0.25),
           ),
@@ -195,13 +198,11 @@ class PortofolioView extends GetView<PortofolioController> {
         child: Row(
           children: [
             _tabItem(
-              size: size,
               title: 'Portofolio',
               isActive: active == 0,
               onTap: () => controller.setTab(0),
             ),
             _tabItem(
-              size: size,
               title: 'Award',
               isActive: active == 1,
               onTap: () => controller.setTab(1),
@@ -213,7 +214,6 @@ class PortofolioView extends GetView<PortofolioController> {
   }
 
   Widget _tabItem({
-    required Size size,
     required String title,
     required bool isActive,
     required VoidCallback onTap,
@@ -223,10 +223,10 @@ class PortofolioView extends GetView<PortofolioController> {
         onTap: onTap,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 180),
-          padding: EdgeInsets.symmetric(vertical: size.height * 0.012),
+          padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
             color: isActive ? AppColors.primaryColor : AppColors.whiteColor,
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(AppDimensions.radiusLarge),
           ),
           child: Center(
             child: Text(
@@ -243,16 +243,16 @@ class PortofolioView extends GetView<PortofolioController> {
     );
   }
 
-  Widget _tabContent(Size size) {
+  Widget _tabContent() {
     return Obx(() {
       if (controller.activeTab.value == 0) {
-        return _portfolioGrid(size);
+        return _portfolioGrid();
       }
-      return _awardGrid(size);
+      return _awardGrid();
     });
   }
 
-  Widget _portfolioGrid(Size size) {
+  Widget _portfolioGrid() {
     final isLoading = controller.isLoadingPortfolio.value;
     final hasError = controller.portfolioError.value.isNotEmpty;
     final hasData = controller.portfolios.isNotEmpty;
@@ -277,16 +277,16 @@ class PortofolioView extends GetView<PortofolioController> {
         itemCount: items.length,
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
-          mainAxisSpacing: 12,
-          crossAxisSpacing: 12,
+          mainAxisSpacing: AppDimensions.spacingLarge,
+          crossAxisSpacing: AppDimensions.spacingLarge,
           childAspectRatio: 0.82,
         ),
-        itemBuilder: (_, index) => _portfolioCard(size, items[index]),
+        itemBuilder: (_, index) => _portfolioCard(items[index]),
       ),
     );
   }
 
-  Widget _awardGrid(Size size) {
+  Widget _awardGrid() {
     final isLoading = controller.isLoadingAward.value;
     final hasError = controller.awardError.value.isNotEmpty;
     final hasData = controller.awards.isNotEmpty;
@@ -309,26 +309,27 @@ class PortofolioView extends GetView<PortofolioController> {
         itemCount: items.length,
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
-          mainAxisSpacing: 12,
-          crossAxisSpacing: 12,
+          mainAxisSpacing: AppDimensions.spacingLarge,
+          crossAxisSpacing: AppDimensions.spacingLarge,
           childAspectRatio: 0.82,
         ),
-        itemBuilder: (_, index) => _awardCard(size, items[index]),
+        itemBuilder: (_, index) => _awardCard(items[index]),
       ),
     );
   }
 
-  Widget _portfolioCard(Size size, Catalog catalog) {
+  Widget _portfolioCard(Catalog catalog) {
     final images =
         catalog.imageUrls.isNotEmpty ? catalog.imageUrls : catalog.images;
     final image = images.isNotEmpty ? images.first : '';
+
     return Container(
       decoration: BoxDecoration(
         color: AppColors.whiteColor,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppDimensions.radiusXLarge),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x11000000),
+            color: AppColors.shadowSoftColor,
             blurRadius: 8,
             offset: Offset(0, 3),
           ),
@@ -338,7 +339,9 @@ class PortofolioView extends GetView<PortofolioController> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(AppDimensions.radiusXLarge),
+            ),
             child: AspectRatio(
               aspectRatio: 1.1,
               child:
@@ -354,7 +357,7 @@ class PortofolioView extends GetView<PortofolioController> {
             ),
           ),
           Padding(
-            padding: EdgeInsets.all(size.width * 0.02),
+            padding: const EdgeInsets.all(8),
             child: Text(
               catalog.name.isNotEmpty ? catalog.name : 'Project',
               maxLines: 1,
@@ -370,14 +373,14 @@ class PortofolioView extends GetView<PortofolioController> {
     );
   }
 
-  Widget _awardCard(Size size, Award award) {
+  Widget _awardCard(Award award) {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.whiteColor,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppDimensions.radiusXLarge),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x11000000),
+            color: AppColors.shadowSoftColor,
             blurRadius: 8,
             offset: Offset(0, 3),
           ),
@@ -387,7 +390,9 @@ class PortofolioView extends GetView<PortofolioController> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(AppDimensions.radiusXLarge),
+            ),
             child: AspectRatio(
               aspectRatio: 1.1,
               child:
@@ -403,7 +408,7 @@ class PortofolioView extends GetView<PortofolioController> {
             ),
           ),
           Padding(
-            padding: EdgeInsets.all(size.width * 0.02),
+            padding: const EdgeInsets.all(8),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -416,12 +421,12 @@ class PortofolioView extends GetView<PortofolioController> {
                     fontWeight: FontWeight.w700,
                   ),
                 ),
-                2.0.sh,
+                AppDimensions.spacingExtraSmall.sh,
                 Text(
                   award.dateLabel,
                   style: AppTypography.bodySmall.copyWith(
                     color: AppColors.textBodyColor.withValues(alpha: 0.8),
-                    fontSize: 10,
+                    fontSize: AppTypography.caption.fontSize,
                   ),
                 ),
               ],

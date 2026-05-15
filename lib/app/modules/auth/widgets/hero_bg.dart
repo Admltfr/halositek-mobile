@@ -14,7 +14,7 @@ class HeroBg extends StatelessWidget {
         fit: StackFit.expand,
         children: [
           Image.asset('assets/images/bg-image.png', fit: BoxFit.cover),
-          Container(color: AppColors.blackColor.withOpacity(0.3)),
+          Container(color: AppColors.heroOverlayColor),
         ],
       ),
     );

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:halositek/app/core/constants/app_enums.dart';
+import 'package:halositek/app/core/constants/app_dimensions.dart';
 import 'package:halositek/app/core/widgets/custom_text_button.dart';
 import 'package:halositek/app/modules/auth/widgets/form_button.dart';
 import 'package:halositek/app/modules/auth/widgets/form_label.dart';
@@ -59,7 +60,7 @@ class LoginView extends GetView<LoginController> {
               color: AppColors.primaryColor,
             ),
           ),
-          4.0.sh,
+          AppDimensions.spacingXSmall.sh,
           Text(
             'Please enter your details',
             style: AppTypography.bodyMedium.copyWith(
@@ -84,8 +85,8 @@ class LoginView extends GetView<LoginController> {
         decoration: const BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(44),
-            topRight: Radius.circular(44),
+            topLeft: Radius.circular(AppDimensions.radiusPill),
+            topRight: Radius.circular(AppDimensions.radiusPill),
           ),
         ),
         child: SingleChildScrollView(
@@ -99,14 +100,14 @@ class LoginView extends GetView<LoginController> {
                   fontWeight: FontWeight.w700,
                 ),
               ),
-              8.0.sh,
+              AppDimensions.spacingMedium.sh,
               Text(
                 'Please proceed with the exploration',
                 style: AppTypography.bodyMedium.copyWith(
                   color: AppColors.textBodyColor,
                 ),
               ),
-              28.0.sh,
+              AppDimensions.spacing5XLarge.sh,
 
               Form(
                 autovalidateMode: AutovalidateMode.onUserInteraction,
@@ -114,31 +115,31 @@ class LoginView extends GetView<LoginController> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     FormLabel(text: 'Email Address'),
-                    8.0.sh,
+                    AppDimensions.spacingMedium.sh,
                     FormTextField(
                       controller: controller.emailController,
                       isObscure: false,
                       fieldType: FormFieldType.email,
                     ),
-                    18.0.sh,
+                    AppDimensions.spacing3XLarge.sh,
 
                     FormLabel(text: 'Password'),
-                    8.0.sh,
+                    AppDimensions.spacingMedium.sh,
                     FormTextField(
                       controller: controller.passwordController,
                       isObscure: true,
                       fieldType: FormFieldType.password,
                     ),
-                    10.0.sh,
+                    AppDimensions.spacingSemibold.sh,
                   ],
                 ),
               ),
 
               CustomTextButton(text: 'Forgot Password', onPressed: () {}),
-              16.0.sh,
+              AppDimensions.spacing2XLarge.sh,
 
               FormButton(text: 'LOGIN', onPressed: controller.login),
-              16.0.sh,
+              AppDimensions.spacing2XLarge.sh,
 
               Center(
                 child: Row(

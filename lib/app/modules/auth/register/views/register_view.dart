@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:halositek/app/core/constants/app_colors.dart';
 import 'package:halositek/app/core/constants/app_enums.dart';
+import 'package:halositek/app/core/constants/app_dimensions.dart';
 import 'package:halositek/app/core/constants/app_extensions.dart';
 import 'package:halositek/app/core/constants/app_typography.dart';
 import 'package:halositek/app/core/widgets/custom_text_button.dart';
@@ -40,7 +41,7 @@ class RegisterView extends GetView<RegisterController> {
               color: AppColors.primaryColor,
             ),
           ),
-          4.0.sh,
+          AppDimensions.spacingXSmall.sh,
           Text(
             'Create Your Dream Home with Experts',
             style: AppTypography.bodyMedium.copyWith(
@@ -65,8 +66,8 @@ class RegisterView extends GetView<RegisterController> {
         decoration: const BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(44),
-            topRight: Radius.circular(44),
+            topLeft: Radius.circular(AppDimensions.radiusPill),
+            topRight: Radius.circular(AppDimensions.radiusPill),
           ),
         ),
         child: SingleChildScrollView(
@@ -80,14 +81,14 @@ class RegisterView extends GetView<RegisterController> {
                   fontWeight: FontWeight.w700,
                 ),
               ),
-              8.0.sh,
+              AppDimensions.spacingMedium.sh,
               Text(
                 'Please proceed with the exploration',
                 style: AppTypography.bodyMedium.copyWith(
                   color: AppColors.textBodyColor,
                 ),
               ),
-              16.0.sh,
+              AppDimensions.spacing2XLarge.sh,
 
               Form(
                 autovalidateMode: AutovalidateMode.onUserInteraction,
@@ -95,34 +96,34 @@ class RegisterView extends GetView<RegisterController> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     FormLabel(text: 'Email Address'),
-                    8.0.sh,
+                    AppDimensions.spacingMedium.sh,
                     FormTextField(
                       controller: controller.emailController,
                       isObscure: false,
                       fieldType: FormFieldType.email,
                     ),
-                    18.0.sh,
+                    AppDimensions.spacing3XLarge.sh,
 
                     FormLabel(text: 'Username'),
-                    8.0.sh,
+                    AppDimensions.spacingMedium.sh,
                     FormTextField(
                       controller: controller.nameController,
                       isObscure: false,
                       fieldType: FormFieldType.text,
                     ),
-                    18.0.sh,
+                    AppDimensions.spacing3XLarge.sh,
 
                     FormLabel(text: 'Password'),
-                    8.0.sh,
+                    AppDimensions.spacingMedium.sh,
                     FormTextField(
                       controller: controller.passwordController,
                       isObscure: true,
                       fieldType: FormFieldType.password,
                     ),
-                    18.0.sh,
+                    AppDimensions.spacing3XLarge.sh,
 
                     FormLabel(text: 'Password Confirmation'),
-                    8.0.sh,
+                    AppDimensions.spacingMedium.sh,
                     FormTextField(
                       controller: controller.passwordConfirmationController,
                       isObscure: true,
@@ -137,18 +138,18 @@ class RegisterView extends GetView<RegisterController> {
                         return null;
                       },
                     ),
-                    18.0.sh,
+                    AppDimensions.spacing3XLarge.sh,
 
                     FormLabel(text: 'Role'),
-                    8.0.sh,
+                    AppDimensions.spacingMedium.sh,
                     _dropdown(),
-                    10.0.sh,
+                    AppDimensions.spacingSemibold.sh,
                   ],
                 ),
               ),
 
               FormButton(text: 'REGISTER', onPressed: controller.register),
-              8.0.sh,
+              AppDimensions.spacingMedium.sh,
 
               Center(
                 child: Row(

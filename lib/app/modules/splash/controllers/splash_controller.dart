@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:halositek/app/data/network/token_service.dart';
 
@@ -17,6 +18,8 @@ class SplashController extends GetxController {
     try {
       final accessToken = await _tokenService.getAccessToken();
       final refreshToken = await _tokenService.getRefreshToken();
+      // debugPrint('\x1B[31m ${accessToken}\x1B[0m');
+      // debugPrint('\x1B[31m ${refreshToken}\x1B[0m');
       isLoading.value = false;
       if (accessToken != null && refreshToken != null) {
         Get.offAllNamed('/navigation', arguments: 0);

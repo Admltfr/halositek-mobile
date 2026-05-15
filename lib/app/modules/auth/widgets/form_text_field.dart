@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:halositek/app/core/constants/app_dimensions.dart';
 import 'package:halositek/app/core/constants/app_colors.dart';
 import 'package:halositek/app/core/constants/app_enums.dart';
 
@@ -44,15 +45,15 @@ class FormTextField extends StatelessWidget {
       decoration: InputDecoration(
         isDense: true,
         contentPadding: const EdgeInsets.symmetric(
-          horizontal: 10,
-          vertical: 10,
+          horizontal: AppDimensions.inputContentPadding,
+          vertical: AppDimensions.inputVerticalPadding,
         ),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(0),
+          borderRadius: BorderRadius.circular(AppDimensions.radiusNone),
           borderSide: const BorderSide(color: AppColors.formBorderColor),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(0),
+          borderRadius: BorderRadius.circular(AppDimensions.radiusNone),
           borderSide: const BorderSide(color: AppColors.formBorderColor),
         ),
         focusedBorder: const OutlineInputBorder(

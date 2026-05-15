@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:halositek/app/core/constants/app_colors.dart';
+import 'package:halositek/app/core/constants/app_dimensions.dart';
 import 'package:halositek/app/core/constants/app_extensions.dart';
 import 'package:halositek/app/core/constants/app_typography.dart';
 import 'package:halositek/app/data/models/catalog.dart';
@@ -29,11 +30,11 @@ class DesignView extends GetView<DesignController> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _topBarSection(size),
-              14.0.sh,
+              AppDimensions.spacingXLarge.sh,
               _searchSection(size),
-              14.0.sh,
+              AppDimensions.spacingXLarge.sh,
               _catalogSection(size),
-              10.0.sh,
+              AppDimensions.spacingSemibold.sh,
             ],
           ),
         ),
@@ -69,7 +70,7 @@ class DesignView extends GetView<DesignController> {
       padding: EdgeInsets.symmetric(horizontal: size.width * 0.03),
       decoration: BoxDecoration(
         color: AppColors.whiteColor,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppDimensions.radiusXLarge),
         border: Border.all(
           color: AppColors.formBorderColor.withValues(alpha: 0.35),
         ),
@@ -139,7 +140,9 @@ class DesignView extends GetView<DesignController> {
               children: List.generate(catalogs.length, (index) {
                 final isLast = index == catalogs.length - 1;
                 return Padding(
-                  padding: EdgeInsets.only(bottom: isLast ? 0 : 15),
+                  padding: EdgeInsets.only(
+                    bottom: isLast ? 0 : AppDimensions.spacingXLarge,
+                  ),
                   child: _catalogItem(
                     size: size,
                     catalog: catalogs[index],
@@ -157,7 +160,7 @@ class DesignView extends GetView<DesignController> {
 
           if (!isLoading && !hasData)
             Padding(
-              padding: const EdgeInsets.only(top: 15),
+              padding: const EdgeInsets.only(top: AppDimensions.spacingXLarge),
               child: Text(
                 'Belum ada katalog',
                 style: AppTypography.bodySmall.copyWith(
@@ -190,10 +193,10 @@ class DesignView extends GetView<DesignController> {
         width: double.infinity,
         decoration: BoxDecoration(
           color: AppColors.whiteColor,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(AppDimensions.radius2XLarge),
           boxShadow: const [
             BoxShadow(
-              color: Color(0x11000000),
+              color: AppColors.shadowSoftColor,
               blurRadius: 10,
               offset: Offset(0, 5),
             ),
@@ -206,7 +209,7 @@ class DesignView extends GetView<DesignController> {
               children: [
                 ClipRRect(
                   borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(15),
+                    top: Radius.circular(AppDimensions.radius3XLarge),
                   ),
                   child: AspectRatio(
                     aspectRatio: 1.50,
@@ -260,9 +263,17 @@ class DesignView extends GetView<DesignController> {
                       (index) {
                         final isActive = index == activeIndex;
                         return Container(
-                          margin: const EdgeInsets.symmetric(horizontal: 3),
-                          width: isActive ? 8 : 6,
-                          height: isActive ? 8 : 6,
+                          margin: const EdgeInsets.symmetric(
+                            horizontal: AppDimensions.spacingTiny,
+                          ),
+                          width:
+                              isActive
+                                  ? AppDimensions.spacingMedium
+                                  : AppDimensions.spacingSmall,
+                          height:
+                              isActive
+                                  ? AppDimensions.spacingMedium
+                                  : AppDimensions.spacingSmall,
                           decoration: BoxDecoration(
                             color:
                                 isActive
@@ -298,14 +309,16 @@ class DesignView extends GetView<DesignController> {
                           color: AppColors.secondaryColor.withValues(
                             alpha: 0.18,
                           ),
-                          borderRadius: BorderRadius.circular(5),
+                          borderRadius: BorderRadius.circular(
+                            AppDimensions.radiusSmall,
+                          ),
                         ),
                         child: Text(
                           label,
                           style: AppTypography.bodySmall.copyWith(
                             color: AppColors.primaryColor,
                             fontWeight: FontWeight.w700,
-                            fontSize: 10,
+                            fontSize: AppTypography.caption.fontSize,
                           ),
                         ),
                       ),
@@ -314,7 +327,7 @@ class DesignView extends GetView<DesignController> {
                         specs,
                         style: AppTypography.bodySmall.copyWith(
                           color: AppColors.textBodyColor,
-                          fontSize: 11,
+                          fontSize: AppTypography.captionLarge.fontSize,
                         ),
                       ),
                       const Spacer(),
@@ -328,7 +341,7 @@ class DesignView extends GetView<DesignController> {
                               catalog.liked
                                   ? AppColors.errorColor
                                   : AppColors.formBorderColor,
-                          size: 19,
+                          size: AppDimensions.iconSizeLarge,
                         ),
                       ),
                     ],

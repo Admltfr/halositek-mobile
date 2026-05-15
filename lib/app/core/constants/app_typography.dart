@@ -38,4 +38,22 @@ class AppTypography {
     fontWeight: FontWeight.normal,
     fontFamily: fontFamily,
   );
+
+  static const TextStyle captionLarge = TextStyle(
+    fontSize: 11,
+    fontWeight: FontWeight.normal,
+    fontFamily: fontFamily,
+  );
+
+  static const TextStyle caption = TextStyle(
+    fontSize: 10,
+    fontWeight: FontWeight.normal,
+    fontFamily: fontFamily,
+  );
+
+  static const TextStyle captionSmall = TextStyle(
+    fontSize: 9,
+    fontWeight: FontWeight.normal,
+    fontFamily: fontFamily,
+  );
 }

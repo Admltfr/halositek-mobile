@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:halositek/app/core/constants/app_colors.dart';
+import 'package:halositek/app/core/constants/app_dimensions.dart';
 import 'package:halositek/app/core/constants/app_extensions.dart';
 import 'package:halositek/app/core/constants/app_typography.dart';
 import 'package:halositek/app/data/models/catalog.dart';
@@ -60,11 +61,11 @@ class DetailView extends GetView<DetailController> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _priceSection(size),
-                        14.0.sh,
+                        AppDimensions.spacingXLarge.sh,
                         _descriptionSection(project),
-                        14.0.sh,
+                        AppDimensions.spacingXLarge.sh,
                         _layoutSection(size),
-                        20.0.sh,
+                        AppDimensions.spacing4XLarge.sh,
                       ],
                     ),
                   ),
@@ -88,13 +89,13 @@ class DetailView extends GetView<DetailController> {
         child: Row(
           children: [
             InkWell(
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(AppDimensions.radius4XLarge),
               onTap: controller.goBack,
               child: const Padding(
-                padding: EdgeInsets.all(4),
+                padding: EdgeInsets.all(AppDimensions.spacingXSmall),
                 child: Icon(
                   Icons.arrow_back_ios_new_rounded,
-                  size: 14,
+                  size: AppDimensions.iconSizeSmall,
                   color: AppColors.textHeadingColor,
                 ),
               ),
@@ -153,9 +154,17 @@ class DetailView extends GetView<DetailController> {
               children: List.generate(images.length, (index) {
                 final isActive = index == active;
                 return Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 3),
-                  width: isActive ? 8 : 6,
-                  height: isActive ? 8 : 6,
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: AppDimensions.spacingTiny,
+                  ),
+                  width:
+                      isActive
+                          ? AppDimensions.spacingMedium
+                          : AppDimensions.spacingSmall,
+                  height:
+                      isActive
+                          ? AppDimensions.spacingMedium
+                          : AppDimensions.spacingSmall,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color:
@@ -181,7 +190,7 @@ class DetailView extends GetView<DetailController> {
       padding: EdgeInsets.all(size.width * 0.03),
       decoration: BoxDecoration(
         color: AppColors.whiteColor,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(AppDimensions.radiusLarge),
         border: Border.all(
           color: AppColors.formBorderColor.withValues(alpha: 0.25),
         ),
@@ -198,12 +207,14 @@ class DetailView extends GetView<DetailController> {
                 ),
                 decoration: BoxDecoration(
                   color: AppColors.secondaryColor.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(4),
+                  borderRadius: BorderRadius.circular(
+                    AppDimensions.radiusXSmall,
+                  ),
                 ),
                 child: Text(
                   p.style.toUpperCase(),
                   style: AppTypography.bodySmall.copyWith(
-                    fontSize: 9,
+                    fontSize: AppTypography.captionSmall.fontSize,
                     color: AppColors.primaryColor,
                     fontWeight: FontWeight.w700,
                   ),
@@ -214,7 +225,7 @@ class DetailView extends GetView<DetailController> {
                 controller.areaDisplay,
                 style: AppTypography.bodySmall.copyWith(
                   color: AppColors.textBodyColor,
-                  fontSize: 10,
+                  fontSize: AppTypography.caption.fontSize,
                 ),
               ),
               const Spacer(),
@@ -224,7 +235,7 @@ class DetailView extends GetView<DetailController> {
                   p.liked
                       ? Icons.favorite_rounded
                       : Icons.favorite_border_rounded,
-                  size: 17,
+                  size: AppDimensions.iconSizeMedium,
                   color:
                       p.liked
                           ? AppColors.errorColor
@@ -248,7 +259,7 @@ class DetailView extends GetView<DetailController> {
               Text(
                 p.likesCount.toString(),
                 style: AppTypography.bodySmall.copyWith(
-                  fontSize: 10,
+                  fontSize: AppTypography.caption.fontSize,
                   color: AppColors.textBodyColor.withValues(alpha: 0.75),
                 ),
               ),
@@ -284,7 +295,7 @@ class DetailView extends GetView<DetailController> {
                       controller.architectEmail,
                       style: AppTypography.bodySmall.copyWith(
                         color: AppColors.textBodyColor,
-                        fontSize: 10,
+                        fontSize: AppTypography.caption.fontSize,
                       ),
                     ),
                   ],
@@ -331,7 +342,7 @@ class DetailView extends GetView<DetailController> {
           title,
           style: AppTypography.bodySmall.copyWith(
             color: AppColors.textBodyColor,
-            fontSize: 9,
+            fontSize: AppTypography.captionSmall.fontSize,
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -395,8 +406,8 @@ class DetailView extends GetView<DetailController> {
             width: double.infinity,
             height: size.height * 0.2,
             decoration: BoxDecoration(
-              color: const Color(0xFFE9E9E9),
-              borderRadius: BorderRadius.circular(8),
+              color: AppColors.subtleSurfaceColor,
+              borderRadius: BorderRadius.circular(AppDimensions.radiusMedium),
               border: Border.all(
                 color: AppColors.formBorderColor.withValues(alpha: 0.25),
               ),
@@ -414,10 +425,13 @@ class DetailView extends GetView<DetailController> {
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: layouts.length,
-              separatorBuilder: (_, __) => SizedBox(width: size.width * 0.03),
+              separatorBuilder:
+                  (_, __) => SizedBox(width: AppDimensions.spacingSmall),
               itemBuilder: (_, index) {
                 return ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(
+                    AppDimensions.radiusMedium,
+                  ),
                   child: Image.network(
                     layouts[index],
                     width: size.width * 0.7,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:halositek/app/core/constants/app_dimensions.dart';
 import 'package:halositek/app/core/constants/app_colors.dart';
 import 'package:halositek/app/core/constants/app_typography.dart';
 
@@ -18,9 +19,11 @@ class FormButton extends StatelessWidget {
           backgroundColor: AppColors.primaryColor,
           foregroundColor: AppColors.whiteColor,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(AppDimensions.radiusLarge),
           ),
-          padding: const EdgeInsets.symmetric(vertical: 10),
+          padding: const EdgeInsets.symmetric(
+            vertical: AppDimensions.inputVerticalPadding,
+          ),
           elevation: 2,
         ),
         child: Text(

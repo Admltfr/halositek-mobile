@@ -6,6 +6,10 @@ class AppColors {
   static const Color accentColor = Color(0xFF334155);
   static const Color whiteColor = Color(0xFFFFFFFF);
   static const Color blackColor = Color(0xFF000000);
+  static const Color shadowColor = Color(0x12000000);
+  static const Color shadowSoftColor = Color(0x11000000);
+  static const Color heroOverlayColor = Color(0x4D000000);
+  static const Color subtleSurfaceColor = Color(0xFFE9E9E9);
 
   static const Color backgroundColor = Color(0xFFFFFFFF);
 

@@ -1,6 +1,11 @@
 import 'package:get/get.dart';
+import 'package:halositek/app/data/network/token_service.dart';
 
 class NavigationController extends GetxController {
+  final TokenService _tokenService;
+
+  NavigationController(this._tokenService);
+
   final RxInt currentIndex = 0.obs;
 
   final navigatorKeys = List.generate(4, (index) {
@@ -21,6 +26,8 @@ class NavigationController extends GetxController {
   void onReady() {
     super.onReady();
   }
+
+  void isArchitect() {}
 
   void changeIndex(int index) {
     if (currentIndex.value == index) {

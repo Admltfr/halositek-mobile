@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:halositek/app/core/constants/app_colors.dart';
+import 'package:halositek/app/core/constants/app_dimensions.dart';
 import 'package:halositek/app/core/constants/app_extensions.dart';
 import 'package:halositek/app/core/constants/app_typography.dart';
 import 'package:halositek/app/core/widgets/custom_text_button.dart';
@@ -31,19 +32,19 @@ class HomeView extends GetView<HomeController> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _headerSection(size),
-              14.0.sh,
+              AppDimensions.spacingXLarge.sh,
               _searchSection(size),
-              16.0.sh,
+              AppDimensions.spacing2XLarge.sh,
               _galleryHeaderSection(),
-              10.0.sh,
+              AppDimensions.spacingSemibold.sh,
               _catalogSection(size),
-              14.0.sh,
+              AppDimensions.spacingXLarge.sh,
               _aiAssistantSection(size),
-              16.0.sh,
+              AppDimensions.spacing2XLarge.sh,
               _architectHeaderSection(),
-              12.0.sh,
+              AppDimensions.spacingLarge.sh,
               _architectSection(size),
-              10.0.sh,
+              AppDimensions.spacingSemibold.sh,
             ],
           ),
         ),
@@ -87,13 +88,13 @@ class HomeView extends GetView<HomeController> {
               height: size.width * 0.10,
               decoration: BoxDecoration(
                 color: AppColors.whiteColor,
-                borderRadius: BorderRadius.circular(100),
+                borderRadius: BorderRadius.circular(AppDimensions.radiusCircle),
                 border: Border.all(
                   color: AppColors.formBorderColor.withValues(alpha: 0.25),
                 ),
                 boxShadow: const [
                   BoxShadow(
-                    color: Color(0x12000000),
+                    color: AppColors.shadowColor,
                     blurRadius: 8,
                     offset: Offset(0, 3),
                   ),
@@ -129,7 +130,7 @@ class HomeView extends GetView<HomeController> {
       padding: EdgeInsets.symmetric(horizontal: size.width * 0.03),
       decoration: BoxDecoration(
         color: AppColors.whiteColor,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppDimensions.radiusXLarge),
         border: Border.all(
           color: AppColors.formBorderColor.withValues(alpha: 0.35),
         ),
@@ -224,7 +225,9 @@ class HomeView extends GetView<HomeController> {
               children: List.generate(catalogs.length, (index) {
                 final isLast = index == catalogs.length - 1;
                 return Padding(
-                  padding: EdgeInsets.only(bottom: isLast ? 0 : 15),
+                  padding: EdgeInsets.only(
+                    bottom: isLast ? 0 : AppDimensions.spacingXLarge,
+                  ),
                   child: _catalogItem(
                     size: size,
                     catalog: catalogs[index],
@@ -242,7 +245,7 @@ class HomeView extends GetView<HomeController> {
 
           if (!isLoading && !hasData)
             Padding(
-              padding: const EdgeInsets.only(top: 15),
+              padding: const EdgeInsets.only(top: AppDimensions.spacingXLarge),
               child: Text(
                 'Belum ada katalog',
                 style: AppTypography.bodySmall.copyWith(
@@ -275,10 +278,10 @@ class HomeView extends GetView<HomeController> {
         width: double.infinity,
         decoration: BoxDecoration(
           color: AppColors.whiteColor,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(AppDimensions.radius2XLarge),
           boxShadow: const [
             BoxShadow(
-              color: Color(0x11000000),
+              color: AppColors.shadowSoftColor,
               blurRadius: 10,
               offset: Offset(0, 5),
             ),
@@ -291,7 +294,7 @@ class HomeView extends GetView<HomeController> {
               children: [
                 ClipRRect(
                   borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(15),
+                    top: Radius.circular(AppDimensions.radius3XLarge),
                   ),
                   child: AspectRatio(
                     aspectRatio: 1.50,
@@ -345,9 +348,17 @@ class HomeView extends GetView<HomeController> {
                       (index) {
                         final isActive = index == activeIndex;
                         return Container(
-                          margin: const EdgeInsets.symmetric(horizontal: 3),
-                          width: isActive ? 8 : 6,
-                          height: isActive ? 8 : 6,
+                          margin: const EdgeInsets.symmetric(
+                            horizontal: AppDimensions.spacingTiny,
+                          ),
+                          width:
+                              isActive
+                                  ? AppDimensions.spacingMedium
+                                  : AppDimensions.spacingSmall,
+                          height:
+                              isActive
+                                  ? AppDimensions.spacingMedium
+                                  : AppDimensions.spacingSmall,
                           decoration: BoxDecoration(
                             color:
                                 isActive
@@ -383,14 +394,16 @@ class HomeView extends GetView<HomeController> {
                           color: AppColors.secondaryColor.withValues(
                             alpha: 0.18,
                           ),
-                          borderRadius: BorderRadius.circular(5),
+                          borderRadius: BorderRadius.circular(
+                            AppDimensions.radiusSmall,
+                          ),
                         ),
                         child: Text(
                           label,
                           style: AppTypography.bodySmall.copyWith(
                             color: AppColors.primaryColor,
                             fontWeight: FontWeight.w700,
-                            fontSize: 10,
+                            fontSize: AppTypography.caption.fontSize,
                           ),
                         ),
                       ),
@@ -399,7 +412,7 @@ class HomeView extends GetView<HomeController> {
                         specs,
                         style: AppTypography.bodySmall.copyWith(
                           color: AppColors.textBodyColor,
-                          fontSize: 11,
+                          fontSize: AppTypography.captionLarge.fontSize,
                         ),
                       ),
                       const Spacer(),
@@ -418,7 +431,7 @@ class HomeView extends GetView<HomeController> {
                       ),
                     ],
                   ),
-                  8.0.sh,
+                  AppDimensions.spacingMedium.sh,
                   Row(
                     children: [
                       Expanded(
@@ -458,7 +471,7 @@ class HomeView extends GetView<HomeController> {
       ),
       decoration: BoxDecoration(
         color: AppColors.primaryColor,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppDimensions.radius2XLarge),
       ),
       child: Row(
         children: [
@@ -488,7 +501,7 @@ class HomeView extends GetView<HomeController> {
                     height: 1.12,
                   ),
                 ),
-                4.0.sh,
+                AppDimensions.spacingXSmall.sh,
                 Text(
                   'Describe your dream home and let AI\n'
                   'generate a concept for you.',
@@ -507,7 +520,7 @@ class HomeView extends GetView<HomeController> {
               backgroundColor: AppColors.whiteColor,
               foregroundColor: AppColors.primaryColor,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(AppDimensions.radiusLarge),
               ),
               padding: EdgeInsets.symmetric(
                 horizontal: size.width * 0.045,
@@ -614,7 +627,7 @@ class HomeView extends GetView<HomeController> {
       child: Column(
         children: [
           InkWell(
-            borderRadius: BorderRadius.circular(50),
+            borderRadius: BorderRadius.circular(AppDimensions.radiusRound),
             onTap: onTap,
             child: CircleAvatar(
               radius: size.width * 0.058,
@@ -653,7 +666,7 @@ class HomeView extends GetView<HomeController> {
               ),
             ),
           ),
-          6.0.sh,
+          AppDimensions.spacingSmall.sh,
           Text(
             name,
             maxLines: 1,

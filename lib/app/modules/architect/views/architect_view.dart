@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:halositek/app/core/constants/app_colors.dart';
+import 'package:halositek/app/core/constants/app_dimensions.dart';
 import 'package:halositek/app/core/constants/app_extensions.dart';
 import 'package:halositek/app/core/constants/app_typography.dart';
 import 'package:halositek/app/data/models/architect.dart';
@@ -29,11 +30,11 @@ class ArchitectView extends GetView<ArchitectController> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _topBarSection(size),
-              14.0.sh,
+              AppDimensions.spacingXLarge.sh,
               _searchSection(size),
-              14.0.sh,
+              AppDimensions.spacingXLarge.sh,
               _architectListSection(size),
-              10.0.sh,
+              AppDimensions.spacingSemibold.sh,
             ],
           ),
         ),
@@ -69,7 +70,7 @@ class ArchitectView extends GetView<ArchitectController> {
       padding: EdgeInsets.symmetric(horizontal: size.width * 0.03),
       decoration: BoxDecoration(
         color: AppColors.whiteColor,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppDimensions.radiusXLarge),
         border: Border.all(
           color: AppColors.formBorderColor.withValues(alpha: 0.35),
         ),
@@ -137,7 +138,7 @@ class ArchitectView extends GetView<ArchitectController> {
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           itemCount: architects.length,
-          separatorBuilder: (_, __) => 10.0.sh,
+          separatorBuilder: (_, __) => AppDimensions.spacingSemibold.sh,
           itemBuilder: (_, index) {
             return _architectCard(size: size, architect: architects[index]);
           },
@@ -157,7 +158,7 @@ class ArchitectView extends GetView<ArchitectController> {
         padding: EdgeInsets.all(size.width * 0.03),
         decoration: BoxDecoration(
           color: AppColors.whiteColor,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(AppDimensions.radius2XLarge),
           border: Border.all(
             color: AppColors.formBorderColor.withValues(alpha: 0.25),
           ),
@@ -193,7 +194,7 @@ class ArchitectView extends GetView<ArchitectController> {
                             ),
                   ),
                 ),
-                10.0.sw,
+                AppDimensions.spacingSemibold.sw,
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -255,7 +256,7 @@ class ArchitectView extends GetView<ArchitectController> {
 
   Widget _projectThumb(Size size, String imagePath) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(AppDimensions.radiusMedium),
       child: AspectRatio(
         aspectRatio: 1.25,
         child: Image.asset(imagePath, fit: BoxFit.cover),
@@ -265,7 +266,7 @@ class ArchitectView extends GetView<ArchitectController> {
 
   Widget _moreThumb({required Size size, required String label}) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(AppDimensions.radiusMedium),
       child: AspectRatio(
         aspectRatio: 1.25,
         child: Stack(
