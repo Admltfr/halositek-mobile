@@ -22,6 +22,7 @@ class DesignView extends GetView<DesignController> {
       backgroundColor: AppColors.whiteColor,
       body: SafeArea(
         child: SingleChildScrollView(
+          controller: controller.scrollController,
           padding: EdgeInsets.symmetric(
             horizontal: size.width * 0.05,
             vertical: size.height * 0.01,
@@ -106,6 +107,7 @@ class DesignView extends GetView<DesignController> {
   Widget _catalogSection(Size size) {
     return Obx(() {
       final isLoading = controller.isLoadingCatalog.value;
+      final isLoadingMore = controller.isLoadingMore.value;
       final hasError = controller.catalogError.value.isNotEmpty;
       final hasData = controller.catalogs.isNotEmpty;
 
@@ -119,7 +121,7 @@ class DesignView extends GetView<DesignController> {
               ),
             ),
             TextButton(
-              onPressed: controller.fetchCatalogs,
+              onPressed: () => controller.fetchCatalogs(reset: true),
               child: const Text('Coba Lagi'),
             ),
           ],
@@ -128,14 +130,14 @@ class DesignView extends GetView<DesignController> {
 
       final catalogs =
           hasData
-              ? controller.catalogs.take(3).toList()
+              ? controller.catalogs
               : List.generate(3, (_) => Catalog.dummy());
 
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Skeletonizer(
-            enabled: isLoading,
+            enabled: isLoading && !hasData,
             child: Column(
               children: List.generate(catalogs.length, (index) {
                 final isLast = index == catalogs.length - 1;
@@ -157,14 +159,17 @@ class DesignView extends GetView<DesignController> {
               }),
             ),
           ),
-
-          if (!isLoading && !hasData)
+          if (isLoadingMore)
             Padding(
               padding: const EdgeInsets.only(top: AppDimensions.spacingXLarge),
-              child: Text(
-                'Belum ada katalog',
-                style: AppTypography.bodySmall.copyWith(
-                  color: AppColors.textBodyColor,
+              child: Center(
+                child: SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.2,
+                    color: AppColors.primaryColor,
+                  ),
                 ),
               ),
             ),

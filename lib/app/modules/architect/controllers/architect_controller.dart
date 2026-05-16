@@ -1,18 +1,27 @@
+// lib/app/modules/architect/controllers/architect_controller.dart
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:halositek/app/data/models/architect.dart';
 import 'package:halositek/app/data/network/architect_service.dart';
 import 'package:halositek/app/modules/navigation/controllers/navigation_controller.dart';
 
 class ArchitectController extends GetxController {
+  static const int _perPage = 12;
+
   final ArchitectService _architectService;
 
   ArchitectController(this._architectService);
 
   final architects = <Architect>[].obs;
-
   final isLoading = false.obs;
+  final isLoadingMore = false.obs;
+  final hasMore = true.obs;
   final errorMessage = ''.obs;
   final searchQuery = ''.obs;
+
+  final ScrollController scrollController = ScrollController();
+
+  int _page = 1;
 
   bool get hasData => architects.isNotEmpty;
 
@@ -24,21 +33,71 @@ class ArchitectController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    fetchArchitects();
+    scrollController.addListener(_onScroll);
+    fetchArchitects(reset: true);
   }
 
-  Future<void> fetchArchitects() async {
+  @override
+  void onClose() {
+    scrollController.removeListener(_onScroll);
+    scrollController.dispose();
+    super.onClose();
+  }
+
+  void _onScroll() {
+    if (!scrollController.hasClients) return;
+
+    final triggerPoint = scrollController.position.maxScrollExtent - 200;
+    if (scrollController.position.pixels >= triggerPoint) {
+      loadMoreArchitects();
+    }
+  }
+
+  Future<void> fetchArchitects({bool reset = false}) async {
+    if (reset) {
+      _page = 1;
+      hasMore.value = true;
+      architects.clear();
+    } else {
+      if (!hasMore.value || isLoading.value || isLoadingMore.value) {
+        return;
+      }
+    }
+
     try {
-      isLoading.value = true;
+      if (reset) {
+        isLoading.value = true;
+      } else {
+        isLoadingMore.value = true;
+      }
       errorMessage.value = '';
 
-      final result = await _architectService.getArchitects(perPage: 12);
-      architects.assignAll(result);
+      final result = await _architectService.getArchitects(
+        page: _page,
+        perPage: _perPage,
+      );
+
+      if (reset) {
+        architects.assignAll(result);
+      } else {
+        architects.addAll(result);
+      }
+
+      hasMore.value = result.length == _perPage;
+      if (hasMore.value) {
+        _page++;
+      }
     } catch (e) {
       errorMessage.value = e.toString();
     } finally {
       isLoading.value = false;
+      isLoadingMore.value = false;
     }
+  }
+
+  Future<void> loadMoreArchitects() async {
+    if (!hasMore.value || isLoading.value || isLoadingMore.value) return;
+    await fetchArchitects();
   }
 
   int projectCompletedCount(Architect architect) {

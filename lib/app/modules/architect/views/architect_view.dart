@@ -22,6 +22,7 @@ class ArchitectView extends GetView<ArchitectController> {
       backgroundColor: AppColors.whiteColor,
       body: SafeArea(
         child: SingleChildScrollView(
+          controller: controller.scrollController,
           padding: EdgeInsets.symmetric(
             horizontal: size.width * 0.05,
             vertical: size.height * 0.01,
@@ -106,6 +107,7 @@ class ArchitectView extends GetView<ArchitectController> {
   Widget _architectListSection(Size size) {
     return Obx(() {
       final isLoading = controller.isLoading.value;
+      final isLoadingMore = controller.isLoadingMore.value;
       final hasError = controller.errorMessage.value.isNotEmpty;
       final hasData = controller.hasData;
 
@@ -120,7 +122,7 @@ class ArchitectView extends GetView<ArchitectController> {
               ),
             ),
             TextButton(
-              onPressed: controller.fetchArchitects,
+              onPressed: () => controller.fetchArchitects(reset: true),
               child: const Text('Coba Lagi'),
             ),
           ],
@@ -132,17 +134,36 @@ class ArchitectView extends GetView<ArchitectController> {
               ? controller.architects
               : List.generate(3, (_) => Architect.dummy());
 
-      return Skeletonizer(
-        enabled: isLoading && !hasData,
-        child: ListView.separated(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: architects.length,
-          separatorBuilder: (_, __) => AppDimensions.spacingSemibold.sh,
-          itemBuilder: (_, index) {
-            return _architectCard(size: size, architect: architects[index]);
-          },
-        ),
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Skeletonizer(
+            enabled: isLoading && !hasData,
+            child: ListView.separated(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: architects.length,
+              separatorBuilder: (_, __) => AppDimensions.spacingSemibold.sh,
+              itemBuilder: (_, index) {
+                return _architectCard(size: size, architect: architects[index]);
+              },
+            ),
+          ),
+          if (isLoadingMore)
+            Padding(
+              padding: const EdgeInsets.only(top: AppDimensions.spacingXLarge),
+              child: Center(
+                child: SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.2,
+                    color: AppColors.primaryColor,
+                  ),
+                ),
+              ),
+            ),
+        ],
       );
     });
   }
