@@ -1,9 +1,12 @@
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:halositek/app/data/network/auth_service.dart';
 import 'package:halositek/app/data/network/token_service.dart';
 
 class SplashController extends GetxController {
-  final TokenService _tokenService = Get.find<TokenService>();
+  final TokenService _tokenService;
+  final AuthService _authService;
+
+  SplashController(this._authService, this._tokenService);
 
   final isLoading = true.obs;
 
@@ -18,15 +21,26 @@ class SplashController extends GetxController {
     try {
       final accessToken = await _tokenService.getAccessToken();
       final refreshToken = await _tokenService.getRefreshToken();
-      // debugPrint('\x1B[31m ${accessToken}\x1B[0m');
-      // debugPrint('\x1B[31m ${refreshToken}\x1B[0m');
-      isLoading.value = false;
-      if (accessToken != null && refreshToken != null) {
+      if (accessToken != null && accessToken.isNotEmpty) {
+        await _authService.validateSession();
+        isLoading.value = false;
         Get.offAllNamed('/navigation', arguments: 0);
-      } else {
-        Get.offAllNamed('/login');
+        return;
       }
-    } catch (e) {
+
+      if (refreshToken != null && refreshToken.isNotEmpty) {
+        final newAccessToken = await _authService.refreshToken(refreshToken);
+        if (newAccessToken != null) {
+          await _authService.validateSession();
+          isLoading.value = false;
+          Get.offAllNamed('/navigation', arguments: 0);
+          return;
+        }
+      }
+
+      isLoading.value = false;
+      Get.offAllNamed('/login');
+    } catch (_) {
       isLoading.value = false;
       Get.offAllNamed('/login');
     }

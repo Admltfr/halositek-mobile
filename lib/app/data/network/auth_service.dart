@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
 // import 'package:flutter/material.dart';
 import 'api_client.dart';
 import 'token_service.dart';
@@ -54,16 +55,18 @@ class AuthService {
       ),
     );
 
+    // debugPrint('\x1B[31m ${response.data['data']}\x1B[0m');
+
     return _apiClient.customResponse(response, () async {
       _tokenService.setAccessToken(response.data['data']['access_token']);
       _tokenService.setRefreshToken(response.data['data']['refresh_token']);
-      _tokenService.setRole(response.data['data']['role']);
+      // _tokenService.setRole(response.data['data']['role']);
     }, 'Login');
   }
 
   Future<String?> refreshToken(String token) async {
     final response = await _apiClient.public.post(
-      '/refresh-token',
+      '/auth/refresh-token',
       data: {'refresh_token': token},
       options: Options(
         validateStatus: (status) {
@@ -100,5 +103,17 @@ class AuthService {
       await _tokenService.clearAccessToken();
       await _tokenService.clearRefreshToken();
     }, 'Logout');
+  }
+
+  Future<void> validateSession() async {
+    final response = await _apiClient.private.get(
+      '/me',
+      options: Options(
+        validateStatus: (status) {
+          return status != null && status < 500;
+        },
+      ),
+    );
+    return _apiClient.customResponse(response, () async {}, 'Validate session');
   }
 }
