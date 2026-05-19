@@ -1,6 +1,4 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/material.dart';
-// import 'package:flutter/material.dart';
 import 'api_client.dart';
 import 'token_service.dart';
 
@@ -55,12 +53,12 @@ class AuthService {
       ),
     );
 
-    // debugPrint('\x1B[31m ${response.data['data']}\x1B[0m');
+    // debugPrint('\x1B[31m ${response.data['data']['role']}\x1B[0m');
 
     return _apiClient.customResponse(response, () async {
       _tokenService.setAccessToken(response.data['data']['access_token']);
       _tokenService.setRefreshToken(response.data['data']['refresh_token']);
-      // _tokenService.setRole(response.data['data']['role']);
+      _tokenService.setRole(response.data['data']['role']);
     }, 'Login');
   }
 

@@ -22,6 +22,7 @@ class HomeView extends GetView<HomeController> {
 
     return Scaffold(
       backgroundColor: AppColors.whiteColor,
+      floatingActionButton: _floatingActionButton(),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: EdgeInsets.symmetric(
@@ -80,47 +81,52 @@ class HomeView extends GetView<HomeController> {
             ),
           ),
         ),
-        Stack(
-          clipBehavior: Clip.none,
-          children: [
-            Container(
-              width: size.width * 0.10,
-              height: size.width * 0.10,
-              decoration: BoxDecoration(
-                color: AppColors.whiteColor,
-                borderRadius: BorderRadius.circular(AppDimensions.radiusCircle),
-                border: Border.all(
-                  color: AppColors.formBorderColor.withValues(alpha: 0.25),
-                ),
-                boxShadow: const [
-                  BoxShadow(
-                    color: AppColors.shadowColor,
-                    blurRadius: 8,
-                    offset: Offset(0, 3),
-                  ),
-                ],
-              ),
-              child: Icon(
-                Icons.notifications_none_rounded,
-                color: AppColors.accentColor,
-                size: size.width * 0.055,
-              ),
+      ],
+    );
+  }
+
+  Widget _floatingActionButton() {
+    return Obx(
+      () => Stack(
+        clipBehavior: Clip.none,
+        children: [
+          FloatingActionButton(
+            onPressed: controller.openChatListFromHome,
+            backgroundColor: AppColors.primaryColor,
+            elevation: 4,
+            child: const Icon(
+              Icons.chat_bubble_rounded,
+              color: AppColors.whiteColor,
             ),
+          ),
+
+          if (controller.totalUnread.value > 0)
             Positioned(
-              right: -1,
-              top: -1,
+              right: -3,
+              top: -3,
               child: Container(
-                width: size.width * 0.028,
-                height: size.width * 0.028,
+                padding: const EdgeInsets.all(5),
+                constraints: const BoxConstraints(minWidth: 20, minHeight: 20),
                 decoration: const BoxDecoration(
-                  color: AppColors.errorColor,
+                  color: Colors.red,
                   shape: BoxShape.circle,
                 ),
+                child: Center(
+                  child: Text(
+                    controller.totalUnread.value > 99
+                        ? '15+'
+                        : '${controller.totalUnread.value}',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
               ),
             ),
-          ],
-        ),
-      ],
+        ],
+      ),
     );
   }
 

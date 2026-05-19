@@ -1,6 +1,4 @@
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:halositek/app/routes/route_middleware.dart';
 
 import '../modules/architect/bindings/architect_binding.dart';
 import '../modules/architect/views/architect_view.dart';
@@ -8,6 +6,10 @@ import '../modules/auth/login/bindings/login_binding.dart';
 import '../modules/auth/login/views/login_view.dart';
 import '../modules/auth/register/bindings/register_binding.dart';
 import '../modules/auth/register/views/register_view.dart';
+import '../modules/chat_detail/bindings/chat_detail_binding.dart';
+import '../modules/chat_detail/views/chat_detail_view.dart';
+import '../modules/chat_list/bindings/chat_list_binding.dart';
+import '../modules/chat_list/views/chat_list_view.dart';
 import '../modules/design/bindings/design_binding.dart';
 import '../modules/design/views/design_view.dart';
 import '../modules/detail/bindings/detail_binding.dart';
@@ -29,7 +31,6 @@ class AppPages {
   AppPages._();
 
   static const INITIAL = Routes.SPLASH;
-
 
   static final routes = [
     GetPage(
@@ -91,6 +92,16 @@ class AppPages {
       page: () => const SplashView(),
       binding: SplashBinding(),
       transition: Transition.fadeIn,
+    ),
+    GetPage(
+      name: _Paths.CHAT_LIST,
+      page: () => const ChatListView(),
+      binding: ChatListBinding(),
+    ),
+    GetPage(
+      name: _Paths.CHAT_DETAIL,
+      page: () => const ChatDetailView(),
+      binding: ChatDetailBinding(),
     ),
   ];
 }

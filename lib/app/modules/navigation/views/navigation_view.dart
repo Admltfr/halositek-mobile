@@ -3,6 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:halositek/app/modules/architect/bindings/architect_binding.dart';
 import 'package:halositek/app/modules/architect/views/architect_view.dart';
+import 'package:halositek/app/modules/chat_detail/bindings/chat_detail_binding.dart';
+import 'package:halositek/app/modules/chat_detail/views/chat_detail_view.dart';
+import 'package:halositek/app/modules/chat_list/bindings/chat_list_binding.dart';
+import 'package:halositek/app/modules/chat_list/views/chat_list_view.dart';
 import 'package:halositek/app/modules/design/bindings/design_binding.dart';
 import 'package:halositek/app/modules/design/views/design_view.dart';
 import 'package:halositek/app/modules/detail/bindings/detail_binding.dart';
@@ -119,6 +123,26 @@ class NavigationView extends GetView<NavigationController> {
         page: () => const HomeView(),
         binding: HomeBinding(),
       );
+    } else if (settings.name == _TabRoutes.chatList) {
+      return GetPageRoute(
+        routeName: _TabRoutes.chatList,
+        page: () => const ChatListView(),
+        binding: ChatListBinding(),
+      );
+    } else if (settings.name == _TabRoutes.chatDetail) {
+      final arg = settings.arguments;
+      final conversationId =
+          arg is Map ? (arg['conversationId'] ?? '').toString() : '';
+      final title = arg is Map ? (arg['title'] ?? '').toString() : '';
+
+      return GetPageRoute(
+        routeName: _TabRoutes.chatDetail,
+        page: () => const ChatDetailView(),
+        binding: ChatDetailBinding(
+          conversationId: conversationId,
+          title: title,
+        ),
+      );
     }
 
     return _fallbackRoute('Unknown Home route');
@@ -186,4 +210,6 @@ class _TabRoutes {
   static const root = '/';
   static const detail = '/detail';
   static const portofolio = '/portofolio';
+  static const chatList = '/chats';
+  static const chatDetail = '/chat';
 }

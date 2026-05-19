@@ -1,15 +1,22 @@
 import 'package:get/get.dart';
 import 'package:halositek/app/data/models/catalog.dart';
 import 'package:halositek/app/data/models/architect.dart';
+import 'package:halositek/app/data/models/chat_conversation.dart';
 import 'package:halositek/app/data/network/catalog_service.dart';
 import 'package:halositek/app/data/network/architect_service.dart';
+import 'package:halositek/app/data/network/chat_service.dart';
 import 'package:halositek/app/modules/navigation/controllers/navigation_controller.dart';
 
 class HomeController extends GetxController {
   final CatalogService _catalogService;
   final ArchitectService _architectService;
+  final ChatService _chatService;
 
-  HomeController(this._catalogService, this._architectService);
+  HomeController(
+    this._catalogService,
+    this._architectService,
+    this._chatService,
+  );
 
   final catalogs = <Catalog>[].obs;
   final isLoadingCatalog = false.obs;
@@ -19,6 +26,11 @@ class HomeController extends GetxController {
   final architects = <Architect>[].obs;
   final isLoadingArchitect = false.obs;
   final architectError = ''.obs;
+
+  final isLoadingChat = false.obs;
+  final chatError = ''.obs;
+  final conversations = <ChatConversation>[].obs;
+  final totalUnread = 0.obs;
 
   final likingCatalogIds = <String>{}.obs;
 
@@ -48,12 +60,18 @@ class HomeController extends GetxController {
     nav.changeIndex(1);
   }
 
+  void openChatListFromHome() {
+    final nav = Get.find<NavigationController>();
+    nav.navigateTo(tabIndex: 0, route: '/chats');
+  }
+
   final count = 0.obs;
   @override
   void onInit() {
     super.onInit();
     fetchCatalogs();
     fetchArchitects();
+    fetchUnreadBadge();
   }
 
   Future<void> fetchCatalogs() async {
@@ -67,6 +85,27 @@ class HomeController extends GetxController {
       catalogError.value = e.toString();
     } finally {
       isLoadingCatalog.value = false;
+    }
+  }
+
+  Future<void> fetchUnreadBadge() async {
+    try {
+      int total = 0;
+      isLoadingChat.value = true;
+      chatError.value = '';
+
+      final result = await _chatService.getConversations();
+      conversations.assignAll(result);
+
+      for (var c in conversations) {
+        total += c.unreadCount;
+      }
+
+      totalUnread.value = total;
+    } catch (e) {
+      chatError.value = e.toString();
+    } finally {
+      isLoadingChat.value = false;
     }
   }
 
