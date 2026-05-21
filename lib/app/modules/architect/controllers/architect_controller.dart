@@ -106,16 +106,7 @@ class ArchitectController extends GetxController {
 
   void openPortofolio(Architect architect) {
     final nav = Get.find<NavigationController>();
-    nav.navigateTo(
-      tabIndex: 2,
-      route: '/portofolio',
-      arguments: {
-        'architectId': architect.id,
-        'name': architect.name,
-        'headline': architect.headline,
-        'profile_picture': architect.profilePicture,
-      },
-    );
+    nav.navigateTo(tabIndex: 2, route: '/portofolio', arguments: architect.id);
   }
 
   int hiddenProjectsCount(Architect architect) {

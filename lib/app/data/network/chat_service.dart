@@ -1,7 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/widgets.dart';
-import 'package:halositek/app/data/models/chat_conversation.dart';
-import 'package:halositek/app/data/models/chat_message.dart';
+import 'package:halositek/app/data/models/chat.dart';
 import 'package:halositek/app/data/network/api_client.dart';
 
 class ChatService {
@@ -53,7 +52,6 @@ class ChatService {
     required String conversationId,
     required String body,
   }) async {
-    debugPrint('\x1B[31m ${conversationId}\x1B[0m');
     final response = await _apiClient.private.post(
       '/chat/messages',
       data: {'conversation_id': conversationId, 'body': body},
@@ -78,6 +76,37 @@ class ChatService {
       },
       'Send Message',
       isCreated: isCreated,
+    );
+  }
+
+  Future<ChatConversation> createConversation({
+    required List<String> participantIds,
+    String? name,
+    bool isGroup = false,
+  }) async {
+    final response = await _apiClient.private.post(
+      '/chat/conversations',
+      data: {
+        'name': name,
+        'is_group': isGroup,
+        'participant_ids': participantIds,
+      },
+      options: Options(
+        validateStatus: (status) => status != null && status < 500,
+      ),
+    );
+
+    return _apiClient.customResponse(
+      response,
+      () async {
+        final raw = response.data?['data'];
+        if (raw is! Map) {
+          throw Exception('Invalid create conversation response');
+        }
+        return ChatConversation.fromJson(Map<String, dynamic>.from(raw));
+      },
+      'Create Conversation',
+      isCreated: true,
     );
   }
 }

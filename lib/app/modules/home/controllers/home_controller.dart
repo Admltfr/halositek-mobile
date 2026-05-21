@@ -1,7 +1,7 @@
 import 'package:get/get.dart';
 import 'package:halositek/app/data/models/catalog.dart';
 import 'package:halositek/app/data/models/architect.dart';
-import 'package:halositek/app/data/models/chat_conversation.dart';
+import 'package:halositek/app/data/models/chat.dart';
 import 'package:halositek/app/data/network/catalog_service.dart';
 import 'package:halositek/app/data/network/architect_service.dart';
 import 'package:halositek/app/data/network/chat_service.dart';

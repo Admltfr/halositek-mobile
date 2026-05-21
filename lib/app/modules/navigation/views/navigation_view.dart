@@ -93,26 +93,23 @@ class NavigationView extends GetView<NavigationController> {
   }
 
   Widget _buildNavigator({required int tabIndex, required bool active}) {
-    return Offstage(
-      offstage: !active,
-      child: Navigator(
-        key: controller.navigatorKeys[tabIndex],
-        initialRoute: '/',
-        onGenerateRoute: (settings) {
-          switch (tabIndex) {
-            case 0:
-              return _homeRoutes(settings);
-            case 1:
-              return _designRoutes(settings);
-            case 2:
-              return _architectRoutes(settings);
-            case 3:
-              return _profileRoutes(settings);
-            default:
-              return _fallbackRoute('Unknown tab');
-          }
-        },
-      ),
+    return Navigator(
+      key: controller.navigatorKeys[tabIndex],
+      initialRoute: '/',
+      onGenerateRoute: (settings) {
+        switch (tabIndex) {
+          case 0:
+            return _homeRoutes(settings);
+          case 1:
+            return _designRoutes(settings);
+          case 2:
+            return _architectRoutes(settings);
+          case 3:
+            return _profileRoutes(settings);
+          default:
+            return _fallbackRoute('Unknown tab');
+        }
+      },
     );
   }
 
@@ -128,20 +125,6 @@ class NavigationView extends GetView<NavigationController> {
         routeName: _TabRoutes.chatList,
         page: () => const ChatListView(),
         binding: ChatListBinding(),
-      );
-    } else if (settings.name == _TabRoutes.chatDetail) {
-      final arg = settings.arguments;
-      final conversationId =
-          arg is Map ? (arg['conversationId'] ?? '').toString() : '';
-      final title = arg is Map ? (arg['title'] ?? '').toString() : '';
-
-      return GetPageRoute(
-        routeName: _TabRoutes.chatDetail,
-        page: () => const ChatDetailView(),
-        binding: ChatDetailBinding(
-          conversationId: conversationId,
-          title: title,
-        ),
       );
     }
 
@@ -177,10 +160,12 @@ class NavigationView extends GetView<NavigationController> {
         binding: ArchitectBinding(),
       );
     } else if (settings.name == _TabRoutes.portofolio) {
+      final arg = settings.arguments;
+      final architectId = arg is String ? arg : '';
       return GetPageRoute(
         routeName: _TabRoutes.portofolio,
         page: () => const PortofolioView(),
-        binding: PortofolioBinding(),
+        binding: PortofolioBinding(architectId: architectId),
       );
     }
 
@@ -211,5 +196,4 @@ class _TabRoutes {
   static const detail = '/detail';
   static const portofolio = '/portofolio';
   static const chatList = '/chats';
-  static const chatDetail = '/chat';
 }

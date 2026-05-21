@@ -36,4 +36,21 @@ class ArchitectService {
           .toList();
     }, 'Fetch Architects');
   }
+
+  Future<Architect> getArchitectById(String id) async {
+    final response = await _apiClient.public.get(
+      '/architects/$id',
+      options: Options(
+        validateStatus: (status) => status != null && status < 500,
+      ),
+    );
+
+    return _apiClient.customResponse(response, () async {
+      final raw = response.data?['data'];
+      if (raw is! Map) {
+        throw Exception('Invalid architect detail response');
+      }
+      return Architect.fromJson(Map<String, dynamic>.from(raw));
+    }, 'Fetch Architect Detail');
+  }
 }

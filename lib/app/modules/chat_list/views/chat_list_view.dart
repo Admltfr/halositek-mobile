@@ -4,7 +4,7 @@ import 'package:halositek/app/core/constants/app_colors.dart';
 import 'package:halositek/app/core/constants/app_dimensions.dart';
 import 'package:halositek/app/core/constants/app_extensions.dart';
 import 'package:halositek/app/core/constants/app_typography.dart';
-import 'package:halositek/app/data/models/chat_conversation.dart';
+import 'package:halositek/app/data/models/chat.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import '../controllers/chat_list_controller.dart';
 

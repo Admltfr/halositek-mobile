@@ -134,52 +134,66 @@ class PortofolioView extends GetView<PortofolioController> {
   }
 
   Widget _priceAndChat() {
-    return Row(
-      children: [
-        Expanded(
-          child: Container(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            decoration: BoxDecoration(
-              color: AppColors.secondaryColor.withValues(alpha: 0.18),
-              borderRadius: BorderRadius.circular(AppDimensions.radiusLarge),
-            ),
-            child: Center(
-              child: Text(
-                'Rp 25.000 / 3 jam',
-                style: AppTypography.bodySmall.copyWith(
-                  color: AppColors.primaryColor,
-                  fontWeight: FontWeight.w700,
+    return Obx(
+      () => Row(
+        children: [
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              decoration: BoxDecoration(
+                color: AppColors.secondaryColor.withValues(alpha: 0.18),
+                borderRadius: BorderRadius.circular(AppDimensions.radiusLarge),
+              ),
+              child: Center(
+                child: Text(
+                  'Rp 25.000 / 3 jam',
+                  style: AppTypography.bodySmall.copyWith(
+                    color: AppColors.primaryColor,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ),
           ),
-        ),
-        AppDimensions.spacingSemibold.sw,
-        Expanded(
-          child: ElevatedButton.icon(
-            onPressed: () {},
-            icon: const Icon(
-              Icons.chat_bubble_outline,
-              size: AppDimensions.iconSizeSmall + 1,
-            ),
-            label: Text(
-              'Chat Now',
-              style: AppTypography.bodySmall.copyWith(
-                fontWeight: FontWeight.w700,
+          AppDimensions.spacingSemibold.sw,
+          Expanded(
+            child: ElevatedButton.icon(
+              onPressed:
+                  controller.isStartingChat.value
+                      ? null
+                      : controller.startConsultationChat,
+              icon:
+                  controller.isStartingChat.value
+                      ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                      : const Icon(
+                        Icons.chat_bubble_outline,
+                        size: AppDimensions.iconSizeSmall + 1,
+                      ),
+              label: Text(
+                controller.isStartingChat.value ? 'Loading...' : 'Chat Now',
+                style: AppTypography.bodySmall.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
               ),
-            ),
-            style: ElevatedButton.styleFrom(
-              elevation: 0,
-              backgroundColor: AppColors.primaryColor,
-              foregroundColor: AppColors.whiteColor,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppDimensions.radiusLarge),
+              style: ElevatedButton.styleFrom(
+                elevation: 0,
+                backgroundColor: AppColors.primaryColor,
+                foregroundColor: AppColors.whiteColor,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(
+                    AppDimensions.radiusLarge,
+                  ),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 12),
               ),
-              padding: const EdgeInsets.symmetric(vertical: 12),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 

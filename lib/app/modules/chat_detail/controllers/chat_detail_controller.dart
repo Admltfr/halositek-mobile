@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:halositek/app/data/models/chat_message.dart';
+import 'package:halositek/app/data/models/chat.dart';
 import 'package:halositek/app/data/network/chat_service.dart';
 import 'package:halositek/app/modules/navigation/controllers/navigation_controller.dart';
 
@@ -39,8 +39,7 @@ class ChatDetailController extends GetxController {
   }
 
   void goBack() {
-    final nav = Get.find<NavigationController>();
-    nav.onPop();
+    Get.back();
   }
 
   Future<void> fetchMessages() async {

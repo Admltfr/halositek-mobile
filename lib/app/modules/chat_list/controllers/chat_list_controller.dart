@@ -1,6 +1,8 @@
 import 'package:get/get.dart';
-import 'package:halositek/app/data/models/chat_conversation.dart';
+import 'package:halositek/app/data/models/chat.dart';
 import 'package:halositek/app/data/network/chat_service.dart';
+import 'package:halositek/app/modules/chat_detail/bindings/chat_detail_binding.dart';
+import 'package:halositek/app/modules/chat_detail/views/chat_detail_view.dart';
 import 'package:halositek/app/modules/navigation/controllers/navigation_controller.dart';
 
 class ChatListController extends GetxController {
@@ -49,14 +51,12 @@ class ChatListController extends GetxController {
   }
 
   void openConversation(ChatConversation conversation) {
-    final nav = Get.find<NavigationController>();
-    nav.navigateTo(
-      tabIndex: 0,
-      route: '/chat',
-      arguments: {
-        'conversationId': conversation.id,
-        'title': conversation.displayName,
-      },
+    Get.to(
+      () => const ChatDetailView(),
+      binding: ChatDetailBinding(
+        conversationId: conversation.id,
+        title: conversation.displayName,
+      ),
     );
   }
 }
