@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:halositek/app/data/models/award.dart';
 import 'package:halositek/app/data/network/award_service.dart';
+import 'package:halositek/app/data/network/token_service.dart';
 import 'package:halositek/app/modules/navigation/controllers/navigation_controller.dart';
 
 class AwardController extends GetxController {
@@ -21,6 +24,8 @@ class AwardController extends GetxController {
   final scrollController = ScrollController();
 
   int _page = 1;
+  Timer? _searchDebounce;
+  bool _isScrollRefreshRunning = false;
 
   bool get hasData => awards.isNotEmpty;
   int get approvedCount => awards.where((award) => award.isApproved).length;
@@ -30,12 +35,15 @@ class AwardController extends GetxController {
   void onInit() {
     super.onInit();
     scrollController.addListener(_onScroll);
+    searchController.addListener(_onSearchChanged);
     fetchAwards(reset: true);
   }
 
   @override
   void onClose() {
     scrollController.removeListener(_onScroll);
+    searchController.removeListener(_onSearchChanged);
+    _searchDebounce?.cancel();
     scrollController.dispose();
     searchController.dispose();
     super.onClose();
@@ -47,18 +55,40 @@ class AwardController extends GetxController {
 
   void _onScroll() {
     if (!scrollController.hasClients) return;
-    final triggerPoint = scrollController.position.maxScrollExtent - 200;
-    if (scrollController.position.pixels >= triggerPoint) {
-      fetchAwards();
+
+    final position = scrollController.position;
+    if (position.pixels >= position.maxScrollExtent - 8 &&
+        !_isScrollRefreshRunning &&
+        !isLoading.value) {
+      _isScrollRefreshRunning = true;
+      fetchAwards(reset: true);
     }
   }
 
+  void _onSearchChanged() {
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(const Duration(milliseconds: 500), () {
+      fetchAwards(reset: true);
+    });
+  }
+
+  Future<String?> _getCurrentArchitectId() async {
+    final tokenService = Get.find<TokenService>();
+    final userId = await tokenService.getUserId();
+    final normalized = userId?.trim() ?? '';
+    return normalized.isEmpty ? null : normalized;
+  }
+
   Future<void> fetchAwards({bool reset = false}) async {
+    if (!reset && (isLoading.value || isLoadingMore.value)) {
+      return;
+    }
+
     if (reset) {
       _page = 1;
       hasMore.value = true;
       awards.clear();
-    } else if (!hasMore.value || isLoading.value || isLoadingMore.value) {
+    } else if (!hasMore.value) {
       return;
     }
 
@@ -69,10 +99,12 @@ class AwardController extends GetxController {
         isLoadingMore.value = true;
       }
       errorMessage.value = '';
+      final architectId = await _getCurrentArchitectId();
 
       final result = await _awardService.getAwards(
         page: _page,
         perPage: _perPage,
+        architectId: architectId,
         status: selectedStatus.value,
         search: searchController.text,
       );
@@ -90,6 +122,7 @@ class AwardController extends GetxController {
     } finally {
       isLoading.value = false;
       isLoadingMore.value = false;
+      _isScrollRefreshRunning = false;
     }
   }
 
@@ -104,17 +137,10 @@ class AwardController extends GetxController {
   }
 
   void openAdd() {
-    Get.find<NavigationController>().navigateTo(
-      tabIndex: 2,
-      route: '/award/add',
-    );
+    Get.find<NavigationController>().navigateTo(tabIndex: 2, route: '/award/add');
   }
 
   void openDetail(Award award) {
-    Get.find<NavigationController>().navigateTo(
-      tabIndex: 2,
-      route: '/award/detail',
-      arguments: award.id,
-    );
+    Get.find<NavigationController>().navigateTo(tabIndex: 2, route: '/award/detail', arguments: award.id);
   }
 }

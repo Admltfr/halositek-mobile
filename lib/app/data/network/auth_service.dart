@@ -53,12 +53,15 @@ class AuthService {
       ),
     );
 
-    // debugPrint('\x1B[31m ${response.data['data']['role']}\x1B[0m');
-
     return _apiClient.customResponse(response, () async {
-      _tokenService.setAccessToken(response.data['data']['access_token']);
-      _tokenService.setRefreshToken(response.data['data']['refresh_token']);
-      _tokenService.setRole(response.data['data']['role']);
+      final data = response.data['data'];
+      _tokenService.setAccessToken(data['access_token']);
+      _tokenService.setRefreshToken(data['refresh_token']);
+      _tokenService.setRole(data['role']);
+      final userId = (data['id'] ?? '').toString();
+      if (userId.trim().isNotEmpty) {
+        await _tokenService.setUserId(userId);
+      }
     }, 'Login');
   }
 
@@ -85,8 +88,6 @@ class AuthService {
   }
 
   Future<void> logout() async {
-    // debugPrint('\x1B[31m ${_tokenService.getAccessToken()}\x1B[0m');
-    // debugPrint('\x1B[31m ${_tokenService.getRefreshToken()}\x1B[0m');
     final response = await _apiClient.private.post(
       '/logout',
       data: {'refresh_token': await _tokenService.getRefreshToken()},
@@ -100,6 +101,8 @@ class AuthService {
     return _apiClient.customResponse(response, () async {
       await _tokenService.clearAccessToken();
       await _tokenService.clearRefreshToken();
+      await _tokenService.clearRole();
+      await _tokenService.clearUserId();
     }, 'Logout');
   }
 

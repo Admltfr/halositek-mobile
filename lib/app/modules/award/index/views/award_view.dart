@@ -17,24 +17,28 @@ class AwardView extends GetView<AwardController> {
     return Scaffold(
       backgroundColor: AppColors.whiteColor,
       body: SafeArea(
-        child: SingleChildScrollView(
-          controller: controller.scrollController,
-          padding: const EdgeInsets.fromLTRB(30, 8, 30, 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _topBar(),
-              20.0.sh,
-              _search(),
-              18.0.sh,
-              _stats(),
-              14.0.sh,
-              _addButton(),
-              28.0.sh,
-              _listHeader(),
-              10.0.sh,
-              _awardList(),
-            ],
+        child: RefreshIndicator(
+          onRefresh: () => controller.fetchAwards(reset: true),
+          child: SingleChildScrollView(
+            controller: controller.scrollController,
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(30, 8, 30, 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _topBar(),
+                20.0.sh,
+                _search(),
+                18.0.sh,
+                _stats(),
+                14.0.sh,
+                _addButton(),
+                28.0.sh,
+                _listHeader(),
+                10.0.sh,
+                _awardList(),
+              ],
+            ),
           ),
         ),
       ),
@@ -163,7 +167,7 @@ class AwardView extends GetView<AwardController> {
               value: controller.selectedStatus.value,
               items: const [
                 DropdownMenuItem(value: 'approved', child: Text('Active')),
-                DropdownMenuItem(value: 'pending', child: Text('submission')),
+                DropdownMenuItem(value: 'pending', child: Text('Submission')),
               ],
               onChanged: controller.changeStatus,
             ),
@@ -185,6 +189,40 @@ class AwardView extends GetView<AwardController> {
             Text(controller.errorMessage.value, style: AppTypography.bodySmall.copyWith(color: AppColors.errorColor)),
             TextButton(onPressed: () => controller.fetchAwards(reset: true), child: const Text('Coba Lagi')),
           ],
+        );
+      }
+
+      if (!controller.isLoading.value && !hasData) {
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 36),
+          decoration: BoxDecoration(
+            color: AppColors.whiteColor,
+            borderRadius: BorderRadius.circular(AppDimensions.radiusLarge),
+            border: Border.all(color: AppColors.formBorderColor.withValues(alpha: 0.24)),
+          ),
+          child: Column(
+            children: [
+              const Icon(Icons.inbox_rounded, size: 42, color: AppColors.textBodyColor),
+              10.0.sh,
+              Text(
+                'Belum ada data award tersedia.',
+                textAlign: TextAlign.center,
+                style: AppTypography.bodyMedium.copyWith(
+                  color: AppColors.textHeadingColor,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              6.0.sh,
+              Text(
+                'Silakan ubah filter atau tambahkan award baru.',
+                textAlign: TextAlign.center,
+                style: AppTypography.bodySmall.copyWith(
+                  color: AppColors.textBodyColor.withValues(alpha: 0.85),
+                ),
+              ),
+            ],
+          ),
         );
       }
 

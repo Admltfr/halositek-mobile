@@ -28,6 +28,8 @@ class AwardService {
 
     return _apiClient.customResponse(response, () async {
       final rawList = response.data?['data'];
+      print('architectId: $architectId, search: $search, status: $status');
+      print('Raw awards list: $rawList');
       if (rawList is! List) return <Award>[];
 
       return rawList.whereType<Map>().map((e) => Award.fromJson(Map<String, dynamic>.from(e))).toList();
