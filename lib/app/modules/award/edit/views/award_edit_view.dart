@@ -13,6 +13,8 @@ class AwardEditView extends GetView<AwardEditController> {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+
     return Scaffold(
       backgroundColor: AppColors.whiteColor,
       body: SafeArea(
@@ -20,7 +22,7 @@ class AwardEditView extends GetView<AwardEditController> {
           () => Skeletonizer(
             enabled: controller.isLoading.value,
             child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(38, 8, 36, 28),
+              padding: EdgeInsets.symmetric(horizontal: size.width * 0.05, vertical: size.height * 0.01),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -35,10 +37,15 @@ class AwardEditView extends GetView<AwardEditController> {
                     onPickDate: () => controller.pickDate(context),
                     onCancel: controller.goBack,
                     onSubmit: controller.submit,
+                    onPickFile: controller.pickFile,
+                    onRemoveFile: controller.removeFile,
                     submitLabel: 'Submit Changes',
                     cancelLabel: 'Cancel Changes',
                     isSubmitting: controller.isSubmitting.value,
                     fileName: controller.fileName,
+                    fileSizeLabel: controller.fileSizeLabel,
+                    hasNewFile: controller.hasNewFile,
+                    canRemoveFile: controller.hasNewFile,
                   ),
                 ],
               ),
@@ -56,19 +63,13 @@ class AwardEditView extends GetView<AwardEditController> {
         children: [
           InkWell(
             onTap: controller.goBack,
-            child: const Padding(
-              padding: EdgeInsets.all(6),
-              child: Icon(Icons.arrow_back_ios_new_rounded, size: 15),
-            ),
+            child: const Padding(padding: EdgeInsets.all(6), child: Icon(Icons.arrow_back_ios_new_rounded, size: 15)),
           ),
           Expanded(
             child: Text(
               'Edit Award',
               textAlign: TextAlign.center,
-              style: AppTypography.bodyMedium.copyWith(
-                color: AppColors.textHeadingColor,
-                fontWeight: FontWeight.w700,
-              ),
+              style: AppTypography.bodyMedium.copyWith(color: AppColors.textHeadingColor, fontWeight: FontWeight.w700),
             ),
           ),
           const SizedBox(width: 28),

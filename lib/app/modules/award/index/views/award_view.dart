@@ -14,6 +14,8 @@ class AwardView extends GetView<AwardController> {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+
     return Scaffold(
       backgroundColor: AppColors.whiteColor,
       body: SafeArea(
@@ -22,7 +24,10 @@ class AwardView extends GetView<AwardController> {
           child: SingleChildScrollView(
             controller: controller.scrollController,
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(30, 8, 30, 24),
+            padding: EdgeInsets.symmetric(
+              horizontal: size.width * 0.05,
+              vertical: size.height * 0.01,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -53,13 +58,19 @@ class AwardView extends GetView<AwardController> {
           InkWell(
             onTap: controller.goBack,
             borderRadius: BorderRadius.circular(20),
-            child: const Padding(padding: EdgeInsets.all(6), child: Icon(Icons.arrow_back_ios_new_rounded, size: 15)),
+            child: const Padding(
+              padding: EdgeInsets.all(6),
+              child: Icon(Icons.arrow_back_ios_new_rounded, size: 15),
+            ),
           ),
           Expanded(
             child: Text(
               'Awards',
               textAlign: TextAlign.center,
-              style: AppTypography.bodyMedium.copyWith(color: AppColors.textHeadingColor, fontWeight: FontWeight.w700),
+              style: AppTypography.bodyMedium.copyWith(
+                color: AppColors.textHeadingColor,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
           const SizedBox(width: 28),
@@ -75,8 +86,16 @@ class AwardView extends GetView<AwardController> {
       decoration: BoxDecoration(
         color: AppColors.whiteColor,
         borderRadius: BorderRadius.circular(AppDimensions.radiusXLarge),
-        border: Border.all(color: AppColors.formBorderColor.withValues(alpha: 0.28)),
-        boxShadow: const [BoxShadow(color: AppColors.shadowSoftColor, blurRadius: 18, offset: Offset(0, 6))],
+        border: Border.all(
+          color: AppColors.formBorderColor.withValues(alpha: 0.28),
+        ),
+        boxShadow: const [
+          BoxShadow(
+            color: AppColors.shadowSoftColor,
+            blurRadius: 18,
+            offset: Offset(0, 6),
+          ),
+        ],
       ),
       child: Row(
         children: [
@@ -90,7 +109,9 @@ class AwardView extends GetView<AwardController> {
                 isCollapsed: true,
                 border: InputBorder.none,
                 hintText: 'Search Award',
-                hintStyle: AppTypography.bodyMedium.copyWith(color: AppColors.textBodyColor.withValues(alpha: 0.55)),
+                hintStyle: AppTypography.bodyMedium.copyWith(
+                  color: AppColors.textBodyColor.withValues(alpha: 0.55),
+                ),
               ),
             ),
           ),
@@ -104,11 +125,19 @@ class AwardView extends GetView<AwardController> {
       () => Row(
         children: [
           Expanded(
-            child: _statCard(controller.approvedCount.toString().padLeft(2, '0'), 'Total Approved', AppColors.primaryColor),
+            child: _statCard(
+              controller.approvedCount.toString().padLeft(2, '0'),
+              'Total Approved',
+              AppColors.primaryColor,
+            ),
           ),
           16.0.sw,
           Expanded(
-            child: _statCard(controller.pendingCount.toString().padLeft(2, '0'), 'Pending Review', AppColors.warningColor),
+            child: _statCard(
+              controller.pendingCount.toString().padLeft(2, '0'),
+              'Pending Review',
+              AppColors.warningColor,
+            ),
           ),
         ],
       ),
@@ -121,12 +150,20 @@ class AwardView extends GetView<AwardController> {
       decoration: BoxDecoration(
         color: AppColors.whiteColor,
         borderRadius: BorderRadius.circular(AppDimensions.radiusLarge),
-        border: Border.all(color: AppColors.formBorderColor.withValues(alpha: 0.22)),
+        border: Border.all(
+          color: AppColors.formBorderColor.withValues(alpha: 0.22),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(value, style: AppTypography.headingMedium.copyWith(color: AppColors.textHeadingColor, fontSize: 22)),
+          Text(
+            value,
+            style: AppTypography.headingMedium.copyWith(
+              color: AppColors.textHeadingColor,
+              fontSize: 22,
+            ),
+          ),
           Text(label, style: AppTypography.bodySmall),
           12.0.sh,
           Container(height: 4, decoration: BoxDecoration(color: color)),
@@ -146,7 +183,9 @@ class AwardView extends GetView<AwardController> {
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primaryColor,
           foregroundColor: AppColors.textWhiteColor,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimensions.radiusMedium)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppDimensions.radiusMedium),
+          ),
         ),
       ),
     );
@@ -158,7 +197,10 @@ class AwardView extends GetView<AwardController> {
         Expanded(
           child: Text(
             'Your Award',
-            style: AppTypography.headingSmall.copyWith(color: AppColors.textHeadingColor, fontWeight: FontWeight.w700),
+            style: AppTypography.headingSmall.copyWith(
+              color: AppColors.textHeadingColor,
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ),
         Obx(
@@ -167,7 +209,10 @@ class AwardView extends GetView<AwardController> {
               value: controller.selectedStatus.value,
               items: const [
                 DropdownMenuItem(value: 'approved', child: Text('Active')),
-                DropdownMenuItem(value: 'pending', child: Text('Submission')),
+                DropdownMenuItem(
+                  value: 'submission',
+                  child: Text('Submission'),
+                ),
               ],
               onChanged: controller.changeStatus,
             ),
@@ -186,8 +231,16 @@ class AwardView extends GetView<AwardController> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(controller.errorMessage.value, style: AppTypography.bodySmall.copyWith(color: AppColors.errorColor)),
-            TextButton(onPressed: () => controller.fetchAwards(reset: true), child: const Text('Coba Lagi')),
+            Text(
+              controller.errorMessage.value,
+              style: AppTypography.bodySmall.copyWith(
+                color: AppColors.errorColor,
+              ),
+            ),
+            TextButton(
+              onPressed: () => controller.fetchAwards(reset: true),
+              child: const Text('Coba Lagi'),
+            ),
           ],
         );
       }
@@ -199,11 +252,17 @@ class AwardView extends GetView<AwardController> {
           decoration: BoxDecoration(
             color: AppColors.whiteColor,
             borderRadius: BorderRadius.circular(AppDimensions.radiusLarge),
-            border: Border.all(color: AppColors.formBorderColor.withValues(alpha: 0.24)),
+            border: Border.all(
+              color: AppColors.formBorderColor.withValues(alpha: 0.24),
+            ),
           ),
           child: Column(
             children: [
-              const Icon(Icons.inbox_rounded, size: 42, color: AppColors.textBodyColor),
+              const Icon(
+                Icons.inbox_rounded,
+                size: 42,
+                color: AppColors.textBodyColor,
+              ),
               10.0.sh,
               Text(
                 'Belum ada data award tersedia.',
@@ -226,7 +285,8 @@ class AwardView extends GetView<AwardController> {
         );
       }
 
-      final items = hasData ? controller.awards : List.generate(3, (_) => Award.dummy());
+      final items =
+          hasData ? controller.awards : List.generate(3, (_) => Award.dummy());
 
       return Skeletonizer(
         enabled: controller.isLoading.value && !hasData,
@@ -261,7 +321,9 @@ class AwardView extends GetView<AwardController> {
         decoration: BoxDecoration(
           color: AppColors.whiteColor,
           borderRadius: BorderRadius.circular(AppDimensions.radiusLarge),
-          border: Border.all(color: AppColors.formBorderColor.withValues(alpha: 0.24)),
+          border: Border.all(
+            color: AppColors.formBorderColor.withValues(alpha: 0.24),
+          ),
         ),
         child: Row(
           children: [
@@ -272,7 +334,11 @@ class AwardView extends GetView<AwardController> {
                 color: AppColors.secondaryColor.withValues(alpha: 0.18),
                 borderRadius: BorderRadius.circular(AppDimensions.radiusMedium),
               ),
-              child: const Icon(Icons.workspace_premium_outlined, color: AppColors.primaryColor, size: 34),
+              child: const Icon(
+                Icons.workspace_premium_outlined,
+                color: AppColors.primaryColor,
+                size: 34,
+              ),
             ),
             16.0.sw,
             Expanded(
@@ -296,12 +362,16 @@ class AwardView extends GetView<AwardController> {
                     award.projectName,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: AppTypography.bodySmall.copyWith(color: AppColors.textBodyColor),
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.textBodyColor,
+                    ),
                   ),
                   8.0.sh,
                   Text(
                     'Submitted ${_formatDate(award.createdAt)}',
-                    style: AppTypography.captionLarge.copyWith(color: AppColors.textBodyColor.withValues(alpha: 0.75)),
+                    style: AppTypography.captionLarge.copyWith(
+                      color: AppColors.textBodyColor.withValues(alpha: 0.75),
+                    ),
                   ),
                 ],
               ),
@@ -314,17 +384,25 @@ class AwardView extends GetView<AwardController> {
   }
 
   Widget _statusPill(String status) {
-    final approved = status.toLowerCase() == 'approved';
+    final normalized = status.toLowerCase();
+    final approved = normalized == 'approved';
+    final declined = normalized == 'declined';
+    final background =
+        approved
+            ? AppColors.successColor
+            : (declined ? AppColors.errorColor : AppColors.warningColor);
+    final label = approved ? 'APPROVED' : (declined ? 'DECLINED' : 'PENDING');
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        color: (approved ? AppColors.successColor : AppColors.warningColor).withValues(alpha: 0.12),
+        color: background.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(AppDimensions.radiusXSmall),
       ),
       child: Text(
-        approved ? 'APPROVED' : 'SUBMISSION',
+        label,
         style: AppTypography.captionLarge.copyWith(
-          color: approved ? AppColors.successColor : AppColors.warningColor,
+          color: background,
           fontWeight: FontWeight.w700,
         ),
       ),
@@ -333,7 +411,20 @@ class AwardView extends GetView<AwardController> {
 
   String _formatDate(DateTime? value) {
     if (value == null) return '-';
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
     return '${months[value.month - 1]} ${value.day}, ${value.year}';
   }
 }

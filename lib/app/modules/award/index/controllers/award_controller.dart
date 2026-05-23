@@ -29,7 +29,8 @@ class AwardController extends GetxController {
 
   bool get hasData => awards.isNotEmpty;
   int get approvedCount => awards.where((award) => award.isApproved).length;
-  int get pendingCount => awards.where((award) => !award.isApproved).length;
+  int get pendingCount =>
+      awards.where((award) => award.status.toLowerCase() != 'approved').length;
 
   @override
   void onInit() {
@@ -101,11 +102,10 @@ class AwardController extends GetxController {
       errorMessage.value = '';
       final architectId = await _getCurrentArchitectId();
 
-      final result = await _awardService.getAwards(
+      final result = await _fetchByStatus(
+        architectId: architectId,
         page: _page,
         perPage: _perPage,
-        architectId: architectId,
-        status: selectedStatus.value,
         search: searchController.text,
       );
 
@@ -126,6 +126,57 @@ class AwardController extends GetxController {
     }
   }
 
+  Future<List<Award>> _fetchByStatus({
+    required String? architectId,
+    required int page,
+    required int perPage,
+    required String search,
+  }) async {
+    if (selectedStatus.value == 'approved') {
+      return _awardService.getAwards(
+        page: page,
+        perPage: perPage,
+        architectId: architectId,
+        status: 'approved',
+        search: search,
+      );
+    }
+
+    final responses = await Future.wait([
+      _awardService.getAwards(
+        page: page,
+        perPage: perPage,
+        architectId: architectId,
+        status: 'pending',
+        search: search,
+      ),
+      _awardService.getAwards(
+        page: page,
+        perPage: perPage,
+        architectId: architectId,
+        status: 'declined',
+        search: search,
+      ),
+    ]);
+
+    final merged = [...responses[0], ...responses[1]];
+    final byId = <String, Award>{};
+    for (final item in merged) {
+      byId[item.id] = item;
+    }
+
+    final deduped = byId.values.toList();
+    deduped.sort((a, b) {
+      final left = a.createdAt;
+      final right = b.createdAt;
+      if (left == null && right == null) return 0;
+      if (left == null) return 1;
+      if (right == null) return -1;
+      return right.compareTo(left);
+    });
+    return deduped;
+  }
+
   void changeStatus(String? status) {
     if (status == null || status == selectedStatus.value) return;
     selectedStatus.value = status;
@@ -136,11 +187,21 @@ class AwardController extends GetxController {
     fetchAwards(reset: true);
   }
 
-  void openAdd() {
-    Get.find<NavigationController>().navigateTo(tabIndex: 2, route: '/award/add');
+  Future<void> openAdd() async {
+    final nav = Get.find<NavigationController>().keyForTab(2)?.currentState;
+    if (nav == null) return;
+    final popped = await nav.pushNamed('/award/add');
+    if (popped != null || !isLoading.value) {
+      await fetchAwards(reset: true);
+    }
   }
 
-  void openDetail(Award award) {
-    Get.find<NavigationController>().navigateTo(tabIndex: 2, route: '/award/detail', arguments: award.id);
+  Future<void> openDetail(Award award) async {
+    final nav = Get.find<NavigationController>().keyForTab(2)?.currentState;
+    if (nav == null) return;
+    final popped = await nav.pushNamed('/award/detail', arguments: award.id);
+    if (popped != null || !isLoading.value) {
+      await fetchAwards(reset: true);
+    }
   }
 }

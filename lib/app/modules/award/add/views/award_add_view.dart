@@ -12,11 +12,13 @@ class AwardAddView extends GetView<AwardAddController> {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+
     return Scaffold(
       backgroundColor: AppColors.whiteColor,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(38, 8, 36, 28),
+          padding: EdgeInsets.symmetric(horizontal: size.width * 0.05, vertical: size.height * 0.01),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -32,9 +34,14 @@ class AwardAddView extends GetView<AwardAddController> {
                   onPickDate: () => controller.pickDate(context),
                   onCancel: controller.goBack,
                   onSubmit: controller.submit,
+                  onPickFile: controller.pickFile,
+                  onRemoveFile: controller.removeFile,
                   submitLabel: 'Submit Award',
                   cancelLabel: 'Cancel Award',
                   isSubmitting: controller.isSubmitting.value,
+                  fileName: controller.fileName,
+                  fileSizeLabel: controller.fileSizeLabel,
+                  hasNewFile: controller.fileName.isNotEmpty,
                 ),
               ),
             ],
@@ -51,19 +58,13 @@ class AwardAddView extends GetView<AwardAddController> {
         children: [
           InkWell(
             onTap: controller.goBack,
-            child: const Padding(
-              padding: EdgeInsets.all(6),
-              child: Icon(Icons.arrow_back_ios_new_rounded, size: 15),
-            ),
+            child: const Padding(padding: EdgeInsets.all(6), child: Icon(Icons.arrow_back_ios_new_rounded, size: 15)),
           ),
           Expanded(
             child: Text(
               'New Award',
               textAlign: TextAlign.center,
-              style: AppTypography.bodyMedium.copyWith(
-                color: AppColors.textHeadingColor,
-                fontWeight: FontWeight.w700,
-              ),
+              style: AppTypography.bodyMedium.copyWith(color: AppColors.textHeadingColor, fontWeight: FontWeight.w700),
             ),
           ),
           const SizedBox(width: 28),

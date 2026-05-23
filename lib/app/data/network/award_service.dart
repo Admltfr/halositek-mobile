@@ -28,8 +28,6 @@ class AwardService {
 
     return _apiClient.customResponse(response, () async {
       final rawList = response.data?['data'];
-      print('architectId: $architectId, search: $search, status: $status');
-      print('Raw awards list: $rawList');
       if (rawList is! List) return <Award>[];
 
       return rawList.whereType<Map>().map((e) => Award.fromJson(Map<String, dynamic>.from(e))).toList();
@@ -52,7 +50,7 @@ class AwardService {
     }, 'Fetch Award Detail');
   }
 
-  Future<Award> createAward(Map<String, dynamic> payload) async {
+  Future<Award> createAward(FormData payload) async {
     final response = await _apiClient.private.post(
       '/awards',
       data: payload,
@@ -73,8 +71,10 @@ class AwardService {
     );
   }
 
-  Future<Award> updateAward(String id, Map<String, dynamic> payload) async {
-    final response = await _apiClient.private.put(
+  Future<Award> updateAward(String id, FormData payload) async {
+    payload.fields.add(const MapEntry('_method', 'PUT'));
+
+    final response = await _apiClient.private.post(
       '/awards/$id',
       data: payload,
       options: Options(validateStatus: (s) => s != null && s < 500),

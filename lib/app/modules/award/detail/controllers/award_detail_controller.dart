@@ -42,11 +42,8 @@ class AwardDetailController extends GetxController {
   }
 
   void openEdit() {
-    Get.find<NavigationController>().navigateTo(
-      tabIndex: 2,
-      route: '/award/edit',
-      arguments: award.value ?? awardId,
-    );
+    final nav = Get.find<NavigationController>().keyForTab(2)?.currentState;
+    nav?.pushNamed('/award/edit', arguments: award.value ?? awardId);
   }
 
   Future<void> deleteAward() async {

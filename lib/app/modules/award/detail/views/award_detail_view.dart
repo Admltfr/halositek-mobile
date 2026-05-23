@@ -14,6 +14,8 @@ class AwardDetailView extends GetView<AwardDetailController> {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+
     return Scaffold(
       backgroundColor: AppColors.whiteColor,
       body: SafeArea(
@@ -30,7 +32,7 @@ class AwardDetailView extends GetView<AwardDetailController> {
           return Skeletonizer(
             enabled: controller.isLoading.value,
             child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(26, 8, 26, 28),
+              padding: EdgeInsets.symmetric(horizontal: size.width * 0.05, vertical: size.height * 0.01),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
