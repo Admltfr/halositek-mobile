@@ -1,7 +1,16 @@
 import 'package:get/get.dart';
+import 'package:halositek/app/core/constants/app_extensions.dart';
 
 import '../modules/architect/bindings/architect_binding.dart';
 import '../modules/architect/views/architect_view.dart';
+import '../modules/award/add/bindings/award_add_binding.dart';
+import '../modules/award/add/views/award_add_view.dart';
+import '../modules/award/detail/bindings/award_detail_binding.dart';
+import '../modules/award/detail/views/award_detail_view.dart';
+import '../modules/award/edit/bindings/award_edit_binding.dart';
+import '../modules/award/edit/views/award_edit_view.dart';
+import '../modules/award/index/bindings/award_binding.dart';
+import '../modules/award/index/views/award_view.dart';
 import '../modules/auth/login/bindings/login_binding.dart';
 import '../modules/auth/login/views/login_view.dart';
 import '../modules/auth/register/bindings/register_binding.dart';
@@ -75,6 +84,30 @@ class AppPages {
       binding: ArchitectBinding(),
       transition: Transition.fadeIn,
     ),
+    GetPage(
+      name: _Paths.AWARD,
+      page: () => const AwardView(),
+      binding: AwardBinding(),
+      transition: Transition.fadeIn,
+    ).withRole(['architect']),
+    GetPage(
+      name: _Paths.AWARD_DETAIL,
+      page: () => const AwardDetailView(),
+      binding: AwardDetailBinding(),
+      transition: Transition.fadeIn,
+    ).withRole(['architect']),
+    GetPage(
+      name: _Paths.AWARD_ADD,
+      page: () => const AwardAddView(),
+      binding: AwardAddBinding(),
+      transition: Transition.fadeIn,
+    ).withRole(['architect']),
+    GetPage(
+      name: _Paths.AWARD_EDIT,
+      page: () => const AwardEditView(),
+      binding: AwardEditBinding(),
+      transition: Transition.fadeIn,
+    ).withRole(['architect']),
     GetPage(
       name: _Paths.DETAIL,
       page: () => const DetailView(),
