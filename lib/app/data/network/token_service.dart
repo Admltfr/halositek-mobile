@@ -38,4 +38,16 @@ class TokenService {
   Future<void> clearRole() async {
     await _storage.delete(key: 'role');
   }
+
+  Future<void> setUserId(String userId) async {
+    await _storage.write(key: 'user_id', value: userId);
+  }
+
+  Future<String?> getUserId() async {
+    return _storage.read(key: 'user_id');
+  }
+
+  Future<void> clearUserId() async {
+    await _storage.delete(key: 'user_id');
+  }
 }

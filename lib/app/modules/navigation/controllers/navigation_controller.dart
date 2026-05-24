@@ -1,3 +1,4 @@
+import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:halositek/app/data/network/token_service.dart';
 
@@ -7,10 +8,11 @@ class NavigationController extends GetxController {
   NavigationController(this._tokenService);
 
   final RxInt currentIndex = 0.obs;
+  final RxString role = ''.obs;
 
-  final navigatorKeys = List.generate(4, (index) {
-    return Get.nestedKey(index + 1);
-  });
+  final navigatorKeys = List.generate(4, (index) => Get.nestedKey(index + 1));
+  final architectTabKey = Get.nestedKey(30);
+  final awardTabKey = Get.nestedKey(31);
 
   @override
   void onInit() {
@@ -20,6 +22,8 @@ class NavigationController extends GetxController {
     if (arguments != null && arguments is int) {
       currentIndex.value = arguments;
     }
+
+    loadRole();
   }
 
   @override
@@ -27,11 +31,22 @@ class NavigationController extends GetxController {
     super.onReady();
   }
 
-  void isArchitect() {}
+  Future<void> loadRole() async {
+    role.value = (await _tokenService.getRole() ?? '').trim().toLowerCase();
+  }
+
+  bool get isArchitect => role.value.trim().toLowerCase() == 'architect';
+
+  GlobalKey<NavigatorState>? keyForTab(int index) {
+    if (index == 2) {
+      return isArchitect ? awardTabKey : architectTabKey;
+    }
+    return navigatorKeys[index];
+  }
 
   void changeIndex(int index) {
     if (currentIndex.value == index) {
-      final nav = navigatorKeys[index]?.currentState;
+      final nav = keyForTab(index)?.currentState;
 
       if (nav != null) {
         nav.popUntil((route) => route.isFirst);
@@ -43,7 +58,7 @@ class NavigationController extends GetxController {
   }
 
   Future<bool> onPop() async {
-    final nav = navigatorKeys[currentIndex.value]?.currentState;
+    final nav = keyForTab(currentIndex.value)?.currentState;
 
     if (nav != null && nav.canPop()) {
       nav.pop();
@@ -62,10 +77,7 @@ class NavigationController extends GetxController {
     changeIndex(tabIndex);
 
     if (route != null) {
-      navigatorKeys[tabIndex]?.currentState?.pushNamed(
-        route,
-        arguments: arguments,
-      );
+      keyForTab(tabIndex)?.currentState?.pushNamed(route, arguments: arguments);
     }
   }
 

@@ -3,8 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:halositek/app/modules/architect/bindings/architect_binding.dart';
 import 'package:halositek/app/modules/architect/views/architect_view.dart';
-import 'package:halositek/app/modules/chat_detail/bindings/chat_detail_binding.dart';
-import 'package:halositek/app/modules/chat_detail/views/chat_detail_view.dart';
+import 'package:halositek/app/modules/award/add/bindings/award_add_binding.dart';
+import 'package:halositek/app/modules/award/add/views/award_add_view.dart';
+import 'package:halositek/app/modules/award/detail/bindings/award_detail_binding.dart';
+import 'package:halositek/app/modules/award/detail/views/award_detail_view.dart';
+import 'package:halositek/app/modules/award/edit/bindings/award_edit_binding.dart';
+import 'package:halositek/app/modules/award/edit/views/award_edit_view.dart';
+import 'package:halositek/app/modules/award/index/bindings/award_binding.dart';
+import 'package:halositek/app/modules/award/index/views/award_view.dart';
 import 'package:halositek/app/modules/chat_list/bindings/chat_list_binding.dart';
 import 'package:halositek/app/modules/chat_list/views/chat_list_view.dart';
 import 'package:halositek/app/modules/design/bindings/design_binding.dart';
@@ -18,6 +24,7 @@ import 'package:halositek/app/modules/portofolio/bindings/portofolio_binding.dar
 import 'package:halositek/app/modules/profile/bindings/profile_binding.dart';
 import 'package:halositek/app/modules/profile/views/profile_view.dart';
 import 'package:halositek/app/core/constants/app_colors.dart';
+import 'package:halositek/app/data/models/award.dart';
 
 import '../controllers/navigation_controller.dart';
 
@@ -43,23 +50,29 @@ class NavigationView extends GetView<NavigationController> {
             currentIndex: controller.currentIndex.value,
             onTap: controller.changeIndex,
             selectedItemColor: AppColors.primaryColor,
-            items: const [
-              BottomNavigationBarItem(
+            items: [
+              const BottomNavigationBarItem(
                 icon: Icon(Icons.home_outlined),
                 activeIcon: Icon(Icons.home),
                 label: 'Dashboard',
               ),
-              BottomNavigationBarItem(
+              const BottomNavigationBarItem(
                 icon: Icon(Icons.favorite_border),
                 activeIcon: Icon(Icons.favorite),
                 label: 'Design',
               ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.architecture_outlined),
-                activeIcon: Icon(Icons.architecture),
-                label: 'Architect',
-              ),
-              BottomNavigationBarItem(
+              controller.isArchitect
+                  ? const BottomNavigationBarItem(
+                    icon: Icon(Icons.workspace_premium_outlined),
+                    activeIcon: Icon(Icons.workspace_premium),
+                    label: 'Awards',
+                  )
+                  : const BottomNavigationBarItem(
+                    icon: Icon(Icons.architecture_outlined),
+                    activeIcon: Icon(Icons.architecture),
+                    label: 'Architect',
+                  ),
+              const BottomNavigationBarItem(
                 icon: Icon(Icons.person_outline),
                 activeIcon: Icon(Icons.person),
                 label: 'Profile',
@@ -93,23 +106,34 @@ class NavigationView extends GetView<NavigationController> {
   }
 
   Widget _buildNavigator({required int tabIndex, required bool active}) {
-    return Navigator(
-      key: controller.navigatorKeys[tabIndex],
-      initialRoute: '/',
-      onGenerateRoute: (settings) {
-        switch (tabIndex) {
-          case 0:
-            return _homeRoutes(settings);
-          case 1:
-            return _designRoutes(settings);
-          case 2:
-            return _architectRoutes(settings);
-          case 3:
-            return _profileRoutes(settings);
-          default:
-            return _fallbackRoute('Unknown tab');
-        }
-      },
+    final navigatorKey = ValueKey(
+      tabIndex == 2
+          ? 'tab-2-${controller.isArchitect ? 'architect' : 'user'}'
+          : 'tab-$tabIndex',
+    );
+
+    return KeyedSubtree(
+      key: navigatorKey,
+      child: Navigator(
+        key: controller.keyForTab(tabIndex),
+        initialRoute: '/',
+        onGenerateRoute: (settings) {
+          switch (tabIndex) {
+            case 0:
+              return _homeRoutes(settings);
+            case 1:
+              return _designRoutes(settings);
+            case 2:
+              return controller.isArchitect
+                  ? _awardRoutes(settings)
+                  : _architectRoutes(settings);
+            case 3:
+              return _profileRoutes(settings);
+            default:
+              return _fallbackRoute('Unknown tab');
+          }
+        },
+      ),
     );
   }
 
@@ -172,6 +196,43 @@ class NavigationView extends GetView<NavigationController> {
     return _fallbackRoute('Unknown Architect route');
   }
 
+  Route<dynamic> _awardRoutes(RouteSettings settings) {
+    if (settings.name == _TabRoutes.root) {
+      return GetPageRoute(
+        routeName: _TabRoutes.root,
+        page: () => const AwardView(),
+        binding: AwardBinding(),
+      );
+    } else if (settings.name == _TabRoutes.awardDetail) {
+      final arg = settings.arguments;
+      final awardId = arg is String ? arg : '';
+
+      return GetPageRoute(
+        routeName: _TabRoutes.awardDetail,
+        page: () => const AwardDetailView(),
+        binding: AwardDetailBinding(awardId: awardId),
+      );
+    } else if (settings.name == _TabRoutes.awardAdd) {
+      return GetPageRoute(
+        routeName: _TabRoutes.awardAdd,
+        page: () => const AwardAddView(),
+        binding: AwardAddBinding(),
+      );
+    } else if (settings.name == _TabRoutes.awardEdit) {
+      final arg = settings.arguments;
+      final initialAward = arg is Award ? arg : null;
+      final awardId = arg is String ? arg : initialAward?.id ?? '';
+
+      return GetPageRoute(
+        routeName: _TabRoutes.awardEdit,
+        page: () => const AwardEditView(),
+        binding: AwardEditBinding(awardId: awardId, initialAward: initialAward),
+      );
+    }
+
+    return _fallbackRoute('Unknown Award route');
+  }
+
   Route<dynamic> _profileRoutes(RouteSettings settings) {
     if (settings.name == _TabRoutes.root) {
       return GetPageRoute(
@@ -196,4 +257,7 @@ class _TabRoutes {
   static const detail = '/detail';
   static const portofolio = '/portofolio';
   static const chatList = '/chats';
+  static const awardDetail = '/award/detail';
+  static const awardAdd = '/award/add';
+  static const awardEdit = '/award/edit';
 }
