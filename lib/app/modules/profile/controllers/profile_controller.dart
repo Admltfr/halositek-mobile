@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import 'package:halositek/app/data/models/architect.dart';
 import 'package:halositek/app/data/models/architect_earnings.dart';
+import 'package:halositek/app/data/models/user.dart';
 import 'package:halositek/app/data/network/architect_service.dart';
 import 'package:halositek/app/data/network/auth_service.dart';
 import 'package:halositek/app/data/network/token_service.dart';
@@ -28,11 +29,17 @@ class ProfileController extends GetxController {
   final earningsError = ''.obs;
   final selectedTab = ProfileTab.portfolio.obs;
   final architect = Rxn<Architect>();
+  final user = Rxn<UserProfile>();
   final earnings = ArchitectEarnings.empty().obs;
 
   bool get isArchitect => role.value.trim().toLowerCase() == 'architect';
   List<ArchitectProject> get projects => architect.value?.projects ?? const [];
   List<ArchitectAward> get awards => architect.value?.awards ?? const [];
+  List<SavedProject> get savedProjects => user.value?.savedProjects ?? const [];
+  List<SavedArchitect> get savedArchitects =>
+      user.value?.savedArchitects ?? const [];
+  List<PaymentHistory> get paymentHistories =>
+      user.value?.paymentHistories ?? const [];
 
   @override
   void onInit() {
@@ -49,22 +56,40 @@ class ProfileController extends GetxController {
       role.value = await _tokenService.getRole() ?? '';
       userId.value = await _tokenService.getUserId() ?? '';
 
-      if (!isArchitect) return;
-      if (userId.value.trim().isEmpty) {
-        errorMessage.value =
-            'Architect id tidak ditemukan. Silakan login ulang.';
-        return;
-      }
+      if (isArchitect) {
+        if (userId.value.trim().isEmpty) {
+          errorMessage.value =
+              'Architect id tidak ditemukan. Silakan login ulang.';
+          return;
+        }
 
-      await Future.wait([fetchArchitect(), fetchEarnings()]);
+        await Future.wait([fetchArchitect(), fetchEarnings()]);
+      } else {
+        await fetchUser();
+      }
     } finally {
       isReady.value = true;
     }
   }
 
   Future<void> refreshProfile() async {
-    if (!isArchitect) return;
-    await Future.wait([fetchArchitect(), fetchEarnings()]);
+    if (isArchitect) {
+      await Future.wait([fetchArchitect(), fetchEarnings()]);
+    } else {
+      await fetchUser();
+    }
+  }
+
+  Future<void> fetchUser() async {
+    try {
+      isLoading.value = true;
+      errorMessage.value = '';
+      user.value = await _authService.getMe();
+    } catch (e) {
+      errorMessage.value = e.toString();
+    } finally {
+      isLoading.value = false;
+    }
   }
 
   Future<void> fetchArchitect() async {
@@ -102,6 +127,27 @@ class ProfileController extends GetxController {
       tabIndex: 3,
       route: '/profile/edit',
       arguments: architect.value,
+    );
+  }
+
+  void openSavedArchitects() {
+    Get.find<NavigationController>().navigateTo(
+      tabIndex: 3,
+      route: '/profile/saved-architects',
+    );
+  }
+
+  void openSavedDesigns() {
+    Get.find<NavigationController>().navigateTo(
+      tabIndex: 3,
+      route: '/profile/saved-designs',
+    );
+  }
+
+  void openPaymentHistory() {
+    Get.find<NavigationController>().navigateTo(
+      tabIndex: 3,
+      route: '/profile/payment-history',
     );
   }
 

@@ -24,7 +24,10 @@ import 'package:halositek/app/modules/portofolio/bindings/portofolio_binding.dar
 import 'package:halositek/app/modules/profile/bindings/profile_binding.dart';
 import 'package:halositek/app/modules/profile/edit/bindings/profile_edit_binding.dart';
 import 'package:halositek/app/modules/profile/edit/views/profile_edit_view.dart';
+import 'package:halositek/app/modules/profile/views/payment_history_view.dart';
 import 'package:halositek/app/modules/profile/views/profile_view.dart';
+import 'package:halositek/app/modules/profile/views/saved_architects_view.dart';
+import 'package:halositek/app/modules/profile/views/saved_designs_view.dart';
 import 'package:halositek/app/core/constants/app_colors.dart';
 import 'package:halositek/app/data/models/award.dart';
 import 'package:halositek/app/data/models/architect.dart';
@@ -256,6 +259,21 @@ class NavigationView extends GetView<NavigationController> {
         page: () => const ProfileEditView(),
         binding: ProfileEditBinding(initialArchitect: initialArchitect),
       );
+    } else if (settings.name == _TabRoutes.savedArchitects) {
+      return GetPageRoute(
+        routeName: _TabRoutes.savedArchitects,
+        page: () => const SavedArchitectsView(),
+      );
+    } else if (settings.name == _TabRoutes.savedDesigns) {
+      return GetPageRoute(
+        routeName: _TabRoutes.savedDesigns,
+        page: () => const SavedDesignsView(),
+      );
+    } else if (settings.name == _TabRoutes.paymentHistory) {
+      return GetPageRoute(
+        routeName: _TabRoutes.paymentHistory,
+        page: () => const PaymentHistoryView(),
+      );
     }
 
     return _fallbackRoute('Unknown Profile route');
@@ -277,4 +295,7 @@ class _TabRoutes {
   static const awardAdd = '/award/add';
   static const awardEdit = '/award/edit';
   static const profileEdit = '/profile/edit';
+  static const savedArchitects = '/profile/saved-architects';
+  static const savedDesigns = '/profile/saved-designs';
+  static const paymentHistory = '/profile/payment-history';
 }
