@@ -22,9 +22,12 @@ import 'package:halositek/app/modules/home/views/home_view.dart';
 import 'package:halositek/app/modules/portofolio/views/portofolio_view.dart';
 import 'package:halositek/app/modules/portofolio/bindings/portofolio_binding.dart';
 import 'package:halositek/app/modules/profile/bindings/profile_binding.dart';
+import 'package:halositek/app/modules/profile/edit/bindings/profile_edit_binding.dart';
+import 'package:halositek/app/modules/profile/edit/views/profile_edit_view.dart';
 import 'package:halositek/app/modules/profile/views/profile_view.dart';
 import 'package:halositek/app/core/constants/app_colors.dart';
 import 'package:halositek/app/data/models/award.dart';
+import 'package:halositek/app/data/models/architect.dart';
 
 import '../controllers/navigation_controller.dart';
 
@@ -240,6 +243,19 @@ class NavigationView extends GetView<NavigationController> {
         page: () => const ProfileView(),
         binding: ProfileBinding(),
       );
+    } else if (settings.name == _TabRoutes.profileEdit) {
+      if (!controller.isArchitect) {
+        return _fallbackRoute('Edit Profile hanya tersedia untuk architect');
+      }
+
+      final arg = settings.arguments;
+      final initialArchitect = arg is Architect ? arg : null;
+
+      return GetPageRoute(
+        routeName: _TabRoutes.profileEdit,
+        page: () => const ProfileEditView(),
+        binding: ProfileEditBinding(initialArchitect: initialArchitect),
+      );
     }
 
     return _fallbackRoute('Unknown Profile route');
@@ -260,4 +276,5 @@ class _TabRoutes {
   static const awardDetail = '/award/detail';
   static const awardAdd = '/award/add';
   static const awardEdit = '/award/edit';
+  static const profileEdit = '/profile/edit';
 }

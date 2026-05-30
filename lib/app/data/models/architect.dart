@@ -16,6 +16,10 @@ class Architect {
   final int totalProjects;
   final int totalAwards;
   final double rating;
+  final int consultationFee;
+  final int consultationDuration;
+  final List<ArchitectProject> projects;
+  final List<ArchitectAward> awards;
 
   const Architect({
     required this.id,
@@ -34,6 +38,10 @@ class Architect {
     required this.totalProjects,
     required this.totalAwards,
     required this.rating,
+    required this.consultationFee,
+    required this.consultationDuration,
+    required this.projects,
+    required this.awards,
   });
 
   factory Architect.fromJson(Map<String, dynamic> json) {
@@ -56,6 +64,11 @@ class Architect {
       totalProjects: _toInt(json['total_projects']),
       totalAwards: _toInt(json['total_awards']),
       rating: _toDouble(json['rating']),
+      consultationFee: _toInt(json['consultation_fee']),
+      consultationDuration: _toInt(json['consultation_duration']),
+      projects:
+          _toMapList(json['projects']).map(ArchitectProject.fromJson).toList(),
+      awards: _toMapList(json['awards']).map(ArchitectAward.fromJson).toList(),
     );
   }
 
@@ -77,6 +90,10 @@ class Architect {
       totalProjects: 0,
       totalAwards: 0,
       rating: 0,
+      consultationFee: 0,
+      consultationDuration: 0,
+      projects: <ArchitectProject>[],
+      awards: <ArchitectAward>[],
     );
   }
 
@@ -90,5 +107,112 @@ class Architect {
     if (value is double) return value;
     if (value is int) return value.toDouble();
     return double.tryParse(value?.toString() ?? '') ?? 0;
+  }
+
+  static List<Map<String, dynamic>> _toMapList(dynamic value) {
+    if (value is! List) return <Map<String, dynamic>>[];
+    return value
+        .whereType<Map>()
+        .map((e) => Map<String, dynamic>.from(e))
+        .toList();
+  }
+}
+
+class ArchitectProject {
+  final String id;
+  final String architectId;
+  final String name;
+  final String style;
+  final String description;
+  final List<String> images;
+  final List<String> imageUrls;
+  final String estimatedCost;
+  final List<String> layoutImages;
+  final List<String> layoutImageUrls;
+  final String highlightFeatures;
+  final String area;
+  final int likesCount;
+  final bool liked;
+  final String status;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
+
+  const ArchitectProject({
+    required this.id,
+    required this.architectId,
+    required this.name,
+    required this.style,
+    required this.description,
+    required this.images,
+    required this.imageUrls,
+    required this.estimatedCost,
+    required this.layoutImages,
+    required this.layoutImageUrls,
+    required this.highlightFeatures,
+    required this.area,
+    required this.likesCount,
+    required this.liked,
+    required this.status,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  factory ArchitectProject.fromJson(Map<String, dynamic> json) {
+    return ArchitectProject(
+      id: (json['id'] ?? '').toString(),
+      architectId: (json['architect_id'] ?? '').toString(),
+      name: (json['name'] ?? '').toString(),
+      style: (json['style'] ?? '').toString(),
+      description: (json['description'] ?? '').toString(),
+      images: _toStringList(json['images']),
+      imageUrls: _toStringList(json['image_urls']),
+      estimatedCost: (json['estimated_cost'] ?? '').toString(),
+      layoutImages: _toStringList(json['layout_images']),
+      layoutImageUrls: _toStringList(json['layout_image_urls']),
+      highlightFeatures: (json['highlight_features'] ?? '').toString(),
+      area: (json['area'] ?? '').toString(),
+      likesCount: Architect._toInt(json['likes_count']),
+      liked: json['liked'] == true,
+      status: (json['status'] ?? '').toString(),
+      createdAt: DateTime.tryParse((json['created_at'] ?? '').toString()),
+      updatedAt: DateTime.tryParse((json['updated_at'] ?? '').toString()),
+    );
+  }
+
+  static List<String> _toStringList(dynamic value) {
+    if (value is! List) return <String>[];
+    return value.map((e) => e.toString()).toList();
+  }
+}
+
+class ArchitectAward {
+  final String id;
+  final String name;
+  final String projectName;
+  final DateTime? awardDate;
+  final String description;
+  final String verificationFileUrl;
+  final String status;
+
+  const ArchitectAward({
+    required this.id,
+    required this.name,
+    required this.projectName,
+    required this.awardDate,
+    required this.description,
+    required this.verificationFileUrl,
+    required this.status,
+  });
+
+  factory ArchitectAward.fromJson(Map<String, dynamic> json) {
+    return ArchitectAward(
+      id: (json['id'] ?? '').toString(),
+      name: (json['name'] ?? json['title'] ?? '').toString(),
+      projectName: (json['project_name'] ?? '').toString(),
+      awardDate: DateTime.tryParse((json['award_date'] ?? '').toString()),
+      description: (json['description'] ?? '').toString(),
+      verificationFileUrl: (json['verification_file_url'] ?? '').toString(),
+      status: (json['status'] ?? '').toString(),
+    );
   }
 }
