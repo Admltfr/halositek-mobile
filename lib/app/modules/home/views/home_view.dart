@@ -24,31 +24,51 @@ class HomeView extends GetView<HomeController> {
       backgroundColor: AppColors.whiteColor,
       floatingActionButton: _floatingActionButton(),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: EdgeInsets.symmetric(
-            horizontal: size.width * 0.05,
-            vertical: size.height * 0.01,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _headerSection(size),
-              AppDimensions.spacingXLarge.sh,
-              _searchSection(size),
-              AppDimensions.spacing2XLarge.sh,
-              _galleryHeaderSection(),
-              AppDimensions.spacingSemibold.sh,
-              _catalogSection(size),
-              AppDimensions.spacingXLarge.sh,
-              _aiAssistantSection(size),
-              AppDimensions.spacing2XLarge.sh,
-              _architectHeaderSection(),
-              AppDimensions.spacingLarge.sh,
-              _architectSection(size),
-              AppDimensions.spacingSemibold.sh,
-            ],
-          ),
-        ),
+        child: Obx(() {
+          final isArchitect = controller.isArchitect.value;
+          return SingleChildScrollView(
+            padding: EdgeInsets.symmetric(
+              horizontal: size.width * 0.05,
+              vertical: size.height * 0.01,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _headerSection(size),
+                AppDimensions.spacingXLarge.sh,
+                _searchSection(
+                  size,
+                  hintText:
+                      isArchitect
+                          ? 'Search Project'
+                          : 'Search Design or Architects',
+                ),
+                AppDimensions.spacing2XLarge.sh,
+                if (isArchitect) ...[
+                  _performanceHeaderSection(),
+                  AppDimensions.spacingSemibold.sh,
+                  _performanceSection(size),
+                  AppDimensions.spacingXLarge.sh,
+                  _activeProjectsHeaderSection(),
+                  AppDimensions.spacingSemibold.sh,
+                  _activeProjectSection(size),
+                  AppDimensions.spacingSemibold.sh,
+                ] else ...[
+                  _galleryHeaderSection(),
+                  AppDimensions.spacingSemibold.sh,
+                  _catalogSection(size),
+                  AppDimensions.spacingXLarge.sh,
+                  _aiAssistantSection(size),
+                  AppDimensions.spacing2XLarge.sh,
+                  _architectHeaderSection(),
+                  AppDimensions.spacingLarge.sh,
+                  _architectSection(size),
+                  AppDimensions.spacingSemibold.sh,
+                ],
+              ],
+            ),
+          );
+        }),
       ),
     );
   }
@@ -86,51 +106,69 @@ class HomeView extends GetView<HomeController> {
   }
 
   Widget _floatingActionButton() {
-    return Obx(
-      () => Stack(
-        clipBehavior: Clip.none,
-        children: [
-          FloatingActionButton(
-            onPressed: controller.openChatListFromHome,
-            backgroundColor: AppColors.primaryColor,
-            elevation: 4,
-            child: const Icon(
-              Icons.chat_bubble_rounded,
-              color: AppColors.whiteColor,
-            ),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        FloatingActionButton(
+          heroTag: 'ai_chat_fab',
+          onPressed: controller.openAiChatFromHome,
+          backgroundColor: AppColors.primaryColor,
+          elevation: 4,
+          child: const Icon(
+            Icons.smart_toy_rounded,
+            color: AppColors.whiteColor,
           ),
-
-          if (controller.totalUnread.value > 0)
-            Positioned(
-              right: -3,
-              top: -3,
-              child: Container(
-                padding: const EdgeInsets.all(5),
-                constraints: const BoxConstraints(minWidth: 20, minHeight: 20),
-                decoration: const BoxDecoration(
-                  color: Colors.red,
-                  shape: BoxShape.circle,
+        ),
+        const SizedBox(height: 12),
+        Obx(
+          () => Stack(
+            clipBehavior: Clip.none,
+            children: [
+              FloatingActionButton(
+                heroTag: 'chat_fab',
+                onPressed: controller.openChatListFromHome,
+                backgroundColor: AppColors.primaryColor,
+                elevation: 4,
+                child: const Icon(
+                  Icons.chat_bubble_rounded,
+                  color: AppColors.whiteColor,
                 ),
-                child: Center(
-                  child: Text(
-                    controller.totalUnread.value > 99
-                        ? '15+'
-                        : '${controller.totalUnread.value}',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
+              ),
+
+              if (controller.totalUnread.value > 0)
+                Positioned(
+                  right: -3,
+                  top: -3,
+                  child: Container(
+                    padding: const EdgeInsets.all(5),
+                    constraints: const BoxConstraints(minWidth: 20, minHeight: 20),
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: Text(
+                        controller.totalUnread.value > 99
+                            ? '15+'
+                            : '${controller.totalUnread.value}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ),
-        ],
-      ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
-  Widget _searchSection(Size size) {
+  Widget _searchSection(Size size, {required String hintText}) {
     return Container(
       height: size.height * 0.062,
       padding: EdgeInsets.symmetric(horizontal: size.width * 0.03),
@@ -154,7 +192,7 @@ class HomeView extends GetView<HomeController> {
               decoration: InputDecoration(
                 isCollapsed: true,
                 border: InputBorder.none,
-                hintText: 'Search Design or Architects',
+                hintText: hintText,
                 hintStyle: AppTypography.bodySmall.copyWith(
                   color: AppColors.textBodyColor.withValues(alpha: 0.55),
                 ),
@@ -194,7 +232,10 @@ class HomeView extends GetView<HomeController> {
     );
   }
 
-  Widget _catalogSection(Size size) {
+  Widget _catalogSection(
+    Size size, {
+    String emptyMessage = 'Belum ada katalog',
+  }) {
     return Obx(() {
       final isLoading = controller.isLoadingCatalog.value;
       final hasError = controller.catalogError.value.isNotEmpty;
@@ -253,7 +294,7 @@ class HomeView extends GetView<HomeController> {
             Padding(
               padding: const EdgeInsets.only(top: AppDimensions.spacingXLarge),
               child: Text(
-                'Belum ada katalog',
+                emptyMessage,
                 style: AppTypography.bodySmall.copyWith(
                   color: AppColors.textBodyColor,
                 ),
@@ -262,6 +303,153 @@ class HomeView extends GetView<HomeController> {
         ],
       );
     });
+  }
+
+  Widget _performanceHeaderSection() {
+    return Text(
+      'Performance',
+      style: AppTypography.headingSmall.copyWith(
+        color: AppColors.textHeadingColor,
+        fontWeight: FontWeight.w700,
+      ),
+    );
+  }
+
+  Widget _performanceSection(Size size) {
+    return Obx(() {
+      final isLoading = controller.isLoadingPerformance.value;
+      final hasError = controller.performanceError.value.isNotEmpty;
+
+      if (hasError) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              controller.performanceError.value,
+              style: AppTypography.bodySmall.copyWith(
+                color: AppColors.errorColor,
+              ),
+            ),
+            TextButton(
+              onPressed: controller.fetchArchitectPerformance,
+              child: const Text('Coba Lagi'),
+            ),
+          ],
+        );
+      }
+
+      return Skeletonizer(
+        enabled: isLoading,
+        child: Row(
+          children: [
+            Expanded(
+              child: _performanceCard(
+                size: size,
+                icon: Icons.home_work_outlined,
+                label: 'Total Projects',
+                value: controller.totalProjects.value.toString(),
+              ),
+            ),
+            AppDimensions.spacingLarge.sw,
+            Expanded(
+              child: _performanceCard(
+                size: size,
+                icon: Icons.workspace_premium_outlined,
+                label: 'Total Awards',
+                value: controller.totalAwards.value.toString(),
+              ),
+            ),
+          ],
+        ),
+      );
+    });
+  }
+
+  Widget _performanceCard({
+    required Size size,
+    required IconData icon,
+    required String label,
+    required String value,
+  }) {
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: size.width * 0.04,
+        vertical: size.height * 0.018,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.whiteColor,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusXLarge),
+        boxShadow: const [
+          BoxShadow(
+            color: AppColors.shadowSoftColor,
+            blurRadius: 10,
+            offset: Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: size.width * 0.085,
+            height: size.width * 0.085,
+            decoration: BoxDecoration(
+              color: AppColors.secondaryColor.withValues(alpha: 0.18),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              icon,
+              color: AppColors.primaryColor,
+              size: size.width * 0.045,
+            ),
+          ),
+          AppDimensions.spacingSmall.sh,
+          Text(
+            label,
+            style: AppTypography.bodySmall.copyWith(
+              color: AppColors.textBodyColor,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          AppDimensions.spacingXSmall.sh,
+          Text(
+            value,
+            style: AppTypography.headingSmall.copyWith(
+              color: AppColors.textHeadingColor,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _activeProjectsHeaderSection() {
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            'Active Projects',
+            style: AppTypography.headingSmall.copyWith(
+              color: AppColors.textHeadingColor,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+        CustomTextButton(
+          text: 'See all',
+          onPressed: () => controller.openDesignFromHome(),
+          style: AppTypography.bodyMedium.copyWith(
+            color: AppColors.primaryColor,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _activeProjectSection(Size size) {
+    return _catalogSection(size, emptyMessage: 'Belum ada project');
   }
 
   Widget _catalogItem({
@@ -520,7 +708,7 @@ class HomeView extends GetView<HomeController> {
             ),
           ),
           ElevatedButton(
-            onPressed: () {},
+            onPressed: controller.openAiChatFromHome,
             style: ElevatedButton.styleFrom(
               elevation: 0,
               backgroundColor: AppColors.whiteColor,

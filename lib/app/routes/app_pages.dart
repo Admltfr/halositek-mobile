@@ -33,6 +33,8 @@ import '../modules/profile/bindings/profile_binding.dart';
 import '../modules/profile/views/profile_view.dart';
 import '../modules/splash/bindings/splash_binding.dart';
 import '../modules/splash/views/splash_view.dart';
+import '../modules/ai_chat/bindings/ai_chat_binding.dart';
+import '../modules/ai_chat/views/ai_chat_view.dart';
 
 part 'app_routes.dart';
 
@@ -135,6 +137,12 @@ class AppPages {
       name: _Paths.CHAT_DETAIL,
       page: () => const ChatDetailView(),
       binding: ChatDetailBinding(),
+    ),
+    GetPage(
+      name: _Paths.AI_CHAT,
+      page: () => const AiChatView(),
+      binding: AiChatBinding(),
+      transition: Transition.fadeIn,
     ),
   ];
 }

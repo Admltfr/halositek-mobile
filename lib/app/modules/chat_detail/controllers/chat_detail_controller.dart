@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:halositek/app/data/models/chat.dart';
 import 'package:halositek/app/data/network/chat_service.dart';
-import 'package:halositek/app/modules/navigation/controllers/navigation_controller.dart';
 
 class ChatDetailController extends GetxController {
   final ChatService _chatService;
