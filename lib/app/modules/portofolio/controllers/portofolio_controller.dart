@@ -4,7 +4,6 @@ import 'package:get/get.dart';
 import 'package:halositek/app/core/constants/app_colors.dart';
 import 'package:halositek/app/data/models/award.dart';
 import 'package:halositek/app/data/models/catalog.dart';
-import 'package:halositek/app/data/network/api_client.dart';
 import 'package:halositek/app/data/network/architect_service.dart';
 import 'package:halositek/app/data/network/award_service.dart';
 import 'package:halositek/app/data/network/catalog_service.dart';
@@ -34,7 +33,7 @@ class PortofolioController extends GetxController {
 
   MidtransSDK? _midtrans;
 
-  final String? client_key = dotenv.env['CLIENT_KEY'];
+  final String? clientKey = dotenv.env['CLIENT_KEY'];
 
   final activeTab = 0.obs;
 
@@ -54,6 +53,14 @@ class PortofolioController extends GetxController {
   final architectName = 'David Larsson'.obs;
   final architectTitle = 'Principal Architect'.obs;
   final experienceLabel = "15 Years Experience".obs;
+  final architectPhoto = ''.obs;
+  final architectBio =
+      'Specializing in sustainable modern residential architecture and urban planning with a focus on minimalist aesthetics and eco-friendly materials.'
+          .obs;
+  final totalProjects = 0.obs;
+  final totalAwards = 0.obs;
+  final consultationFee = 25000.obs;
+  final consultationDuration = 2.obs;
 
   @override
   void onInit() {
@@ -71,18 +78,35 @@ class PortofolioController extends GetxController {
     nav.onPop();
   }
 
+  Future<void> refreshPortofolio() async {
+    await Future.wait([fetchArchitect(), fetchPortfolios(), fetchAwards()]);
+  }
+
   Future<void> fetchArchitect() async {
-    debugPrint('\x1B[31m ${architectId}\x1B[0m');
+    debugPrint('\x1B[31m $architectId\x1B[0m');
     try {
       isLoadingArchitect.value = true;
       architectError.value = '';
       final architect = await _architectService.getArchitectById(architectId);
       architectName.value = architect.name;
+      architectPhoto.value = architect.profilePicture;
       architectTitle.value =
           architect.headline.isNotEmpty
               ? architect.headline
               : architectTitle.value;
-      experienceLabel.value = '${architect.totalProjects} Projects';
+      experienceLabel.value =
+          architect.specialization.isNotEmpty
+              ? architect.specialization
+              : '${architect.totalProjects} Projects';
+      architectBio.value =
+          architect.bio.isNotEmpty ? architect.bio : architectBio.value;
+      totalProjects.value = architect.totalProjects;
+      totalAwards.value = architect.totalAwards;
+      consultationFee.value = architect.consultationFee;
+      consultationDuration.value =
+          architect.consultationDuration > 0
+              ? architect.consultationDuration
+              : consultationDuration.value;
     } catch (e) {
       architectError.value = e.toString();
     } finally {
@@ -125,7 +149,7 @@ class PortofolioController extends GetxController {
   Future<void> _initMidtrans() async {
     _midtrans = await MidtransSDK.init(
       config: MidtransConfig(
-        clientKey: client_key ?? '',
+        clientKey: clientKey ?? '',
         merchantBaseUrl: 'https://app.sandbox.midtrans.com/',
         colorTheme: ColorTheme(
           colorPrimary: AppColors.primaryColor,
