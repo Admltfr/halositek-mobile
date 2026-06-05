@@ -4,7 +4,6 @@ import 'package:get/get.dart';
 import 'package:halositek/app/core/constants/app_colors.dart';
 import 'package:halositek/app/data/models/award.dart';
 import 'package:halositek/app/data/models/catalog.dart';
-import 'package:halositek/app/data/network/api_client.dart';
 import 'package:halositek/app/data/network/architect_service.dart';
 import 'package:halositek/app/data/network/award_service.dart';
 import 'package:halositek/app/data/network/catalog_service.dart';

@@ -5,6 +5,7 @@ import 'package:halositek/app/data/models/chat.dart';
 import 'package:halositek/app/data/network/catalog_service.dart';
 import 'package:halositek/app/data/network/architect_service.dart';
 import 'package:halositek/app/data/network/chat_service.dart';
+import 'package:halositek/app/data/network/token_service.dart';
 import 'package:halositek/app/modules/navigation/controllers/navigation_controller.dart';
 
 class HomeController extends GetxController {
@@ -31,6 +32,13 @@ class HomeController extends GetxController {
   final chatError = ''.obs;
   final conversations = <ChatConversation>[].obs;
   final totalUnread = 0.obs;
+
+  final isArchitect = false.obs;
+  final currentArchitectId = ''.obs;
+  final isLoadingPerformance = false.obs;
+  final performanceError = ''.obs;
+  final totalProjects = 0.obs;
+  final totalAwards = 0.obs;
 
   final likingCatalogIds = <String>{}.obs;
 
@@ -69,17 +77,71 @@ class HomeController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    fetchCatalogs();
-    fetchArchitects();
-    fetchUnreadBadge();
+    _initializeDashboard();
   }
 
-  Future<void> fetchCatalogs() async {
+  Future<void> _initializeDashboard() async {
+    await _loadCurrentRole();
+    fetchUnreadBadge();
+
+    if (isArchitect.value) {
+      fetchArchitectPerformance();
+      fetchCatalogs();
+    } else {
+      fetchCatalogs();
+      fetchArchitects();
+    }
+  }
+
+  Future<void> _loadCurrentRole() async {
+    final tokenService = Get.find<TokenService>();
+    final role = (await tokenService.getRole() ?? '').trim().toLowerCase();
+    isArchitect.value = role == 'architect';
+
+    final userId = await tokenService.getUserId();
+    currentArchitectId.value = (userId ?? '').trim();
+  }
+
+  Future<void> fetchArchitectPerformance() async {
+    final architectId = currentArchitectId.value.trim();
+    if (architectId.isEmpty) {
+      performanceError.value = 'Architect ID tidak ditemukan';
+      totalProjects.value = 0;
+      totalAwards.value = 0;
+      return;
+    }
+
+    try {
+      isLoadingPerformance.value = true;
+      performanceError.value = '';
+
+      final architect = await _architectService.getArchitectById(architectId);
+      totalProjects.value = architect.totalProjects;
+      totalAwards.value = architect.totalAwards;
+    } catch (e) {
+      performanceError.value = e.toString();
+    } finally {
+      isLoadingPerformance.value = false;
+    }
+  }
+
+  Future<void> fetchCatalogs({String? architectId}) async {
     try {
       isLoadingCatalog.value = true;
       catalogError.value = '';
 
-      final result = await _catalogService.getCatalogs(perPage: 6);
+      final resolvedArchitectId =
+          architectId ?? (isArchitect.value ? currentArchitectId.value : null);
+      if (isArchitect.value &&
+          (resolvedArchitectId == null || resolvedArchitectId.trim().isEmpty)) {
+        catalogs.clear();
+        catalogError.value = 'Architect ID tidak ditemukan';
+        return;
+      }
+      final result = await _catalogService.getCatalogs(
+        perPage: 6,
+        architectId: resolvedArchitectId,
+      );
       catalogs.assignAll(result);
     } catch (e) {
       catalogError.value = e.toString();
