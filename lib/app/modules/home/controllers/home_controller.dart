@@ -8,6 +8,8 @@ import 'package:halositek/app/data/network/chat_service.dart';
 import 'package:halositek/app/data/network/token_service.dart';
 import 'package:halositek/app/modules/navigation/controllers/navigation_controller.dart';
 
+import 'package:halositek/app/routes/app_pages.dart';
+
 class HomeController extends GetxController {
   final CatalogService _catalogService;
   final ArchitectService _architectService;
@@ -71,6 +73,10 @@ class HomeController extends GetxController {
   void openChatListFromHome() {
     final nav = Get.find<NavigationController>();
     nav.navigateTo(tabIndex: 0, route: '/chats');
+  }
+
+  void openAiChatFromHome() {
+    Get.toNamed(Routes.AI_CHAT);
   }
 
   final count = 0.obs;

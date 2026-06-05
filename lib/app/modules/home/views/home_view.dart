@@ -106,47 +106,65 @@ class HomeView extends GetView<HomeController> {
   }
 
   Widget _floatingActionButton() {
-    return Obx(
-      () => Stack(
-        clipBehavior: Clip.none,
-        children: [
-          FloatingActionButton(
-            onPressed: controller.openChatListFromHome,
-            backgroundColor: AppColors.primaryColor,
-            elevation: 4,
-            child: const Icon(
-              Icons.chat_bubble_rounded,
-              color: AppColors.whiteColor,
-            ),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        FloatingActionButton(
+          heroTag: 'ai_chat_fab',
+          onPressed: controller.openAiChatFromHome,
+          backgroundColor: AppColors.primaryColor,
+          elevation: 4,
+          child: const Icon(
+            Icons.smart_toy_rounded,
+            color: AppColors.whiteColor,
           ),
-
-          if (controller.totalUnread.value > 0)
-            Positioned(
-              right: -3,
-              top: -3,
-              child: Container(
-                padding: const EdgeInsets.all(5),
-                constraints: const BoxConstraints(minWidth: 20, minHeight: 20),
-                decoration: const BoxDecoration(
-                  color: Colors.red,
-                  shape: BoxShape.circle,
+        ),
+        const SizedBox(height: 12),
+        Obx(
+          () => Stack(
+            clipBehavior: Clip.none,
+            children: [
+              FloatingActionButton(
+                heroTag: 'chat_fab',
+                onPressed: controller.openChatListFromHome,
+                backgroundColor: AppColors.primaryColor,
+                elevation: 4,
+                child: const Icon(
+                  Icons.chat_bubble_rounded,
+                  color: AppColors.whiteColor,
                 ),
-                child: Center(
-                  child: Text(
-                    controller.totalUnread.value > 99
-                        ? '15+'
-                        : '${controller.totalUnread.value}',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
+              ),
+
+              if (controller.totalUnread.value > 0)
+                Positioned(
+                  right: -3,
+                  top: -3,
+                  child: Container(
+                    padding: const EdgeInsets.all(5),
+                    constraints: const BoxConstraints(minWidth: 20, minHeight: 20),
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: Text(
+                        controller.totalUnread.value > 99
+                            ? '15+'
+                            : '${controller.totalUnread.value}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ),
-        ],
-      ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -690,7 +708,7 @@ class HomeView extends GetView<HomeController> {
             ),
           ),
           ElevatedButton(
-            onPressed: () {},
+            onPressed: controller.openAiChatFromHome,
             style: ElevatedButton.styleFrom(
               elevation: 0,
               backgroundColor: AppColors.whiteColor,
