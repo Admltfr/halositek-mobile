@@ -81,3 +81,68 @@ class Award {
     return awardDate!.year.toString();
   }
 }
+
+class AwardListResponse {
+  final List<Award> awards;
+  final AwardMeta meta;
+
+  const AwardListResponse({required this.awards, required this.meta});
+
+  factory AwardListResponse.empty() {
+    return AwardListResponse(awards: const <Award>[], meta: AwardMeta.empty());
+  }
+}
+
+class AwardMeta {
+  final int currentPage;
+  final int lastPage;
+  final int perPage;
+  final int total;
+  final int pendingCount;
+  final int approvedCount;
+
+  const AwardMeta({
+    required this.currentPage,
+    required this.lastPage,
+    required this.perPage,
+    required this.total,
+    required this.pendingCount,
+    required this.approvedCount,
+  });
+
+  factory AwardMeta.fromJson(Map<String, dynamic> json) {
+    return AwardMeta(
+      currentPage: _toInt(json['current_page']),
+      lastPage: _toInt(json['last_page']),
+      perPage: _toInt(json['per_page']),
+      total: _toInt(json['total']),
+      pendingCount: _toInt(
+        json['pending_count'] ??
+            json['total_pending'] ??
+            json['total_pending_awards'],
+      ),
+      approvedCount: _toInt(
+        json['approved_count'] ??
+            json['total_approved'] ??
+            json['total_approved_awards'],
+      ),
+    );
+  }
+
+  factory AwardMeta.empty() {
+    return const AwardMeta(
+      currentPage: 1,
+      lastPage: 1,
+      perPage: 10,
+      total: 0,
+      pendingCount: 0,
+      approvedCount: 0,
+    );
+  }
+
+  static int _toInt(dynamic value) {
+    if (value is int) return value;
+    if (value is double) return value.toInt();
+    return int.tryParse(value?.toString() ?? '') ?? 0;
+  }
+}

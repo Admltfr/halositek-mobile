@@ -18,11 +18,11 @@ class AwardService {
       queryParameters: {
         'page': page,
         'per_page': perPage,
-        if (architectId != null && architectId.trim().isNotEmpty) 'architect_id': architectId.trim(),
+        if (architectId != null && architectId.trim().isNotEmpty)
+          'architect_id': architectId.trim(),
         if (search != null && search.trim().isNotEmpty) 'search': search.trim(),
         if (status != null && status.trim().isNotEmpty) 'status': status.trim(),
       },
-
       options: Options(validateStatus: (s) => s != null && s < 500),
     );
 
@@ -30,7 +30,50 @@ class AwardService {
       final rawList = response.data?['data'];
       if (rawList is! List) return <Award>[];
 
-      return rawList.whereType<Map>().map((e) => Award.fromJson(Map<String, dynamic>.from(e))).toList();
+      return rawList
+          .whereType<Map>()
+          .map((e) => Award.fromJson(Map<String, dynamic>.from(e)))
+          .toList();
+    }, 'Fetch Awards');
+  }
+
+  Future<AwardListResponse> getAwardList({
+    int page = 1,
+    int perPage = 10,
+    String? architectId,
+    String? search,
+    String? status,
+  }) async {
+    final response = await _apiClient.public.get(
+      '/awards',
+      queryParameters: {
+        'page': page,
+        'per_page': perPage,
+        if (architectId != null && architectId.trim().isNotEmpty)
+          'architect_id': architectId.trim(),
+        if (search != null && search.trim().isNotEmpty) 'search': search.trim(),
+        if (status != null && status.trim().isNotEmpty) 'status': status.trim(),
+      },
+      options: Options(validateStatus: (s) => s != null && s < 500),
+    );
+
+    return _apiClient.customResponse(response, () async {
+      final rawList = response.data?['data'];
+      final rawMeta = response.data?['meta'];
+
+      return AwardListResponse(
+        awards:
+            rawList is List
+                ? rawList
+                    .whereType<Map>()
+                    .map((e) => Award.fromJson(Map<String, dynamic>.from(e)))
+                    .toList()
+                : <Award>[],
+        meta:
+            rawMeta is Map
+                ? AwardMeta.fromJson(Map<String, dynamic>.from(rawMeta))
+                : AwardMeta.empty(),
+      );
     }, 'Fetch Awards');
   }
 

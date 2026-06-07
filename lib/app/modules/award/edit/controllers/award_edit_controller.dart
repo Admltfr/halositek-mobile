@@ -113,8 +113,11 @@ class AwardEditController extends GetxController {
 
     try {
       isSubmitting.value = true;
-      await _awardService.updateAward(resolvedAwardId, await _payload());
-      Get.find<NavigationController>().onPop();
+      final updatedAward = await _awardService.updateAward(
+        resolvedAwardId,
+        await _payload(),
+      );
+      Get.find<NavigationController>().onPop(updatedAward);
     } catch (e) {
       Get.snackbar('Award gagal diubah', e.toString());
     } finally {
