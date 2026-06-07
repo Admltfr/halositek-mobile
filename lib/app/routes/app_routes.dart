@@ -19,6 +19,7 @@ abstract class Routes {
   static const SPLASH = _Paths.SPLASH;
   static const CHAT_LIST = _Paths.CHAT_LIST;
   static const CHAT_DETAIL = _Paths.CHAT_DETAIL;
+  static const AI_CHAT = _Paths.AI_CHAT;
 }
 
 abstract class _Paths {
@@ -39,4 +40,5 @@ abstract class _Paths {
   static const SPLASH = '/splash';
   static const CHAT_LIST = '/chat-list';
   static const CHAT_DETAIL = '/chat-detail';
+  static const AI_CHAT = '/ai-chat';
 }
