@@ -93,7 +93,7 @@ class ArchitectView extends GetView<ArchitectController> {
                       hintText: 'Search Architects',
                       hintStyle: AppTypography.bodySmall.copyWith(color: AppColors.textBodyColor.withValues(alpha: 0.55)),
                     ),
-                    style: AppTypography.bodyMedium.copyWith(color: AppColors.textHeadingColor),
+                    style: AppTypography.bodySmall.copyWith(color: AppColors.textHeadingColor),
                   ),
                 ),
               ],
