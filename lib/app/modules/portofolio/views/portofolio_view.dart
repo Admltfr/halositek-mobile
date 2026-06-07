@@ -139,33 +139,7 @@ class PortofolioView extends GetView<PortofolioController> {
                             : Image.asset(_dummyAvatar, fit: BoxFit.cover),
                   ),
                 ),
-                Positioned(
-                  right: 0,
-                  bottom: 2,
-                  child: Container(
-                    width: 38,
-                    height: 38,
-                    decoration: BoxDecoration(
-                      color: AppColors.whiteColor,
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: AppColors.primaryColor.withValues(alpha: 0.08),
-                      ),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: AppColors.shadowSoftColor,
-                          blurRadius: 10,
-                          offset: Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: const Icon(
-                      Icons.bookmark_border_rounded,
-                      color: AppColors.textHeadingColor,
-                      size: 21,
-                    ),
-                  ),
-                ),
+                Positioned(right: 0, bottom: 2, child: _saveArchitectButton()),
                 Positioned(
                   right: 0,
                   top: 56,
@@ -212,6 +186,58 @@ class PortofolioView extends GetView<PortofolioController> {
         ],
       ),
     );
+  }
+
+  Widget _saveArchitectButton() {
+    return Obx(() {
+      final isSaved = controller.isWishlisted.value == true;
+      final isLoading = controller.isSavingArchitect.value;
+
+      return InkWell(
+        customBorder: const CircleBorder(),
+        onTap: isLoading ? null : controller.toggleSaveArchitect,
+        child: Container(
+          width: 38,
+          height: 38,
+          decoration: BoxDecoration(
+            color: AppColors.whiteColor,
+            shape: BoxShape.circle,
+            border: Border.all(
+              color:
+                  isSaved
+                      ? AppColors.primaryColor.withValues(alpha: 0.32)
+                      : AppColors.primaryColor.withValues(alpha: 0.08),
+            ),
+            boxShadow: const [
+              BoxShadow(
+                color: AppColors.shadowSoftColor,
+                blurRadius: 10,
+                offset: Offset(0, 4),
+              ),
+            ],
+          ),
+          child:
+              isLoading
+                  ? const Padding(
+                    padding: EdgeInsets.all(10),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: AppColors.primaryColor,
+                    ),
+                  )
+                  : Icon(
+                    isSaved
+                        ? Icons.bookmark_rounded
+                        : Icons.bookmark_border_rounded,
+                    color:
+                        isSaved
+                            ? AppColors.primaryColor
+                            : AppColors.textHeadingColor,
+                    size: 21,
+                  ),
+        ),
+      );
+    });
   }
 
   Widget _stats() {

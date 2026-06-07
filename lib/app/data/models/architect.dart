@@ -18,6 +18,7 @@ class Architect {
   final double rating;
   final int consultationFee;
   final int consultationDuration;
+  final bool? isWishlisted;
   final List<ArchitectProject> projects;
   final List<ArchitectAward> awards;
 
@@ -40,6 +41,7 @@ class Architect {
     required this.rating,
     required this.consultationFee,
     required this.consultationDuration,
+    required this.isWishlisted,
     required this.projects,
     required this.awards,
   });
@@ -66,6 +68,7 @@ class Architect {
       rating: _toDouble(json['rating']),
       consultationFee: _toInt(json['consultation_fee']),
       consultationDuration: _toInt(json['consultation_duration']),
+      isWishlisted: _toNullableBool(json['is_wishlisted']),
       projects:
           _toMapList(json['projects']).map(ArchitectProject.fromJson).toList(),
       awards: _toMapList(json['awards']).map(ArchitectAward.fromJson).toList(),
@@ -92,6 +95,7 @@ class Architect {
       rating: 0,
       consultationFee: 0,
       consultationDuration: 0,
+      isWishlisted: null,
       projects: <ArchitectProject>[],
       awards: <ArchitectAward>[],
     );
@@ -107,6 +111,17 @@ class Architect {
     if (value is double) return value;
     if (value is int) return value.toDouble();
     return double.tryParse(value?.toString() ?? '') ?? 0;
+  }
+
+  static bool? _toNullableBool(dynamic value) {
+    if (value == null) return null;
+    if (value is bool) return value;
+    if (value is num) return value == 1;
+
+    final normalized = value.toString().toLowerCase().trim();
+    if (normalized == 'true' || normalized == '1') return true;
+    if (normalized == 'false' || normalized == '0') return false;
+    return null;
   }
 
   static List<Map<String, dynamic>> _toMapList(dynamic value) {
