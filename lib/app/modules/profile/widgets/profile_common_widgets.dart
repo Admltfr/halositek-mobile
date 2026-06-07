@@ -70,57 +70,56 @@ class SavedArchitectCard extends StatelessWidget {
         architect.architectProfile.bio.isNotEmpty ? architect.architectProfile.bio : architect.architectProfile.location;
 
     return Container(
-      padding: EdgeInsets.all(compact ? 8 : 16),
-      decoration: BoxDecoration(
-        color: AppColors.whiteColor,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusXLarge),
-        border: Border.all(color: AppColors.primaryColor.withValues(alpha: 0.14)),
-        boxShadow: const [BoxShadow(color: AppColors.shadowSoftColor, blurRadius: 12, offset: Offset(0, 4))],
-      ),
       child:
           compact
               ? Column(
                 children: [
                   _Avatar(url: architect.photoProfileUrl, radius: 30),
-                  8.0.sh,
+                  6.0.sh,
                   Text(
                     architect.name.isNotEmpty ? architect.name : '-',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: AppTypography.captionLarge.copyWith(
-                      color: AppColors.textHeadingColor,
-                      fontWeight: FontWeight.w700,
-                    ),
+                    style: AppTypography.caption.copyWith(color: AppColors.textHeadingColor, fontWeight: FontWeight.w700),
                   ),
                 ],
               )
-              : Row(
-                children: [
-                  _Avatar(url: architect.photoProfileUrl, radius: 30),
-                  16.0.sw,
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          architect.name.isNotEmpty ? architect.name : '-',
-                          style: AppTypography.bodyMedium.copyWith(
-                            color: AppColors.textHeadingColor,
-                            fontWeight: FontWeight.w800,
+              : Container(
+                padding: EdgeInsets.all(compact ? 8 : 16),
+                decoration: BoxDecoration(
+                  color: AppColors.whiteColor,
+                  borderRadius: BorderRadius.circular(AppDimensions.radiusXLarge),
+                  border: Border.all(color: AppColors.primaryColor.withValues(alpha: 0.14)),
+                  boxShadow: const [BoxShadow(color: AppColors.shadowSoftColor, blurRadius: 12, offset: Offset(0, 4))],
+                ),
+                child: Row(
+                  children: [
+                    _Avatar(url: architect.photoProfileUrl, radius: 30),
+                    16.0.sw,
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            architect.name.isNotEmpty ? architect.name : '-',
+                            style: AppTypography.bodyMedium.copyWith(
+                              color: AppColors.textHeadingColor,
+                              fontWeight: FontWeight.w800,
+                            ),
                           ),
-                        ),
-                        4.0.sh,
-                        Text(
-                          subtitle.isNotEmpty ? subtitle : 'Architect',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTypography.bodySmall.copyWith(color: AppColors.textBodyColor),
-                        ),
-                      ],
+                          4.0.sh,
+                          Text(
+                            subtitle.isNotEmpty ? subtitle : 'Architect',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTypography.bodySmall.copyWith(color: AppColors.textBodyColor),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  const Icon(Icons.bookmark, color: AppColors.secondaryColor),
-                ],
+                    const Icon(Icons.bookmark, color: AppColors.secondaryColor),
+                  ],
+                ),
               ),
     );
   }
