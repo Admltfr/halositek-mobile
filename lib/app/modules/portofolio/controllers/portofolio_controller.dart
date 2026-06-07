@@ -43,6 +43,7 @@ class PortofolioController extends GetxController {
   final isLoadingPortfolio = false.obs;
   final isLoadingAward = false.obs;
   final isLoadingArchitect = false.obs;
+  final isSavingArchitect = false.obs;
   final portfolioError = ''.obs;
   final awardError = ''.obs;
   final architectError = ''.obs;
@@ -61,6 +62,7 @@ class PortofolioController extends GetxController {
   final totalAwards = 0.obs;
   final consultationFee = 25000.obs;
   final consultationDuration = 2.obs;
+  final isWishlisted = RxnBool();
 
   @override
   void onInit() {
@@ -90,23 +92,16 @@ class PortofolioController extends GetxController {
       final architect = await _architectService.getArchitectById(architectId);
       architectName.value = architect.name;
       architectPhoto.value = architect.profilePicture;
-      architectTitle.value =
-          architect.headline.isNotEmpty
-              ? architect.headline
-              : architectTitle.value;
+      architectTitle.value = architect.headline.isNotEmpty ? architect.headline : architectTitle.value;
       experienceLabel.value =
-          architect.specialization.isNotEmpty
-              ? architect.specialization
-              : '${architect.totalProjects} Projects';
-      architectBio.value =
-          architect.bio.isNotEmpty ? architect.bio : architectBio.value;
+          architect.specialization.isNotEmpty ? architect.specialization : '${architect.totalProjects} Projects';
+      architectBio.value = architect.bio.isNotEmpty ? architect.bio : architectBio.value;
       totalProjects.value = architect.totalProjects;
       totalAwards.value = architect.totalAwards;
       consultationFee.value = architect.consultationFee;
       consultationDuration.value =
-          architect.consultationDuration > 0
-              ? architect.consultationDuration
-              : consultationDuration.value;
+          architect.consultationDuration > 0 ? architect.consultationDuration : consultationDuration.value;
+      isWishlisted.value = architect.isWishlisted;
     } catch (e) {
       architectError.value = e.toString();
     } finally {
@@ -114,14 +109,37 @@ class PortofolioController extends GetxController {
     }
   }
 
+  Future<void> toggleSaveArchitect() async {
+    if (isSavingArchitect.value) return;
+
+    final architectIdValue = architectId.trim();
+    if (architectIdValue.isEmpty) {
+      Get.snackbar('Gagal', 'Architect ID tidak ditemukan');
+      return;
+    }
+
+    isSavingArchitect.value = true;
+
+    try {
+      if (isWishlisted.value == true) {
+        await _architectService.unsaveArchitect(architectIdValue);
+      } else {
+        await _architectService.saveArchitect(architectIdValue);
+      }
+
+      await fetchArchitect();
+    } catch (e) {
+      Get.snackbar('Gagal', e.toString());
+    } finally {
+      isSavingArchitect.value = false;
+    }
+  }
+
   Future<void> fetchPortfolios() async {
     try {
       isLoadingPortfolio.value = true;
       portfolioError.value = '';
-      final result = await _catalogService.getCatalogs(
-        perPage: 12,
-        architectId: architectId,
-      );
+      final result = await _catalogService.getCatalogs(perPage: 12, architectId: architectId);
       portfolios.assignAll(result);
     } catch (e) {
       portfolioError.value = e.toString();
@@ -134,10 +152,7 @@ class PortofolioController extends GetxController {
     try {
       isLoadingAward.value = true;
       awardError.value = '';
-      final result = await _awardService.getAwards(
-        perPage: 12,
-        architectId: architectId,
-      );
+      final result = await _awardService.getAwards(perPage: 12, architectId: architectId);
       awards.assignAll(result);
     } catch (e) {
       awardError.value = e.toString();
@@ -182,9 +197,7 @@ class PortofolioController extends GetxController {
     paymentError.value = '';
 
     try {
-      final initiation = await _paymentService.initiate(
-        architectId: architectIdValue,
-      );
+      final initiation = await _paymentService.initiate(architectId: architectIdValue);
 
       await _midtrans?.startPaymentUiFlow(token: initiation.snapToken);
     } catch (e) {
@@ -212,9 +225,7 @@ class PortofolioController extends GetxController {
       final conversationId =
           status.conversationId.isNotEmpty
               ? status.conversationId
-              : (await _chatService.createConversation(
-                participantIds: [architectId],
-              )).id;
+              : (await _chatService.createConversation(participantIds: [architectId])).id;
 
       _openChat(conversationId);
     } else {
@@ -225,10 +236,7 @@ class PortofolioController extends GetxController {
   void _openChat(String conversationId) {
     Get.to(
       () => const ChatDetailView(),
-      binding: ChatDetailBinding(
-        conversationId: conversationId,
-        title: architectName.value,
-      ),
+      binding: ChatDetailBinding(conversationId: conversationId, title: architectName.value),
     );
   }
 }

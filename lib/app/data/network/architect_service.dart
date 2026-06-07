@@ -2,9 +2,11 @@ import 'package:dio/dio.dart';
 import 'package:halositek/app/data/models/architect.dart';
 import 'package:halositek/app/data/models/architect_earnings.dart';
 import 'package:halositek/app/data/network/api_client.dart';
+import 'package:halositek/app/data/network/token_service.dart';
 
 class ArchitectService {
   final ApiClient _apiClient;
+  final TokenService _tokenService = TokenService();
 
   ArchitectService(this._apiClient);
 
@@ -39,7 +41,11 @@ class ArchitectService {
   }
 
   Future<Architect> getArchitectById(String id) async {
-    final response = await _apiClient.public.get(
+    final useAuthenticatedRequest = await _shouldUseAuthenticatedDetail();
+    final client =
+        useAuthenticatedRequest ? _apiClient.private : _apiClient.public;
+
+    final response = await client.get(
       '/architects/$id',
       options: Options(
         validateStatus: (status) => status != null && status < 500,
@@ -53,6 +59,35 @@ class ArchitectService {
       }
       return Architect.fromJson(Map<String, dynamic>.from(raw));
     }, 'Fetch Architect Detail');
+  }
+
+  Future<bool> _shouldUseAuthenticatedDetail() async {
+    final token = await _tokenService.getAccessToken();
+    final role = (await _tokenService.getRole() ?? '').trim().toLowerCase();
+
+    return token != null && token.trim().isNotEmpty && role == 'user';
+  }
+
+  Future<void> saveArchitect(String id) async {
+    final response = await _apiClient.private.post(
+      '/architects/$id/save',
+      options: Options(
+        validateStatus: (status) => status != null && status < 500,
+      ),
+    );
+
+    return _apiClient.customResponse(response, () async {}, 'Save Architect');
+  }
+
+  Future<void> unsaveArchitect(String id) async {
+    final response = await _apiClient.private.delete(
+      '/architects/$id/save',
+      options: Options(
+        validateStatus: (status) => status != null && status < 500,
+      ),
+    );
+
+    return _apiClient.customResponse(response, () async {}, 'Unsave Architect');
   }
 
   Future<ArchitectEarnings> getArchitectEarnings() async {
