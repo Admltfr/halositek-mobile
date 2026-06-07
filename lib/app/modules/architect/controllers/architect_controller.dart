@@ -1,4 +1,6 @@
 // lib/app/modules/architect/controllers/architect_controller.dart
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:halositek/app/data/models/architect.dart';
@@ -19,9 +21,11 @@ class ArchitectController extends GetxController {
   final errorMessage = ''.obs;
   final searchQuery = ''.obs;
 
+  final TextEditingController searchController = TextEditingController();
   final ScrollController scrollController = ScrollController();
 
   int _page = 1;
+  Timer? _searchDebounce;
 
   bool get hasData => architects.isNotEmpty;
 
@@ -34,13 +38,17 @@ class ArchitectController extends GetxController {
   void onInit() {
     super.onInit();
     scrollController.addListener(_onScroll);
+    searchController.addListener(_onSearchChanged);
     fetchArchitects(reset: true);
   }
 
   @override
   void onClose() {
     scrollController.removeListener(_onScroll);
+    searchController.removeListener(_onSearchChanged);
+    _searchDebounce?.cancel();
     scrollController.dispose();
+    searchController.dispose();
     super.onClose();
   }
 
@@ -51,6 +59,18 @@ class ArchitectController extends GetxController {
     if (scrollController.position.pixels >= triggerPoint) {
       loadMoreArchitects();
     }
+  }
+
+  void _onSearchChanged() {
+    searchQuery.value = searchController.text;
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(const Duration(milliseconds: 500), () {
+      fetchArchitects(reset: true);
+    });
+  }
+
+  Future<void> refreshArchitects() async {
+    await fetchArchitects(reset: true);
   }
 
   Future<void> fetchArchitects({bool reset = false}) async {
@@ -75,6 +95,7 @@ class ArchitectController extends GetxController {
       final result = await _architectService.getArchitects(
         page: _page,
         perPage: _perPage,
+        search: searchController.text,
       );
 
       if (reset) {
