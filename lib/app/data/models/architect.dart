@@ -18,6 +18,7 @@ class Architect {
   final double rating;
   final int consultationFee;
   final int consultationDuration;
+  final int yearOfExperience;
   final bool? isWishlisted;
   final List<ArchitectProject> projects;
   final List<ArchitectAward> awards;
@@ -41,6 +42,7 @@ class Architect {
     required this.rating,
     required this.consultationFee,
     required this.consultationDuration,
+    required this.yearOfExperience,
     required this.isWishlisted,
     required this.projects,
     required this.awards,
@@ -51,10 +53,8 @@ class Architect {
       id: (json['id'] ?? '').toString(),
       name: (json['name'] ?? '').toString(),
       email: (json['email'] ?? '').toString(),
-      profilePicture: (json['profile_picture'] ?? '').toString(),
-      emailVerifiedAt: DateTime.tryParse(
-        (json['email_verified_at'] ?? '').toString(),
-      ),
+      profilePicture: (json['profile_picture'] ?? json['photo_profile_url'] ?? '').toString(),
+      emailVerifiedAt: DateTime.tryParse((json['email_verified_at'] ?? '').toString()),
       role: (json['role'] ?? '').toString(),
       createdAt: DateTime.tryParse((json['created_at'] ?? '').toString()),
       updatedAt: DateTime.tryParse((json['updated_at'] ?? '').toString()),
@@ -67,10 +67,10 @@ class Architect {
       totalAwards: _toInt(json['total_awards']),
       rating: _toDouble(json['rating']),
       consultationFee: _toInt(json['consultation_fee']),
-      consultationDuration: _toInt(json['consultation_duration']),
+      consultationDuration: _toInt(json['consultation_duration'] ?? json['consultation_hours']),
+      yearOfExperience: _toInt(json['year_of_experience']),
       isWishlisted: _toNullableBool(json['is_wishlisted']),
-      projects:
-          _toMapList(json['projects']).map(ArchitectProject.fromJson).toList(),
+      projects: _toMapList(json['projects']).map(ArchitectProject.fromJson).toList(),
       awards: _toMapList(json['awards']).map(ArchitectAward.fromJson).toList(),
     );
   }
@@ -95,9 +95,60 @@ class Architect {
       rating: 0,
       consultationFee: 0,
       consultationDuration: 0,
+      yearOfExperience: 0,
       isWishlisted: null,
       projects: <ArchitectProject>[],
       awards: <ArchitectAward>[],
+    );
+  }
+
+  Architect copyWith({
+    String? id,
+    String? name,
+    String? email,
+    String? profilePicture,
+    DateTime? emailVerifiedAt,
+    String? role,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    String? headline,
+    String? bio,
+    String? location,
+    String? status,
+    String? specialization,
+    int? totalProjects,
+    int? totalAwards,
+    double? rating,
+    int? consultationFee,
+    int? consultationDuration,
+    int? yearOfExperience,
+    bool? isWishlisted,
+    List<ArchitectProject>? projects,
+    List<ArchitectAward>? awards,
+  }) {
+    return Architect(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      email: email ?? this.email,
+      profilePicture: profilePicture ?? this.profilePicture,
+      emailVerifiedAt: emailVerifiedAt ?? this.emailVerifiedAt,
+      role: role ?? this.role,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      headline: headline ?? this.headline,
+      bio: bio ?? this.bio,
+      location: location ?? this.location,
+      status: status ?? this.status,
+      specialization: specialization ?? this.specialization,
+      totalProjects: totalProjects ?? this.totalProjects,
+      totalAwards: totalAwards ?? this.totalAwards,
+      rating: rating ?? this.rating,
+      consultationFee: consultationFee ?? this.consultationFee,
+      consultationDuration: consultationDuration ?? this.consultationDuration,
+      yearOfExperience: yearOfExperience ?? this.yearOfExperience,
+      isWishlisted: isWishlisted ?? this.isWishlisted,
+      projects: projects ?? this.projects,
+      awards: awards ?? this.awards,
     );
   }
 
@@ -126,10 +177,7 @@ class Architect {
 
   static List<Map<String, dynamic>> _toMapList(dynamic value) {
     if (value is! List) return <Map<String, dynamic>>[];
-    return value
-        .whereType<Map>()
-        .map((e) => Map<String, dynamic>.from(e))
-        .toList();
+    return value.whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList();
   }
 }
 

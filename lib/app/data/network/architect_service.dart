@@ -129,4 +129,97 @@ class ArchitectService {
       return Architect.fromJson(Map<String, dynamic>.from(architectJson));
     }, 'Update Architect');
   }
+
+  Future<Architect> updateArchitectProfile(
+    FormData payload,
+    Architect current,
+  ) async {
+    final response = await _apiClient.private.post(
+      '/architects/profile',
+      data: payload,
+      options: Options(
+        validateStatus: (status) => status != null && status < 500,
+      ),
+    );
+
+    if (response.statusCode == 200) {
+      final raw = response.data?['data'];
+      if (raw is! Map) {
+        throw Exception('Invalid architect profile update response');
+      }
+
+      final data = Map<String, dynamic>.from(raw);
+      return current.copyWith(
+        name: (data['name'] ?? current.name).toString(),
+        email: (data['email'] ?? current.email).toString(),
+        headline: (data['headline'] ?? current.headline).toString(),
+        bio: (data['bio'] ?? current.bio).toString(),
+        profilePicture:
+            (data['photo_profile_url'] ??
+                    data['profile_picture'] ??
+                    current.profilePicture)
+                .toString(),
+        consultationFee:
+            _toInt(data['consultation_fee']) == 0 &&
+                    data['consultation_fee'] == null
+                ? current.consultationFee
+                : _toInt(data['consultation_fee']),
+        consultationDuration:
+            _toInt(data['consultation_hours']) == 0 &&
+                    data['consultation_hours'] == null
+                ? current.consultationDuration
+                : _toInt(data['consultation_hours']),
+        yearOfExperience:
+            data['year_of_experience'] == null
+                ? current.yearOfExperience
+                : _toInt(data['year_of_experience']),
+      );
+    }
+
+    if (response.statusCode == 422) {
+      throw ArchitectValidationException.fromResponse(response.data);
+    }
+
+    return _apiClient.customResponse(
+      response,
+      () async => current,
+      'Update Architect Profile',
+    );
+  }
+
+  int _toInt(dynamic value) {
+    if (value is int) return value;
+    if (value is double) return value.toInt();
+    return int.tryParse(value?.toString() ?? '') ?? 0;
+  }
+}
+
+class ArchitectValidationException implements Exception {
+  ArchitectValidationException(this.message, this.errors);
+
+  final String message;
+  final Map<String, String> errors;
+
+  factory ArchitectValidationException.fromResponse(dynamic data) {
+    final fallback =
+        (data is Map ? data['message'] : null)?.toString() ??
+        'Validation failed.';
+    final result = <String, String>{};
+    final rawErrors = data is Map ? data['errors'] : null;
+
+    if (rawErrors is Map) {
+      rawErrors.forEach((key, value) {
+        if (value is List && value.isNotEmpty) {
+          result[key.toString()] = value.first.toString();
+        } else if (value != null) {
+          result[key.toString()] = value.toString();
+        }
+      });
+    }
+
+    return ArchitectValidationException(fallback, result);
+  }
+
+  @override
+  String toString() => message;
 }

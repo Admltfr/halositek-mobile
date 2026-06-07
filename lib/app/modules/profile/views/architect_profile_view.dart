@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart';
 import 'package:halositek/app/core/constants/app_colors.dart';
 import 'package:halositek/app/core/constants/app_dimensions.dart';
@@ -102,6 +103,7 @@ Architect _dummyArchitect() {
     rating: 0,
     consultationFee: 250000,
     consultationDuration: 1,
+    yearOfExperience: 8,
     isWishlisted: null,
     projects: _dummyProjects,
     awards: _dummyAwards,
@@ -200,7 +202,9 @@ class _Header extends StatelessWidget {
                 child:
                     architect.profilePicture.isNotEmpty
                         ? Image.network(
-                          architect.profilePicture,
+                          architect.profilePicture.startsWith('http') || architect.profilePicture.startsWith('https')
+                              ? architect.profilePicture
+                              : "${dotenv.env['BASEURL']}/storage/${architect.profilePicture}",
                           fit: BoxFit.cover,
                           errorBuilder: (_, __, ___) => Image.asset(profileFallbackImage, fit: BoxFit.cover),
                         )
