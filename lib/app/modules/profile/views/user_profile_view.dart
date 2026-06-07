@@ -8,6 +8,7 @@ import 'package:halositek/app/data/models/user.dart';
 import 'package:halositek/app/modules/profile/controllers/profile_controller.dart';
 import 'package:halositek/app/modules/profile/widgets/profile_common_widgets.dart';
 import 'package:halositek/app/modules/profile/widgets/profile_top_bar.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
 class UserProfileView extends StatelessWidget {
   final ProfileController controller;
@@ -28,7 +29,8 @@ class UserProfileView extends StatelessWidget {
             physics: const AlwaysScrollableScrollPhysics(),
             padding: EdgeInsets.symmetric(horizontal: size.width * 0.05, vertical: size.height * 0.01),
             child: Obx(() {
-              final user = controller.user.value ?? UserProfile.empty();
+              final isLoading = controller.isLoading.value;
+              final user = controller.user.value ?? _dummyUser();
 
               if (controller.errorMessage.value.isNotEmpty && controller.user.value == null) {
                 return Column(
@@ -45,43 +47,48 @@ class UserProfileView extends StatelessWidget {
                 );
               }
 
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  ProfileTopBar(title: 'Your Profile', onBack: controller.goBack, onLogout: controller.logout),
-                  12.0.sh,
-                  _UserHeader(user: user),
-                  26.0.sh,
-                  _PersonalData(user: user),
-                  24.0.sh,
-                  _SectionTitle(title: 'Saved Architect', onViewAll: controller.openSavedArchitects),
-                  14.0.sh,
-                  _SavedArchitectPreview(items: controller.savedArchitects),
-                  24.0.sh,
-                  _SectionTitle(title: 'Saved Design', onViewAll: controller.openSavedDesigns),
-                  14.0.sh,
-                  _SavedDesignPreview(items: controller.savedProjects),
-                  24.0.sh,
-                  _SectionTitle(title: 'Consultation Payment History', onViewAll: controller.openPaymentHistory),
-                  14.0.sh,
-                  _PaymentPreview(items: controller.paymentHistories),
-                  24.0.sh,
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton.icon(
-                      onPressed: controller.logout,
-                      icon: const Icon(Icons.logout_rounded, size: 18),
-                      label: Text('LOGOUT', style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.bold)),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primaryColor,
-                        foregroundColor: AppColors.whiteColor,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimensions.radiusMedium)),
+              return Skeletonizer(
+                enabled: isLoading,
+                child: AbsorbPointer(
+                  absorbing: isLoading,
+                  child: Column(
+                    children: [
+                      ProfileTopBar(title: 'Your Profile', onBack: controller.goBack, onLogout: controller.logout),
+                      12.0.sh,
+                      _UserHeader(user: user, onEdit: controller.openEditProfile),
+                      24.0.sh,
+                      _PersonalData(user: user),
+                      24.0.sh,
+                      _SectionTitle(title: 'Saved Architect', onViewAll: controller.openSavedArchitects),
+                      14.0.sh,
+                      _SavedArchitectPreview(items: isLoading ? _dummySavedArchitects : controller.savedArchitects),
+                      24.0.sh,
+                      _SectionTitle(title: 'Saved Design', onViewAll: controller.openSavedDesigns),
+                      14.0.sh,
+                      _SavedDesignPreview(items: isLoading ? _dummySavedProjects : controller.savedProjects),
+                      24.0.sh,
+                      _SectionTitle(title: 'Consultation Payment History', onViewAll: controller.openPaymentHistory),
+                      14.0.sh,
+                      _PaymentPreview(items: isLoading ? _dummyPayments : controller.paymentHistories),
+                      24.0.sh,
+                      SizedBox(
+                        width: double.infinity,
+                        height: 50,
+                        child: ElevatedButton.icon(
+                          onPressed: controller.logout,
+                          icon: const Icon(Icons.logout_rounded, size: 18),
+                          label: Text('LOGOUT', style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.bold)),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primaryColor,
+                            foregroundColor: AppColors.whiteColor,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimensions.radiusMedium)),
+                          ),
+                        ),
                       ),
-                    ),
+                      16.0.sh,
+                    ],
                   ),
-                  16.0.sh,
-                ],
+                ),
               );
             }),
           ),
@@ -91,46 +98,164 @@ class UserProfileView extends StatelessWidget {
   }
 }
 
+UserProfile _dummyUser() {
+  return const UserProfile(
+    id: 'loading-user',
+    name: 'Muhammad User',
+    email: 'user@example.com',
+    role: 'user',
+    accountStatus: 'active',
+    photoProfileUrl: '',
+    createdAt: null,
+    updatedAt: null,
+    savedProjects: <SavedProject>[],
+    savedArchitects: <SavedArchitect>[],
+    paymentHistories: <PaymentHistory>[],
+  );
+}
+
+const _dummySavedArchitects = <SavedArchitect>[
+  SavedArchitect(
+    id: 'loading-architect-1',
+    name: 'Architect Name',
+    photoProfileUrl: '',
+    architectProfile: SavedArchitectProfile(id: '', bio: 'Residential Specialist', location: 'Jakarta'),
+    totalProjects: 0,
+    totalAwards: 0,
+  ),
+  SavedArchitect(
+    id: 'loading-architect-2',
+    name: 'Architect Name',
+    photoProfileUrl: '',
+    architectProfile: SavedArchitectProfile(id: '', bio: 'Interior Designer', location: 'Bandung'),
+    totalProjects: 0,
+    totalAwards: 0,
+  ),
+  SavedArchitect(
+    id: 'loading-architect-3',
+    name: 'Architect Name',
+    photoProfileUrl: '',
+    architectProfile: SavedArchitectProfile(id: '', bio: 'Modern Design', location: 'Surabaya'),
+    totalProjects: 0,
+    totalAwards: 0,
+  ),
+];
+
+const _dummySavedProjects = <SavedProject>[
+  SavedProject(
+    id: 'loading-project-1',
+    title: 'Modern House',
+    style: 'modern',
+    imageUrl: '',
+    architect: UserArchitectSummary(id: '', name: '', photoProfileUrl: ''),
+  ),
+  SavedProject(
+    id: 'loading-project-2',
+    title: 'Classic Villa',
+    style: 'classic',
+    imageUrl: '',
+    architect: UserArchitectSummary(id: '', name: '', photoProfileUrl: ''),
+  ),
+];
+
+const _dummyPayments = <PaymentHistory>[
+  PaymentHistory(
+    id: 'loading-payment-1',
+    orderId: '',
+    status: 'paid',
+    refundStatus: '',
+    amount: 250000,
+    taxAmount: 0,
+    totalPaidAmount: 250000,
+    durationHours: 1,
+    paymentMethod: '',
+    paidAt: null,
+    createdAt: null,
+    consultationId: '',
+    conversationId: '',
+    architect: UserArchitectSummary(id: '', name: 'Architect Name', photoProfileUrl: ''),
+  ),
+  PaymentHistory(
+    id: 'loading-payment-2',
+    orderId: '',
+    status: 'paid',
+    refundStatus: '',
+    amount: 250000,
+    taxAmount: 0,
+    totalPaidAmount: 250000,
+    durationHours: 1,
+    paymentMethod: '',
+    paidAt: null,
+    createdAt: null,
+    consultationId: '',
+    conversationId: '',
+    architect: UserArchitectSummary(id: '', name: 'Architect Name', photoProfileUrl: ''),
+  ),
+];
+
 class _UserHeader extends StatelessWidget {
   final UserProfile user;
+  final VoidCallback onEdit;
 
-  const _UserHeader({required this.user});
+  const _UserHeader({required this.user, required this.onEdit});
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        children: [
-          Container(
-            width: 138,
-            height: 138,
-            padding: const EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: AppColors.secondaryColor.withValues(alpha: 0.28), width: 4),
+    return Column(
+      children: [
+        Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Container(
+              width: 138,
+              height: 138,
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: AppColors.secondaryColor.withValues(alpha: 0.28), width: 4),
+              ),
+              child: ClipOval(
+                child:
+                    user.photoProfileUrl.isNotEmpty
+                        ? Image.network(
+                          user.photoProfileUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => Image.asset(profileFallbackImage, fit: BoxFit.cover),
+                        )
+                        : Image.asset(profileFallbackImage, fit: BoxFit.cover),
+              ),
             ),
-            child: ClipOval(
-              child:
-                  user.photoProfileUrl.isNotEmpty
-                      ? Image.network(
-                        user.photoProfileUrl,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => Image.asset(profileFallbackImage, fit: BoxFit.cover),
-                      )
-                      : Image.asset(profileFallbackImage, fit: BoxFit.cover),
+            Positioned(
+              right: 4,
+              bottom: 6,
+              child: InkWell(
+                onTap: onEdit,
+                borderRadius: BorderRadius.circular(AppDimensions.radiusMedium),
+                child: Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryColor,
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusMedium),
+                    border: Border.all(color: AppColors.whiteColor, width: 3),
+                  ),
+                  child: const Icon(Icons.edit_square, color: AppColors.whiteColor, size: 18),
+                ),
+              ),
             ),
+          ],
+        ),
+        18.0.sh,
+        Text(
+          user.name.isNotEmpty ? user.name : '-',
+          textAlign: TextAlign.center,
+          style: AppTypography.headingMedium.copyWith(
+            fontSize: 20,
+            color: AppColors.textHeadingColor,
+            fontWeight: FontWeight.w900,
           ),
-          22.0.sh,
-          Text(
-            user.name.isNotEmpty ? user.name : '-',
-            style: AppTypography.headingMedium.copyWith(
-              fontSize: 20,
-              color: AppColors.textHeadingColor,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -250,7 +375,7 @@ class _SavedArchitectPreview extends StatelessWidget {
       height: 94,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        itemCount: items.take(6).length,
+        itemCount: items.take(4).length,
         separatorBuilder: (_, __) => 12.0.sw,
         itemBuilder: (_, index) => SizedBox(width: 72, child: SavedArchitectCard(architect: items[index], compact: true)),
       ),

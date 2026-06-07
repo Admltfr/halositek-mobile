@@ -10,6 +10,7 @@ import 'package:halositek/app/modules/profile/controllers/profile_controller.dar
 import 'package:halositek/app/modules/profile/widgets/profile_common_widgets.dart';
 import 'package:halositek/app/modules/profile/widgets/profile_formatters.dart';
 import 'package:halositek/app/modules/profile/widgets/profile_top_bar.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 
 class ArchitectProfileView extends StatelessWidget {
   final ProfileController controller;
@@ -31,6 +32,7 @@ class ArchitectProfileView extends StatelessWidget {
             padding: EdgeInsets.symmetric(horizontal: size.width * 0.05, vertical: size.height * 0.01),
             child: Obx(() {
               final architect = controller.architect.value;
+              final isLoading = controller.isLoading.value;
               final hasError = controller.errorMessage.value.isNotEmpty;
 
               if (hasError && architect == null) {
@@ -48,23 +50,29 @@ class ArchitectProfileView extends StatelessWidget {
                 );
               }
 
-              final profile = architect ?? Architect.dummy();
+              final profile = architect ?? _dummyArchitect();
 
-              return Column(
-                children: [
-                  ProfileTopBar(title: 'Your Profile', onBack: controller.goBack, onLogout: controller.logout),
-                  12.0.sh,
-                  _Header(architect: profile, onEdit: controller.openEditProfile),
-                  24.0.sh,
-                  _Stats(architect: profile),
-                  24.0.sh,
-                  _FeeButton(architect: profile),
-                  26.0.sh,
-                  _Tabs(controller: controller),
-                  18.0.sh,
-                  _TabBody(controller: controller),
-                  24.0.sh,
-                ],
+              return Skeletonizer(
+                enabled: isLoading,
+                child: AbsorbPointer(
+                  absorbing: isLoading,
+                  child: Column(
+                    children: [
+                      ProfileTopBar(title: 'Your Profile', onBack: controller.goBack, onLogout: controller.logout),
+                      12.0.sh,
+                      _Header(architect: profile, onEdit: controller.openEditProfile),
+                      24.0.sh,
+                      _Stats(architect: profile),
+                      24.0.sh,
+                      _FeeButton(architect: profile),
+                      26.0.sh,
+                      _Tabs(controller: controller),
+                      18.0.sh,
+                      _TabBody(controller: controller, isProfileLoading: isLoading),
+                      24.0.sh,
+                    ],
+                  ),
+                ),
               );
             }),
           ),
@@ -73,6 +81,94 @@ class ArchitectProfileView extends StatelessWidget {
     );
   }
 }
+
+Architect _dummyArchitect() {
+  return const Architect(
+    id: 'loading-architect',
+    name: 'Architect Name',
+    email: 'architect@example.com',
+    profilePicture: '',
+    emailVerifiedAt: null,
+    role: 'architect',
+    createdAt: null,
+    updatedAt: null,
+    headline: 'Residential Specialist',
+    bio: 'Experienced architect focused on thoughtful residential and interior design.',
+    location: 'Jakarta',
+    status: 'approved',
+    specialization: 'Modern Minimalist',
+    totalProjects: 12,
+    totalAwards: 4,
+    rating: 0,
+    consultationFee: 250000,
+    consultationDuration: 1,
+    isWishlisted: null,
+    projects: _dummyProjects,
+    awards: _dummyAwards,
+  );
+}
+
+const _dummyProjects = <ArchitectProject>[
+  ArchitectProject(
+    id: 'loading-project-1',
+    architectId: '',
+    name: 'Modern Residence',
+    style: 'modern',
+    description: '',
+    images: <String>[],
+    imageUrls: <String>[],
+    estimatedCost: '',
+    layoutImages: <String>[],
+    layoutImageUrls: <String>[],
+    highlightFeatures: '',
+    area: '',
+    likesCount: 0,
+    liked: false,
+    status: 'approved',
+    createdAt: null,
+    updatedAt: null,
+  ),
+  ArchitectProject(
+    id: 'loading-project-2',
+    architectId: '',
+    name: 'Classic Interior',
+    style: 'classic',
+    description: '',
+    images: <String>[],
+    imageUrls: <String>[],
+    estimatedCost: '',
+    layoutImages: <String>[],
+    layoutImageUrls: <String>[],
+    highlightFeatures: '',
+    area: '',
+    likesCount: 0,
+    liked: false,
+    status: 'approved',
+    createdAt: null,
+    updatedAt: null,
+  ),
+];
+
+const _dummyAwards = <ArchitectAward>[
+  ArchitectAward(
+    id: 'loading-award-1',
+    name: 'Design Award',
+    projectName: 'Modern Residence',
+    awardDate: null,
+    description: '',
+    verificationFileUrl: '',
+    status: 'approved',
+  ),
+  ArchitectAward(
+    id: 'loading-award-2',
+    name: 'Architecture Award',
+    projectName: 'Classic Interior',
+    awardDate: null,
+    description: '',
+    verificationFileUrl: '',
+    status: 'approved',
+  ),
+];
 
 class _Header extends StatelessWidget {
   final Architect architect;
@@ -131,7 +227,7 @@ class _Header extends StatelessWidget {
             ),
           ],
         ),
-        22.0.sh,
+        18.0.sh,
         Text(
           architect.name.isNotEmpty ? architect.name : '-',
           textAlign: TextAlign.center,
@@ -280,17 +376,18 @@ class _Tabs extends StatelessWidget {
 
 class _TabBody extends StatelessWidget {
   final ProfileController controller;
+  final bool isProfileLoading;
 
-  const _TabBody({required this.controller});
+  const _TabBody({required this.controller, required this.isProfileLoading});
 
   @override
   Widget build(BuildContext context) {
     return Obx(() {
       switch (controller.selectedTab.value) {
         case ProfileTab.portfolio:
-          return _PortfolioGrid(projects: controller.projects);
+          return _PortfolioGrid(projects: isProfileLoading ? _dummyProjects : controller.projects);
         case ProfileTab.award:
-          return _AwardGrid(awards: controller.awards);
+          return _AwardGrid(awards: isProfileLoading ? _dummyAwards : controller.awards);
         case ProfileTab.earnings:
           return _EarningsList(controller: controller);
       }
@@ -432,7 +529,17 @@ class _EarningsList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final data = controller.earnings.value;
+    final isLoading = controller.isLoadingEarnings.value && controller.earnings.value.earnings.isEmpty;
+    final data =
+        isLoading
+            ? const ArchitectEarnings(
+              totalGrossEarnings: 0,
+              totalTaxPaid: 0,
+              totalNetEarnings: 0,
+              earnings: _dummyEarnings,
+              meta: ArchitectEarningsMeta(currentPage: 1, lastPage: 1, perPage: 15, total: 2),
+            )
+            : controller.earnings.value;
 
     if (controller.earningsError.value.isNotEmpty && data.earnings.isEmpty) {
       return Column(
@@ -451,15 +558,39 @@ class _EarningsList extends StatelessWidget {
       return const ProfileEmptyState(message: 'Belum ada earnings.');
     }
 
-    return ListView.separated(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: data.earnings.length,
-      separatorBuilder: (_, __) => 10.0.sh,
-      itemBuilder: (_, index) => _EarningCard(item: data.earnings[index]),
+    return Skeletonizer(
+      enabled: isLoading,
+      child: ListView.separated(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        itemCount: data.earnings.length,
+        separatorBuilder: (_, __) => 10.0.sh,
+        itemBuilder: (_, index) => _EarningCard(item: data.earnings[index]),
+      ),
     );
   }
 }
+
+const _dummyEarnings = <ArchitectEarningItem>[
+  ArchitectEarningItem(
+    consultationId: 'loading-earning-1',
+    user: ArchitectEarningUser(id: '', name: 'Client Name', email: 'client@example.com'),
+    date: null,
+    grossFee: 250000,
+    taxDeduction: 0,
+    netEarning: 250000,
+    releasedAt: null,
+  ),
+  ArchitectEarningItem(
+    consultationId: 'loading-earning-2',
+    user: ArchitectEarningUser(id: '', name: 'Client Name', email: 'client@example.com'),
+    date: null,
+    grossFee: 250000,
+    taxDeduction: 0,
+    netEarning: 250000,
+    releasedAt: null,
+  ),
+];
 
 class _EarningCard extends StatelessWidget {
   final ArchitectEarningItem item;
