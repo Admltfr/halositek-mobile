@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:halositek/app/data/models/architect.dart';
+import 'package:halositek/app/data/models/architect_earnings.dart';
 import 'package:halositek/app/data/network/api_client.dart';
 
 class ArchitectService {
@@ -52,5 +53,45 @@ class ArchitectService {
       }
       return Architect.fromJson(Map<String, dynamic>.from(raw));
     }, 'Fetch Architect Detail');
+  }
+
+  Future<ArchitectEarnings> getArchitectEarnings() async {
+    final response = await _apiClient.private.get(
+      '/architects/earnings',
+      options: Options(
+        validateStatus: (status) => status != null && status < 500,
+      ),
+    );
+
+    return _apiClient.customResponse(response, () async {
+      final raw = response.data?['data'];
+      if (raw is! Map) {
+        throw Exception('Invalid architect earnings response');
+      }
+      return ArchitectEarnings.fromJson(Map<String, dynamic>.from(raw));
+    }, 'Fetch Architect Earnings');
+  }
+
+  Future<Architect> updateArchitect(
+    String id,
+    Map<String, dynamic> payload,
+  ) async {
+    final response = await _apiClient.private.put(
+      '/architects/$id',
+      data: payload,
+      options: Options(
+        validateStatus: (status) => status != null && status < 500,
+      ),
+    );
+
+    return _apiClient.customResponse(response, () async {
+      final raw = response.data?['data'];
+      if (raw is! Map) {
+        throw Exception('Invalid architect update response');
+      }
+
+      final architectJson = raw['architect'] is Map ? raw['architect'] : raw;
+      return Architect.fromJson(Map<String, dynamic>.from(architectJson));
+    }, 'Update Architect');
   }
 }

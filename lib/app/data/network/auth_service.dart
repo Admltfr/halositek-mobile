@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:halositek/app/data/models/user.dart';
 import 'api_client.dart';
 import 'token_service.dart';
 
@@ -116,5 +117,22 @@ class AuthService {
       ),
     );
     return _apiClient.customResponse(response, () async {}, 'Validate session');
+  }
+
+  Future<UserProfile> getMe() async {
+    final response = await _apiClient.private.get(
+      '/me',
+      options: Options(
+        validateStatus: (status) {
+          return status != null && status < 500;
+        },
+      ),
+    );
+
+    return _apiClient.customResponse(response, () async {
+      final data = response.data['data'];
+      final raw = data is Map ? data : response.data;
+      return UserProfile.fromJson(Map<String, dynamic>.from(raw));
+    }, 'Get profile');
   }
 }
