@@ -21,6 +21,9 @@ class AiChatController extends GetxController {
   Timer? _thinkingTimer;
   String? _nextCursor;
   bool _hasMore = true;
+  bool _canLoadMoreHistory = false;
+  bool _isRestoringLoadMoreScroll = false;
+  int _scrollToBottomToken = 0;
 
   static const int _perPage = 10;
 
@@ -101,26 +104,36 @@ class AiChatController extends GetxController {
       } else {
         messages.assignAll(orderedMessages);
       }
-      _scrollToBottom();
+      await _scrollToBottom(animated: false);
+      _canLoadMoreHistory = true;
     } catch (e) {
       Get.snackbar('Failed', e.toString());
       if (messages.isEmpty) {
         messages.assignAll([_welcomeMessage()]);
       }
+      await _scrollToBottom(animated: false);
+      _canLoadMoreHistory = true;
     } finally {
       isLoadingHistory.value = false;
     }
   }
 
   Future<void> loadMoreHistory() async {
-    if (isLoadingMore.value || !_hasMore || _nextCursor == null) return;
+    if (isLoadingMore.value ||
+        _isRestoringLoadMoreScroll ||
+        !_canLoadMoreHistory ||
+        !_hasMore ||
+        _nextCursor == null) {
+      return;
+    }
 
+    _scrollToBottomToken++;
     final previousMaxExtent =
         scrollController.hasClients
             ? scrollController.position.maxScrollExtent
             : 0.0;
-    final previousOffset =
-        scrollController.hasClients ? scrollController.offset : 0.0;
+    final previousPixels =
+        scrollController.hasClients ? scrollController.position.pixels : 0.0;
 
     try {
       isLoadingMore.value = true;
@@ -132,16 +145,13 @@ class AiChatController extends GetxController {
       _hasMore = page.hasMore;
 
       messages.insertAll(0, page.messages.reversed);
-
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!scrollController.hasClients) return;
-        final delta =
-            scrollController.position.maxScrollExtent - previousMaxExtent;
-        scrollController.jumpTo(previousOffset + delta);
-      });
     } catch (e) {
       Get.snackbar('Failed', e.toString());
     } finally {
+      await _restoreScrollAfterLoadMore(
+        previousMaxExtent: previousMaxExtent,
+        previousPixels: previousPixels,
+      );
       isLoadingMore.value = false;
     }
   }
@@ -181,7 +191,13 @@ class AiChatController extends GetxController {
   }
 
   void _handleScroll() {
-    if (!scrollController.hasClients) return;
+    if (!scrollController.hasClients ||
+        !_canLoadMoreHistory ||
+        isLoadingHistory.value ||
+        isLoadingMore.value ||
+        _isRestoringLoadMoreScroll) {
+      return;
+    }
     if (scrollController.offset <= 80) {
       loadMoreHistory();
     }
@@ -212,14 +228,54 @@ class AiChatController extends GetxController {
     isAiThinking.value = false;
   }
 
-  void _scrollToBottom() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!scrollController.hasClients) return;
-      scrollController.animateTo(
-        scrollController.position.maxScrollExtent,
+  Future<void> _restoreScrollAfterLoadMore({
+    required double previousMaxExtent,
+    required double previousPixels,
+  }) async {
+    _isRestoringLoadMoreScroll = true;
+
+    try {
+      for (var attempt = 0; attempt < 4; attempt++) {
+        await WidgetsBinding.instance.endOfFrame;
+        if (!scrollController.hasClients) return;
+
+        final addedHeight =
+            scrollController.position.maxScrollExtent - previousMaxExtent;
+        final target = previousPixels + addedHeight;
+        final safeTarget = target.clamp(
+          scrollController.position.minScrollExtent,
+          scrollController.position.maxScrollExtent,
+        );
+        scrollController.jumpTo(safeTarget);
+      }
+    } finally {
+      _isRestoringLoadMoreScroll = false;
+    }
+  }
+
+  Future<void> _scrollToBottom({bool animated = true}) async {
+    final token = ++_scrollToBottomToken;
+    await WidgetsBinding.instance.endOfFrame;
+    if (!scrollController.hasClients ||
+        isLoadingMore.value ||
+        _isRestoringLoadMoreScroll ||
+        token != _scrollToBottomToken) {
+      return;
+    }
+
+    final bottom = scrollController.position.maxScrollExtent;
+    if (animated) {
+      await scrollController.animateTo(
+        bottom,
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeOut,
       );
-    });
+    } else {
+      scrollController.jumpTo(bottom);
+      await WidgetsBinding.instance.endOfFrame;
+      if (scrollController.hasClients && token == _scrollToBottomToken) {
+        scrollController.jumpTo(scrollController.position.maxScrollExtent);
+      }
+    }
   }
 }
