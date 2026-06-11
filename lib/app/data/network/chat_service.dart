@@ -8,6 +8,89 @@ class ChatService {
 
   ChatService(this._apiClient);
 
+  Future<AiChatMessagesPage> getAiMessages({
+    int perPage = 10,
+    String? cursor,
+  }) async {
+    final response = await _apiClient.private.get(
+      '/chat/ai/messages',
+      queryParameters: {
+        'per_page': perPage,
+        if (cursor != null && cursor.trim().isNotEmpty) 'cursor': cursor,
+      },
+      options: Options(
+        validateStatus: (status) => status != null && status < 500,
+      ),
+    );
+
+    return _apiClient.customResponse(response, () async {
+      final rawList = response.data?['data'];
+      final messages =
+          rawList is List
+              ? rawList
+                  .whereType<Map>()
+                  .map(
+                    (e) => ChatMessage.fromJson(Map<String, dynamic>.from(e)),
+                  )
+                  .toList()
+              : <ChatMessage>[];
+
+      final rawMeta = response.data?['meta'];
+      final meta =
+          rawMeta is Map
+              ? Map<String, dynamic>.from(rawMeta)
+              : <String, dynamic>{};
+
+      return AiChatMessagesPage(
+        messages: messages,
+        perPage: _toInt(meta['per_page']),
+        nextCursor: meta['next_cursor']?.toString(),
+        hasMore: meta['has_more'] == true,
+      );
+    }, 'Fetch AI Messages');
+  }
+
+  Future<ChatMessage> sendAiMessage(String message) async {
+    final response = await _apiClient.private.post(
+      '/chat/ai/messages',
+      data: {'message': message},
+      options: Options(
+        validateStatus: (status) => status != null && status < 500,
+      ),
+    );
+
+    return _apiClient.customResponse(response, () async {
+      final raw = response.data?['data'] ?? response.data;
+      if (raw is! Map) {
+        throw Exception('Invalid AI message response format');
+      }
+
+      final data = Map<String, dynamic>.from(raw);
+      final content = (data['content'] ?? '').toString();
+      final now = DateTime.now();
+
+      return ChatMessage(
+        id: now.microsecondsSinceEpoch.toString(),
+        conversationId: 'ai_conversation',
+        userId: 'sitek_ai',
+        body: content,
+        content: content,
+        role: 'assistant',
+        type: (data['type'] ?? 'text').toString(),
+        attachment: null,
+        readAt: null,
+        isMine: false,
+        sender: const ChatSender(
+          id: 'sitek_ai',
+          name: 'Sitek AI',
+          email: 'ai@halositek.com',
+        ),
+        createdAt: now,
+        updatedAt: now,
+      );
+    }, 'Send AI Message');
+  }
+
   Future<List<ChatConversation>> getConversations() async {
     final response = await _apiClient.private.get(
       '/chat/conversations',
@@ -109,4 +192,24 @@ class ChatService {
       isCreated: true,
     );
   }
+
+  int _toInt(dynamic value) {
+    if (value is int) return value;
+    if (value is double) return value.toInt();
+    return int.tryParse(value?.toString() ?? '') ?? 0;
+  }
+}
+
+class AiChatMessagesPage {
+  final List<ChatMessage> messages;
+  final int perPage;
+  final String? nextCursor;
+  final bool hasMore;
+
+  const AiChatMessagesPage({
+    required this.messages,
+    required this.perPage,
+    required this.nextCursor,
+    required this.hasMore,
+  });
 }
