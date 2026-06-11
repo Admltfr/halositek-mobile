@@ -5,7 +5,6 @@ import 'package:halositek/app/core/constants/app_colors.dart';
 import 'package:halositek/app/core/constants/app_dimensions.dart';
 import 'package:halositek/app/core/constants/app_extensions.dart';
 import 'package:halositek/app/core/constants/app_typography.dart';
-import 'package:halositek/app/data/models/chat.dart';
 import '../controllers/ai_chat_controller.dart';
 
 class AiChatView extends GetView<AiChatController> {
@@ -138,44 +137,92 @@ class AiChatView extends GetView<AiChatController> {
     return Obx(() {
       final messages = controller.messages;
       final isThinking = controller.isAiThinking.value;
+      final isLoadingMore = controller.isLoadingMore.value;
 
-      return ListView.separated(
-        controller: controller.scrollController,
-        padding: EdgeInsets.symmetric(
-          horizontal: size.width * 0.05,
-          vertical: size.height * 0.02,
-        ),
-        itemCount: messages.length + (isThinking ? 1 : 0),
-        separatorBuilder: (_, __) => AppDimensions.spacingLarge.sh,
-        itemBuilder: (_, index) {
-          if (isThinking && index == messages.length) {
-            return _thinkingBubble(size);
-          }
+      if (controller.isLoadingHistory.value && messages.isEmpty) {
+        return const Center(
+          child: CircularProgressIndicator(color: AppColors.primaryColor),
+        );
+      }
 
-          final msg = messages[index];
-          final isMine = msg.isMine;
+      return Stack(
+        children: [
+          ListView.separated(
+            controller: controller.scrollController,
+            padding: EdgeInsets.symmetric(
+              horizontal: size.width * 0.05,
+              vertical: size.height * 0.02,
+            ),
+            itemCount: messages.length + (isThinking ? 1 : 0),
+            separatorBuilder: (_, __) => AppDimensions.spacingLarge.sh,
+            itemBuilder: (_, index) {
+              if (isThinking && index == messages.length) {
+                return _thinkingBubble(size);
+              }
 
-          // If the welcome message is showing and no user message has been sent,
-          // render suggestions below it.
-          if (index == 0 && messages.length == 1) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _aiBubbleLayout(size, msg.displayBody, msg.createdAt),
-                AppDimensions.spacing5XLarge.sh,
-                _suggestionsHeader(),
-                AppDimensions.spacingMedium.sh,
-                _suggestionsGrid(size),
-              ],
-            );
-          }
+              final msg = messages[index];
+              final isMine = msg.isMine;
+              final showDateSeparator = _shouldShowDateSeparator(index);
+              final messageWidget =
+                  isMine
+                      ? _userBubbleLayout(size, msg.displayBody, msg.createdAt)
+                      : _aiBubbleLayout(size, msg.displayBody, msg.createdAt);
 
-          return isMine
-              ? _userBubbleLayout(size, msg.displayBody, msg.createdAt)
-              : _aiBubbleLayout(size, msg.displayBody, msg.createdAt);
-        },
+              // If the welcome message is showing and no user message has been sent,
+              // render suggestions below it.
+              if (index == 0 && messages.length == 1) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (showDateSeparator) _dateSeparator(msg.createdAt),
+                    if (showDateSeparator) AppDimensions.spacingLarge.sh,
+                    _aiBubbleLayout(size, msg.displayBody, msg.createdAt),
+                    AppDimensions.spacing5XLarge.sh,
+                    _suggestionsHeader(),
+                    AppDimensions.spacingMedium.sh,
+                    _suggestionsGrid(size),
+                  ],
+                );
+              }
+
+              if (!showDateSeparator) return messageWidget;
+
+              return Column(
+                children: [
+                  _dateSeparator(msg.createdAt),
+                  AppDimensions.spacingLarge.sh,
+                  messageWidget,
+                ],
+              );
+            },
+          ),
+          if (isLoadingMore)
+            Positioned(top: 0, left: 0, right: 0, child: _historyLoader()),
+        ],
       );
     });
+  }
+
+  Widget _historyLoader() {
+    return Container(
+      padding: const EdgeInsets.only(
+        top: AppDimensions.spacingSmall,
+        bottom: AppDimensions.spacingXLarge,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.whiteColor.withValues(alpha: 0.92),
+      ),
+      child: const Center(
+        child: SizedBox(
+          width: 18,
+          height: 18,
+          child: CircularProgressIndicator(
+            strokeWidth: 2,
+            color: AppColors.primaryColor,
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _userBubbleLayout(Size size, String text, DateTime? time) {
@@ -332,17 +379,19 @@ class AiChatView extends GetView<AiChatController> {
                 bottomRight: Radius.circular(AppDimensions.radius2XLarge),
               ),
             ),
-            child: const Row(
+            child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                _BouncingDots(),
-                SizedBox(width: 8),
-                Text(
-                  'Sitek AI sedang berpikir...',
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: AppColors.textBodyColor,
-                    fontStyle: FontStyle.italic,
+                const _BouncingDots(),
+                const SizedBox(width: 8),
+                Obx(
+                  () => Text(
+                    controller.thinkingText.value,
+                    style: const TextStyle(
+                      fontSize: 10,
+                      color: AppColors.textBodyColor,
+                      fontStyle: FontStyle.italic,
+                    ),
                   ),
                 ),
               ],
@@ -375,124 +424,152 @@ class AiChatView extends GetView<AiChatController> {
 
   Widget _suggestionsGrid(Size size) {
     return Column(
-      children: controller.suggestions.map((suggestion) {
-        return Container(
-          margin: const EdgeInsets.only(bottom: AppDimensions.spacingMedium),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: () => controller.selectSuggestion(suggestion),
-              borderRadius: BorderRadius.circular(AppDimensions.radiusLarge),
-              child: Container(
-                padding: const EdgeInsets.all(AppDimensions.spacingLarge),
-                decoration: BoxDecoration(
-                  color: AppColors.primaryColor.withValues(alpha: 0.04),
-                  border: Border.all(
-                    color: AppColors.primaryColor.withValues(alpha: 0.12),
+      children:
+          controller.suggestions.map((suggestion) {
+            return Container(
+              margin: const EdgeInsets.only(
+                bottom: AppDimensions.spacingMedium,
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () => controller.selectSuggestion(suggestion),
+                  borderRadius: BorderRadius.circular(
+                    AppDimensions.radiusLarge,
                   ),
-                  borderRadius: BorderRadius.circular(AppDimensions.radiusLarge),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        suggestion,
-                        style: AppTypography.bodySmall.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textHeadingColor,
-                        ),
+                  child: Container(
+                    padding: const EdgeInsets.all(AppDimensions.spacingLarge),
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryColor.withValues(alpha: 0.04),
+                      border: Border.all(
+                        color: AppColors.primaryColor.withValues(alpha: 0.12),
+                      ),
+                      borderRadius: BorderRadius.circular(
+                        AppDimensions.radiusLarge,
                       ),
                     ),
-                    const Icon(
-                      Icons.arrow_forward_ios_rounded,
-                      color: AppColors.primaryColor,
-                      size: AppDimensions.iconSizeSmall,
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            suggestion,
+                            style: AppTypography.bodySmall.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textHeadingColor,
+                            ),
+                          ),
+                        ),
+                        const Icon(
+                          Icons.arrow_forward_ios_rounded,
+                          color: AppColors.primaryColor,
+                          size: AppDimensions.iconSizeSmall,
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ),
-            ),
-          ),
-        );
-      }).toList(),
+            );
+          }).toList(),
     );
   }
 
   Widget _inputBar(Size size) {
-    return SafeArea(
-      top: false,
-      child: Container(
-        padding: EdgeInsets.fromLTRB(
-          size.width * 0.04,
-          size.height * 0.01,
-          size.width * 0.04,
-          size.height * 0.02,
-        ),
-        decoration: BoxDecoration(
-          color: AppColors.whiteColor,
-          border: Border(
-            top: BorderSide(
-              color: AppColors.formBorderColor.withValues(alpha: 0.15),
+    return Obx(() {
+      final isDisabled = controller.isAiThinking.value;
+
+      return SafeArea(
+        top: false,
+        child: Container(
+          padding: EdgeInsets.fromLTRB(
+            size.width * 0.04,
+            size.height * 0.02,
+            size.width * 0.04,
+            size.height * 0.02,
+          ),
+          decoration: BoxDecoration(
+            color: AppColors.whiteColor,
+            border: Border(
+              top: BorderSide(
+                color: AppColors.formBorderColor.withValues(alpha: 0.15),
+              ),
             ),
           ),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Container(
-                padding: EdgeInsets.symmetric(horizontal: size.width * 0.04),
-                decoration: BoxDecoration(
-                  color: AppColors.whiteColor,
-                  borderRadius: BorderRadius.circular(AppDimensions.radiusPill),
-                  border: Border.all(
-                    color: AppColors.formBorderColor.withValues(alpha: 0.3),
+          child: Row(
+            children: [
+              Expanded(
+                child: Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: size.width * 0.04,
+                    vertical: AppDimensions.spacingLarge,
                   ),
-                ),
-                child: TextField(
-                  controller: controller.messageController,
-                  minLines: 1,
-                  maxLines: 4,
-                  textInputAction: TextInputAction.send,
-                  onSubmitted: (_) => controller.sendMessage(),
-                  decoration: InputDecoration(
-                    isCollapsed: true,
-                    border: InputBorder.none,
-                    hintText: 'Tanyakan ide arsitektur / estimasi...',
-                    hintStyle: AppTypography.bodySmall.copyWith(
-                      color: AppColors.textBodyColor.withValues(alpha: 0.5),
+                  decoration: BoxDecoration(
+                    color:
+                        isDisabled
+                            ? AppColors.subtleSurfaceColor.withValues(
+                              alpha: 0.45,
+                            )
+                            : AppColors.whiteColor,
+                    borderRadius: BorderRadius.circular(
+                      AppDimensions.radiusPill,
+                    ),
+                    border: Border.all(
+                      color: AppColors.formBorderColor.withValues(alpha: 0.3),
                     ),
                   ),
-                  style: AppTypography.bodyMedium.copyWith(
-                    color: AppColors.textHeadingColor,
+                  child: TextField(
+                    controller: controller.messageController,
+                    enabled: !isDisabled,
+                    minLines: 1,
+                    maxLines: 4,
+                    textInputAction: TextInputAction.send,
+                    onSubmitted:
+                        isDisabled ? null : (_) => controller.sendMessage(),
+                    decoration: InputDecoration(
+                      isCollapsed: true,
+                      border: InputBorder.none,
+                      hintText: 'Tanyakan ide arsitektur / estimasi...',
+                      hintStyle: AppTypography.bodySmall.copyWith(
+                        color: AppColors.textBodyColor.withValues(alpha: 0.5),
+                      ),
+                    ),
+                    style: AppTypography.bodyMedium.copyWith(
+                      color: AppColors.textHeadingColor,
+                    ),
                   ),
                 ),
               ),
-            ),
-            AppDimensions.spacingMedium.sw,
-            Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: () => controller.sendMessage(),
-                borderRadius: BorderRadius.circular(AppDimensions.radiusCircle),
-                child: Container(
-                  width: size.width * 0.11,
-                  height: size.width * 0.11,
-                  decoration: const BoxDecoration(
-                    color: AppColors.primaryColor,
-                    shape: BoxShape.circle,
+              AppDimensions.spacingMedium.sw,
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: isDisabled ? null : () => controller.sendMessage(),
+                  borderRadius: BorderRadius.circular(
+                    AppDimensions.radiusCircle,
                   ),
-                  child: Icon(
-                    Icons.send_rounded,
-                    color: AppColors.whiteColor,
-                    size: size.width * 0.05,
+                  child: Container(
+                    width: size.width * 0.11,
+                    height: size.width * 0.11,
+                    decoration: BoxDecoration(
+                      color:
+                          isDisabled
+                              ? AppColors.formBorderColor.withValues(alpha: 0.6)
+                              : AppColors.primaryColor,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.send_rounded,
+                      color: AppColors.whiteColor,
+                      size: size.width * 0.05,
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
-    );
+      );
+    });
   }
 
   String _formatTime(DateTime? value) {
@@ -504,6 +581,81 @@ class AiChatView extends GetView<AiChatController> {
     final suffix = hour >= 12 ? 'PM' : 'AM';
     final mm = minute.toString().padLeft(2, '0');
     return '${h.toString().padLeft(2, '0')}:$mm $suffix';
+  }
+
+  bool _shouldShowDateSeparator(int index) {
+    if (index == 0) return true;
+
+    final current = controller.messages[index].createdAt;
+    final previous = controller.messages[index - 1].createdAt;
+    if (current == null || previous == null) return false;
+
+    final currentLocal = current.toLocal();
+    final previousLocal = previous.toLocal();
+    return currentLocal.year != previousLocal.year ||
+        currentLocal.month != previousLocal.month ||
+        currentLocal.day != previousLocal.day;
+  }
+
+  Widget _dateSeparator(DateTime? value) {
+    final label = _formatDateLabel(value);
+
+    return Row(
+      children: [
+        Expanded(
+          child: Divider(
+            color: AppColors.formBorderColor.withValues(alpha: 0.2),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppDimensions.spacingMedium,
+          ),
+          child: Text(
+            label,
+            style: AppTypography.captionSmall.copyWith(
+              color: AppColors.textBodyColor.withValues(alpha: 0.65),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        Expanded(
+          child: Divider(
+            color: AppColors.formBorderColor.withValues(alpha: 0.2),
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _formatDateLabel(DateTime? value) {
+    if (value == null) return 'Today';
+
+    final date = value.toLocal();
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final messageDate = DateTime(date.year, date.month, date.day);
+    final difference = today.difference(messageDate).inDays;
+
+    if (difference == 0) return 'Today';
+    if (difference == 1) return 'Yesterday';
+
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+
+    return '${date.day} ${months[date.month - 1]} ${date.year}';
   }
 }
 
@@ -546,7 +698,8 @@ class _BouncingDotsState extends State<_BouncingDots>
             if (value < 0) value += 1.0;
             // Map 0..1 to smooth sine wave bounce
             final double bounce = math.sin(value * 2 * 3.14159);
-            final double offset = bounce * 3.0; // Translate up and down by 3 pixels
+            final double offset =
+                bounce * 3.0; // Translate up and down by 3 pixels
 
             return Container(
               margin: const EdgeInsets.symmetric(horizontal: 1.5),
