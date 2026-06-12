@@ -1,13 +1,34 @@
 import 'package:get/get.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:halositek/app/core/constants/app_colors.dart';
 import 'package:halositek/app/data/models/catalog.dart';
 import 'package:halositek/app/data/network/catalog_service.dart';
+import 'package:halositek/app/data/network/chat_service.dart';
+import 'package:halositek/app/data/network/payment_service.dart';
+import 'package:halositek/app/data/network/token_service.dart';
+import 'package:halositek/app/modules/chat_detail/bindings/chat_detail_binding.dart';
+import 'package:halositek/app/modules/chat_detail/views/chat_detail_view.dart';
 import 'package:halositek/app/modules/navigation/controllers/navigation_controller.dart';
+import 'package:midtrans_sdk/midtrans_sdk.dart';
 
 class DetailController extends GetxController {
   final CatalogService _catalogService;
+  final PaymentService _paymentService;
+  final ChatService _chatService;
+  final TokenService _tokenService;
   final String catalogId;
 
-  DetailController(this._catalogService, {required this.catalogId});
+  DetailController(
+    this._catalogService,
+    this._paymentService,
+    this._chatService,
+    this._tokenService, {
+    required this.catalogId,
+  });
+
+  MidtransSDK? _midtrans;
+  final String? clientKey = dotenv.env['CLIENT_KEY'];
 
   final catalog = Rxn<Catalog>();
   final isLoading = false.obs;
@@ -15,10 +36,16 @@ class DetailController extends GetxController {
   final activeImageIndex = 0.obs;
   final activeLayoutIndex = 0.obs;
   final isLiking = false.obs;
+  final isSaving = false.obs;
+  final isStartingChat = false.obs;
+  final isArchitectRole = false.obs;
+  final paymentError = ''.obs;
 
   @override
   void onInit() {
     super.onInit();
+    _loadRole();
+    _initMidtrans();
     fetchCatalogDetail();
   }
 
@@ -73,6 +100,54 @@ class DetailController extends GetxController {
     }
   }
 
+  Future<void> toggleSave() async {
+    final current = catalog.value;
+    if (current == null || current.id.isEmpty || isSaving.value) return;
+
+    isSaving.value = true;
+    final saved = !current.saved;
+    catalog.value = current.copyWith(saved: saved);
+
+    try {
+      if (saved) {
+        await _catalogService.saveCatalog(current.id);
+      } else {
+        await _catalogService.unsaveCatalog(current.id);
+      }
+    } catch (e) {
+      catalog.value = current;
+      Get.snackbar('Gagal', e.toString());
+    } finally {
+      isSaving.value = false;
+    }
+  }
+
+  Future<void> startConsultationChat() async {
+    if (isStartingChat.value) return;
+
+    final architectIdValue = (catalog.value?.architectId ?? '').trim();
+    if (architectIdValue.isEmpty) {
+      Get.snackbar('Gagal', 'Architect ID tidak ditemukan');
+      return;
+    }
+
+    isStartingChat.value = true;
+    paymentError.value = '';
+
+    try {
+      final initiation = await _paymentService.initiate(
+        architectId: architectIdValue,
+      );
+
+      await _midtrans?.startPaymentUiFlow(token: initiation.snapToken);
+    } catch (e) {
+      paymentError.value = e.toString();
+      Get.snackbar('Gagal', e.toString());
+    } finally {
+      isStartingChat.value = false;
+    }
+  }
+
   void setActiveImageIndex(int index) {
     activeImageIndex.value = index;
   }
@@ -103,6 +178,23 @@ class DetailController extends GetxController {
     return p?.architect?.email.isNotEmpty == true ? p!.architect!.email : '-';
   }
 
+  String get architectPhoto {
+    final p = catalog.value;
+    return p?.architect?.profilePicture.isNotEmpty == true
+        ? p!.architect!.profilePicture
+        : '';
+  }
+
+  int get consultationFee {
+    final value = catalog.value?.architect?.consultationFee ?? 0;
+    return value > 0 ? value : 25000;
+  }
+
+  int get consultationDuration {
+    final value = catalog.value?.architect?.consultationDuration ?? 0;
+    return value > 0 ? value : 2;
+  }
+
   String get areaDisplay {
     final p = catalog.value;
     if (p == null || p.areaRaw.trim().isEmpty) return '-';
@@ -113,5 +205,68 @@ class DetailController extends GetxController {
     final p = catalog.value;
     if (p == null || p.estimatedCost.trim().isEmpty) return '-';
     return p.estimatedCost;
+  }
+
+  Future<void> _loadRole() async {
+    final role = (await _tokenService.getRole() ?? '').trim().toLowerCase();
+    isArchitectRole.value = role == 'architect';
+  }
+
+  Future<void> _initMidtrans() async {
+    _midtrans = await MidtransSDK.init(
+      config: MidtransConfig(
+        clientKey: clientKey ?? '',
+        merchantBaseUrl: 'https://app.sandbox.midtrans.com/',
+        colorTheme: ColorTheme(
+          colorPrimary: AppColors.primaryColor,
+          colorPrimaryDark: AppColors.primaryColor,
+          colorSecondary: AppColors.secondaryColor,
+        ),
+        language: 'id',
+        enableLog: true,
+      ),
+    );
+
+    _midtrans?.setTransactionFinishedCallback((result) {
+      _onPaymentFinished(result);
+      debugPrint('\x1B[31m STATUS: ${result.status}\x1B[0m');
+      debugPrint('\x1B[31m TRANSACTION ID: ${result.transactionId}\x1B[0m');
+      debugPrint('\x1B[31m TRANSACTION ID: ${result.message}\x1B[0m');
+    });
+  }
+
+  Future<void> _onPaymentFinished(TransactionResult result) async {
+    if (result.status == 'cancel') {
+      Get.snackbar('Dibatalkan', 'Pembayaran dibatalkan.');
+      return;
+    }
+
+    final transactionId = result.transactionId ?? '';
+    if (transactionId.isEmpty) return;
+
+    final status = await _paymentService.getStatus(transactionId);
+
+    if (status.canEnterConsultation) {
+      final conversationId =
+          status.conversationId.isNotEmpty
+              ? status.conversationId
+              : (await _chatService.createConversation(
+                participantIds: [catalog.value?.architectId ?? ''],
+              )).id;
+
+      _openChat(conversationId);
+    } else {
+      Get.snackbar('Pending', 'Pembayaran belum selesai.');
+    }
+  }
+
+  void _openChat(String conversationId) {
+    Get.to(
+      () => const ChatDetailView(),
+      binding: ChatDetailBinding(
+        conversationId: conversationId,
+        title: architectName,
+      ),
+    );
   }
 }
