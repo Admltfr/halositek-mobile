@@ -6,6 +6,7 @@ import 'package:halositek/app/data/models/user.dart';
 import 'package:halositek/app/data/network/auth_service.dart';
 import 'package:halositek/app/modules/navigation/controllers/navigation_controller.dart';
 import 'package:halositek/app/modules/profile/controllers/profile_controller.dart';
+import 'package:halositek/app/modules/profile/widgets/change_password_dialog.dart';
 
 class UserProfileEditController extends GetxController {
   UserProfileEditController(this._authService, {this.initialUser});
@@ -55,6 +56,24 @@ class UserProfileEditController extends GetxController {
 
   void goBack() {
     Get.find<NavigationController>().onPop();
+  }
+
+  void openChangePasswordDialog() {
+    Get.dialog(
+      ChangePasswordDialog(
+        onSubmit: ({
+          required currentPassword,
+          required newPassword,
+          required newPasswordConfirmation,
+        }) {
+          return _authService.changePassword(
+            currentPassword: currentPassword,
+            newPassword: newPassword,
+            newPasswordConfirmation: newPasswordConfirmation,
+          );
+        },
+      ),
+    );
   }
 
   Future<void> submit() async {

@@ -179,6 +179,32 @@ class AuthService {
       'Update profile',
     );
   }
+
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+    required String newPasswordConfirmation,
+  }) async {
+    final response = await _apiClient.private.post(
+      '/auth/change-password',
+      data: {
+        'current_password': currentPassword,
+        'new_password': newPassword,
+        'new_password_confirmation': newPasswordConfirmation,
+      },
+      options: Options(
+        validateStatus: (status) {
+          return status != null && status < 500;
+        },
+      ),
+    );
+
+    if (response.statusCode == 422) {
+      throw UserValidationException.fromResponse(response.data);
+    }
+
+    return _apiClient.customResponse(response, () async {}, 'Change password');
+  }
 }
 
 class UserValidationException implements Exception {

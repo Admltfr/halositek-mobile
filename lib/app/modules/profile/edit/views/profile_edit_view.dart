@@ -47,9 +47,9 @@ class ProfileEditView extends GetView<ProfileEditController> {
                   16.0.sh,
                   _label('Bio'),
                   _input(controller.bioController, maxLines: 4, errorKey: 'bio'),
-                  8.0.sh,
+                  16.0.sh,
                   _passwordCard(),
-                  8.0.sh,
+                  16.0.sh,
                   _label('Years of Experience'),
                   SizedBox(
                     width: 106,
@@ -277,43 +277,34 @@ class ProfileEditView extends GetView<ProfileEditController> {
   }
 
   Widget _passwordCard() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.whiteColor,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusXLarge),
-        boxShadow: const [BoxShadow(color: AppColors.shadowSoftColor, blurRadius: 12, offset: Offset(0, 5))],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _label('Password'),
-          TextField(
-            controller: controller.passwordController,
-            readOnly: true,
-            obscureText: true,
-            decoration: InputDecoration(
-              suffixIcon: TextButton(
-                onPressed: () {
-                  Get.snackbar('Password', 'Perubahan password belum tersedia di endpoint profile.');
-                },
-                child: Text(
-                  'CHANGE',
-                  style: AppTypography.captionLarge.copyWith(
-                    color: AppColors.primaryColor,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 1,
-                  ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _label('Password'),
+        TextField(
+          controller: controller.passwordController,
+          readOnly: true,
+          obscureText: true,
+          style: AppTypography.bodyMedium.copyWith(color: AppColors.textHeadingColor, fontSize: 12, height: 1.55),
+          decoration: InputDecoration(
+            suffixIcon: TextButton(
+              onPressed: controller.openChangePasswordDialog,
+              child: Text(
+                'CHANGE',
+                style: AppTypography.captionLarge.copyWith(
+                  color: AppColors.primaryColor,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 1,
                 ),
               ),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              enabledBorder: _border(AppColors.textBodyColor.withValues(alpha: 0.62)),
-              focusedBorder: _border(AppColors.primaryColor),
-              border: _border(AppColors.textBodyColor.withValues(alpha: 0.62)),
             ),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            enabledBorder: _border(AppColors.textBodyColor.withValues(alpha: 0.62)),
+            focusedBorder: _border(AppColors.primaryColor),
+            border: _border(AppColors.textBodyColor.withValues(alpha: 0.62)),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
