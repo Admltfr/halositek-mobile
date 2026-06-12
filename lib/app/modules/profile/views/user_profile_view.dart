@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart';
 import 'package:halositek/app/core/constants/app_colors.dart';
 import 'package:halositek/app/core/constants/app_dimensions.dart';
@@ -56,7 +57,7 @@ class UserProfileView extends StatelessWidget {
                       12.0.sh,
                       _UserHeader(user: user, onEdit: controller.openEditProfile),
                       24.0.sh,
-                      _PersonalData(user: user),
+                      _PersonalData(user: user, onEdit: controller.openEditProfile),
                       24.0.sh,
                       _SectionTitle(title: 'Saved Architect', onViewAll: controller.openSavedArchitects),
                       14.0.sh,
@@ -217,7 +218,7 @@ class _UserHeader extends StatelessWidget {
                 child:
                     user.photoProfileUrl.isNotEmpty
                         ? Image.network(
-                          user.photoProfileUrl,
+                          "${dotenv.env['BASEURL']}${user.photoProfileUrl}",
                           fit: BoxFit.cover,
                           errorBuilder: (_, __, ___) => Image.asset(profileFallbackImage, fit: BoxFit.cover),
                         )
@@ -261,17 +262,31 @@ class _UserHeader extends StatelessWidget {
 
 class _PersonalData extends StatelessWidget {
   final UserProfile user;
+  final VoidCallback onEdit;
 
-  const _PersonalData({required this.user});
+  const _PersonalData({required this.user, required this.onEdit});
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Personal Data',
-          style: AppTypography.bodyMedium.copyWith(color: AppColors.textBodyColor, fontWeight: FontWeight.w800),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                'Personal Data',
+                style: AppTypography.bodyMedium.copyWith(color: AppColors.textBodyColor, fontWeight: FontWeight.w800),
+              ),
+            ),
+            InkWell(
+              onTap: onEdit,
+              child: Text(
+                'EDIT',
+                style: AppTypography.captionLarge.copyWith(color: AppColors.primaryColor, fontWeight: FontWeight.w800),
+              ),
+            ),
+          ],
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -280,9 +295,9 @@ class _PersonalData extends StatelessWidget {
               16.0.sh,
               _DataRow(label: 'USERNAME', value: user.name),
               16.0.sh,
-              _DataRow(label: 'EMAIL', value: user.email, action: 'CHANGE'),
+              _DataRow(label: 'EMAIL', value: user.email),
               16.0.sh,
-              const _DataRow(label: 'PASSWORD', value: '************', action: 'CHANGE'),
+              const _DataRow(label: 'PASSWORD', value: '************'),
             ],
           ),
         ),
@@ -294,9 +309,8 @@ class _PersonalData extends StatelessWidget {
 class _DataRow extends StatelessWidget {
   final String label;
   final String value;
-  final String? action;
 
-  const _DataRow({required this.label, required this.value, this.action});
+  const _DataRow({required this.label, required this.value});
 
   @override
   Widget build(BuildContext context) {
@@ -321,11 +335,6 @@ class _DataRow extends StatelessWidget {
             ],
           ),
         ),
-        if (action != null)
-          Text(
-            action!,
-            style: AppTypography.captionLarge.copyWith(color: AppColors.primaryColor, fontWeight: FontWeight.w800),
-          ),
       ],
     );
   }

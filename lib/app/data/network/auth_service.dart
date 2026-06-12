@@ -135,4 +135,78 @@ class AuthService {
       return UserProfile.fromJson(Map<String, dynamic>.from(raw));
     }, 'Get profile');
   }
+
+  Future<UserProfile> updateMe(FormData payload, UserProfile current) async {
+    final response = await _apiClient.private.post(
+      '/me',
+      data: payload,
+      options: Options(
+        validateStatus: (status) {
+          return status != null && status < 500;
+        },
+      ),
+    );
+
+    if (response.statusCode == 200) {
+      final data = response.data['data'];
+      final raw =
+          data is Map ? Map<String, dynamic>.from(data) : <String, dynamic>{};
+      final userJson =
+          raw['user'] is Map ? Map<String, dynamic>.from(raw['user']) : raw;
+
+      return current.copyWith(
+        id: (userJson['id'] ?? current.id).toString(),
+        name: (userJson['name'] ?? current.name).toString(),
+        email: (userJson['email'] ?? current.email).toString(),
+        role: (userJson['role'] ?? current.role).toString(),
+        accountStatus:
+            (userJson['account_status'] ?? current.accountStatus).toString(),
+        photoProfileUrl:
+            (userJson['photo_profile_url'] ??
+                    userJson['photo_profile'] ??
+                    current.photoProfileUrl)
+                .toString(),
+      );
+    }
+
+    if (response.statusCode == 422) {
+      throw UserValidationException.fromResponse(response.data);
+    }
+
+    return _apiClient.customResponse(
+      response,
+      () async => current,
+      'Update profile',
+    );
+  }
+}
+
+class UserValidationException implements Exception {
+  UserValidationException(this.message, this.errors);
+
+  final String message;
+  final Map<String, String> errors;
+
+  factory UserValidationException.fromResponse(dynamic data) {
+    final fallback =
+        (data is Map ? data['message'] : null)?.toString() ??
+        'Validation failed.';
+    final result = <String, String>{};
+    final rawErrors = data is Map ? data['errors'] : null;
+
+    if (rawErrors is Map) {
+      rawErrors.forEach((key, value) {
+        if (value is List && value.isNotEmpty) {
+          result[key.toString()] = value.first.toString();
+        } else if (value != null) {
+          result[key.toString()] = value.toString();
+        }
+      });
+    }
+
+    return UserValidationException(fallback, result);
+  }
+
+  @override
+  String toString() => message;
 }

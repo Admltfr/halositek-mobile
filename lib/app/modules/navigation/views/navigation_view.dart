@@ -24,6 +24,8 @@ import 'package:halositek/app/modules/portofolio/bindings/portofolio_binding.dar
 import 'package:halositek/app/modules/profile/bindings/profile_binding.dart';
 import 'package:halositek/app/modules/profile/edit/bindings/profile_edit_binding.dart';
 import 'package:halositek/app/modules/profile/edit/views/profile_edit_view.dart';
+import 'package:halositek/app/modules/profile/user_edit/bindings/user_profile_edit_binding.dart';
+import 'package:halositek/app/modules/profile/user_edit/views/user_profile_edit_view.dart';
 import 'package:halositek/app/modules/profile/views/payment_history_view.dart';
 import 'package:halositek/app/modules/profile/views/profile_view.dart';
 import 'package:halositek/app/modules/profile/views/saved_architects_view.dart';
@@ -31,6 +33,7 @@ import 'package:halositek/app/modules/profile/views/saved_designs_view.dart';
 import 'package:halositek/app/core/constants/app_colors.dart';
 import 'package:halositek/app/data/models/award.dart';
 import 'package:halositek/app/data/models/architect.dart';
+import 'package:halositek/app/data/models/user.dart';
 
 import '../controllers/navigation_controller.dart';
 
@@ -247,13 +250,19 @@ class NavigationView extends GetView<NavigationController> {
         binding: ProfileBinding(),
       );
     } else if (settings.name == _TabRoutes.profileEdit) {
+      final arg = settings.arguments;
+
       if (!controller.isArchitect) {
-        return _fallbackRoute('Edit Profile hanya tersedia untuk architect');
+        final initialUser = arg is UserProfile ? arg : null;
+
+        return GetPageRoute(
+          routeName: _TabRoutes.profileEdit,
+          page: () => const UserProfileEditView(),
+          binding: UserProfileEditBinding(initialUser: initialUser),
+        );
       }
 
-      final arg = settings.arguments;
       final initialArchitect = arg is Architect ? arg : null;
-
       return GetPageRoute(
         routeName: _TabRoutes.profileEdit,
         page: () => const ProfileEditView(),

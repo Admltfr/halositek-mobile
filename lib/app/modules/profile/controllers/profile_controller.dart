@@ -14,7 +14,11 @@ class ProfileController extends GetxController {
   final TokenService _tokenService;
   final ArchitectService _architectService;
 
-  ProfileController(this._authService, this._tokenService, this._architectService);
+  ProfileController(
+    this._authService,
+    this._tokenService,
+    this._architectService,
+  );
 
   final role = ''.obs;
   final userId = ''.obs;
@@ -32,8 +36,10 @@ class ProfileController extends GetxController {
   List<ArchitectProject> get projects => architect.value?.projects ?? const [];
   List<ArchitectAward> get awards => architect.value?.awards ?? const [];
   List<SavedProject> get savedProjects => user.value?.savedProjects ?? const [];
-  List<SavedArchitect> get savedArchitects => user.value?.savedArchitects ?? const [];
-  List<PaymentHistory> get paymentHistories => user.value?.paymentHistories ?? const [];
+  List<SavedArchitect> get savedArchitects =>
+      user.value?.savedArchitects ?? const [];
+  List<PaymentHistory> get paymentHistories =>
+      user.value?.paymentHistories ?? const [];
 
   @override
   void onInit() {
@@ -53,7 +59,8 @@ class ProfileController extends GetxController {
 
       if (isArchitect) {
         if (userId.value.trim().isEmpty) {
-          errorMessage.value = 'Architect id tidak ditemukan. Silakan login ulang.';
+          errorMessage.value =
+              'Architect id tidak ditemukan. Silakan login ulang.';
           return;
         }
 
@@ -116,21 +123,41 @@ class ProfileController extends GetxController {
 
   void openEditProfile() {
     if (!isArchitect || architect.value == null) {
+      if (user.value != null) {
+        Get.find<NavigationController>().navigateTo(
+          tabIndex: 3,
+          route: '/profile/edit',
+          arguments: user.value,
+        );
+      }
     } else {
-      Get.find<NavigationController>().navigateTo(tabIndex: 3, route: '/profile/edit', arguments: architect.value);
+      Get.find<NavigationController>().navigateTo(
+        tabIndex: 3,
+        route: '/profile/edit',
+        arguments: architect.value,
+      );
     }
   }
 
   void openSavedArchitects() {
-    Get.find<NavigationController>().navigateTo(tabIndex: 3, route: '/profile/saved-architects');
+    Get.find<NavigationController>().navigateTo(
+      tabIndex: 3,
+      route: '/profile/saved-architects',
+    );
   }
 
   void openSavedDesigns() {
-    Get.find<NavigationController>().navigateTo(tabIndex: 3, route: '/profile/saved-designs');
+    Get.find<NavigationController>().navigateTo(
+      tabIndex: 3,
+      route: '/profile/saved-designs',
+    );
   }
 
   void openPaymentHistory() {
-    Get.find<NavigationController>().navigateTo(tabIndex: 3, route: '/profile/payment-history');
+    Get.find<NavigationController>().navigateTo(
+      tabIndex: 3,
+      route: '/profile/payment-history',
+    );
   }
 
   Future<void> logout() async {
