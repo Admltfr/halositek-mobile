@@ -13,6 +13,7 @@ class CatalogService {
     String? search,
     String? style,
     String? architectId,
+    String? status,
   }) async {
     final response = await _apiClient.public.get(
       '/projects',
@@ -22,6 +23,7 @@ class CatalogService {
         if (search != null && search.trim().isNotEmpty) 'search': search.trim(),
         if (style != null && style.trim().isNotEmpty) 'style': style.trim(),
         if (architectId != null && architectId.trim().isNotEmpty) 'architect_id': architectId.trim(),
+        if (status != null && status.trim().isNotEmpty) 'status': status.trim(),
       },
       options: Options(
         validateStatus: (status) {
@@ -29,6 +31,9 @@ class CatalogService {
         },
       ),
     );
+
+    // queryParameters
+    print('Query Parameters: ${response.requestOptions.queryParameters}');
 
     return _apiClient.customResponse(response, () async {
       final rawList = response.data?['data'];
