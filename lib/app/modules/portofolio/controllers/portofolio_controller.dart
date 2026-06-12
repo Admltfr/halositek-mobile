@@ -92,15 +92,23 @@ class PortofolioController extends GetxController {
       final architect = await _architectService.getArchitectById(architectId);
       architectName.value = architect.name;
       architectPhoto.value = architect.profilePicture;
-      architectTitle.value = architect.headline.isNotEmpty ? architect.headline : architectTitle.value;
+      architectTitle.value =
+          architect.headline.isNotEmpty
+              ? architect.headline
+              : architectTitle.value;
       experienceLabel.value =
-          architect.specialization.isNotEmpty ? architect.specialization : '${architect.totalProjects} Projects';
-      architectBio.value = architect.bio.isNotEmpty ? architect.bio : architectBio.value;
+          architect.specialization.isNotEmpty
+              ? architect.specialization
+              : '${architect.totalProjects} Projects';
+      architectBio.value =
+          architect.bio.isNotEmpty ? architect.bio : architectBio.value;
       totalProjects.value = architect.totalProjects;
       totalAwards.value = architect.totalAwards;
       consultationFee.value = architect.consultationFee;
       consultationDuration.value =
-          architect.consultationDuration > 0 ? architect.consultationDuration : consultationDuration.value;
+          architect.consultationDuration > 0
+              ? architect.consultationDuration
+              : consultationDuration.value;
       isWishlisted.value = architect.isWishlisted;
     } catch (e) {
       architectError.value = e.toString();
@@ -139,7 +147,10 @@ class PortofolioController extends GetxController {
     try {
       isLoadingPortfolio.value = true;
       portfolioError.value = '';
-      final result = await _catalogService.getCatalogs(perPage: 12, architectId: architectId);
+      final result = await _catalogService.getCatalogs(
+        perPage: 12,
+        architectId: architectId,
+      );
       portfolios.assignAll(result);
     } catch (e) {
       portfolioError.value = e.toString();
@@ -152,7 +163,10 @@ class PortofolioController extends GetxController {
     try {
       isLoadingAward.value = true;
       awardError.value = '';
-      final result = await _awardService.getAwards(perPage: 12, architectId: architectId);
+      final result = await _awardService.getAwards(
+        perPage: 12,
+        architectId: architectId,
+      );
       awards.assignAll(result);
     } catch (e) {
       awardError.value = e.toString();
@@ -197,7 +211,9 @@ class PortofolioController extends GetxController {
     paymentError.value = '';
 
     try {
-      final initiation = await _paymentService.initiate(architectId: architectIdValue);
+      final initiation = await _paymentService.initiate(
+        architectId: architectIdValue,
+      );
 
       await _midtrans?.startPaymentUiFlow(token: initiation.snapToken);
     } catch (e) {
@@ -225,7 +241,9 @@ class PortofolioController extends GetxController {
       final conversationId =
           status.conversationId.isNotEmpty
               ? status.conversationId
-              : (await _chatService.createConversation(participantIds: [architectId])).id;
+              : (await _chatService.createConversation(
+                participantIds: [architectId],
+              )).id;
 
       _openChat(conversationId);
     } else {
@@ -236,7 +254,10 @@ class PortofolioController extends GetxController {
   void _openChat(String conversationId) {
     Get.to(
       () => const ChatDetailView(),
-      binding: ChatDetailBinding(conversationId: conversationId, title: architectName.value),
+      binding: ChatDetailBinding(
+        conversationId: conversationId,
+        title: architectName.value,
+      ),
     );
   }
 }

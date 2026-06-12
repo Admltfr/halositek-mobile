@@ -30,7 +30,17 @@ class ApiClient {
     if (isCreated ? response.statusCode == 201 : response.statusCode == 200) {
       return await onSuccess();
     } else if (response.statusCode == 422) {
-      throw Exception('Validation error: ${response.data['message']}');
+      final errors = response.data['errors'];
+
+      if (errors is Map && errors.isNotEmpty) {
+        final firstError = errors.values.first;
+
+        if (firstError is List && firstError.isNotEmpty) {
+          throw Exception(firstError.first.toString());
+        }
+      }
+
+      throw Exception('Validation error');
     } else if (response.statusCode == 500) {
       throw Exception('Server error: ${response.data['message']}');
     } else if (response.statusCode == 401) {

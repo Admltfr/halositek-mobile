@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/widgets.dart';
 import 'package:halositek/app/data/models/chat.dart';
@@ -143,7 +144,7 @@ class ChatService {
       ),
     );
 
-    debugPrint('\x1B[31m ${response.data['data']}\x1B[0m');
+    debugPrint('\x1B[31m ${response.data}\x1B[0m');
 
     final isCreated = response.statusCode == 201;
 
@@ -158,6 +159,47 @@ class ChatService {
         return ChatMessage.fromJson(Map<String, dynamic>.from(rawData));
       },
       'Send Message',
+      isCreated: isCreated,
+    );
+  }
+
+  Future<ChatMessage> sendImage({
+    required String conversationId,
+    required File imageFile,
+  }) async {
+    final fileName = imageFile.path.split('/').last.split('\\').last;
+    final formData = FormData.fromMap({
+      'conversation_id': conversationId,
+      'type': 'image',
+      'attachment': await MultipartFile.fromFile(
+        imageFile.path,
+        filename: fileName,
+      ),
+    });
+
+    final response = await _apiClient.private.post(
+      '/chat/messages',
+      data: formData,
+      options: Options(
+        validateStatus: (status) => status != null && status < 500,
+        contentType: 'multipart/form-data',
+      ),
+    );
+
+    debugPrint('\x1B[32m Send Image Response: ${response.data}\x1B[0m');
+
+    final isCreated = response.statusCode == 201;
+
+    return _apiClient.customResponse(
+      response,
+      () async {
+        final rawData = response.data?['data'];
+        if (rawData is! Map) {
+          throw Exception('Invalid send image response format');
+        }
+        return ChatMessage.fromJson(Map<String, dynamic>.from(rawData));
+      },
+      'Send Image',
       isCreated: isCreated,
     );
   }
@@ -193,6 +235,66 @@ class ChatService {
     );
   }
 
+  Future<ChatReport> submitReport({
+    required String consultationId,
+    required String reason,
+  }) async {
+    final response = await _apiClient.private.post(
+      '/consultations/$consultationId/reports',
+      data: {'consultation_id': consultationId, 'reason': reason},
+      options: Options(
+        validateStatus: (status) => status != null && status < 500,
+      ),
+    );
+
+    debugPrint('\x1B[31m ${response.data}\x1B[0m');
+
+    return _apiClient.customResponse(
+      response,
+      () async {
+        final rawData = response.data?['data'];
+        if (rawData is! Map) {
+          throw Exception('Invalid report response format');
+        }
+        return ChatReport.fromJson(Map<String, dynamic>.from(rawData));
+      },
+      'Submit Report',
+      isCreated: true,
+    );
+  }
+
+  Future<List<ChatReport>> getReports(String userId) async {
+    final response = await _apiClient.private.get(
+      '/consultations/reports/users/$userId',
+      options: Options(
+        validateStatus: (status) => status != null && status < 500,
+      ),
+    );
+
+    return _apiClient.customResponse(response, () async {
+      final rawList = response.data?['data'];
+      if (rawList is! List) return <ChatReport>[];
+      return rawList
+          .whereType<Map>()
+          .map((e) => ChatReport.fromJson(Map<String, dynamic>.from(e)))
+          .toList();
+    }, 'Fetch Reports');
+  }
+
+  Future<void> markAsRead(String conversationId) async {
+    final response = await _apiClient.private.post(
+      '/chat/conversations/$conversationId/read',
+      options: Options(
+        validateStatus: (status) => status != null && status < 500,
+      ),
+    );
+
+    return _apiClient.customResponse(
+      response,
+      () async {},
+      'Mark as Read',
+    );
+  }
   int _toInt(dynamic value) {
     if (value is int) return value;
     if (value is double) return value.toInt();

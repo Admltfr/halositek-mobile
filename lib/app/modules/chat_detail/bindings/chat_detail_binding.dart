@@ -6,9 +6,18 @@ import '../controllers/chat_detail_controller.dart';
 
 class ChatDetailBinding extends Bindings {
   final String conversationId;
+  final String consultationId;
   final String title;
+  final int durationHours;
+  final String conversationStatus;
 
-  ChatDetailBinding({this.conversationId = '', this.title = ''});
+  ChatDetailBinding({
+    this.conversationId = '',
+    this.consultationId = '',
+    this.title = '',
+    this.durationHours = 0,
+    this.conversationStatus = '',
+  });
 
   @override
   void dependencies() {
@@ -18,7 +27,10 @@ class ChatDetailBinding extends Bindings {
       () => ChatDetailController(
         Get.find<ChatService>(),
         conversationId: conversationId,
+        consultationId: consultationId,
         title: title,
+        durationHours: durationHours,
+        conversationStatus: conversationStatus,
       ),
     );
   }

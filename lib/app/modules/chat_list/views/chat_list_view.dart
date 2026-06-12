@@ -32,6 +32,8 @@ class ChatListView extends GetView<ChatListController> {
               AppDimensions.spacingXLarge.sh,
               _searchBar(size),
               AppDimensions.spacingXLarge.sh,
+              _sectionHeader(size),
+              AppDimensions.spacingLarge.sh,
               Expanded(child: _chatList(size)),
             ],
           ),
@@ -68,33 +70,66 @@ class ChatListView extends GetView<ChatListController> {
               ),
             ),
           ),
-          Container(
-            padding: EdgeInsets.symmetric(
-              horizontal: size.width * 0.03,
-              vertical: size.height * 0.005,
-            ),
-            decoration: BoxDecoration(
-              color: AppColors.secondaryColor.withValues(alpha: 0.18),
-              borderRadius: BorderRadius.circular(AppDimensions.radiusPill),
-            ),
-            child: Row(
-              children: [
-                Text(
-                  'Consultation',
-                  style: AppTypography.bodySmall.copyWith(
-                    color: AppColors.primaryColor,
-                    fontWeight: FontWeight.w700,
-                  ),
+          // Filter dropdown (REPORT style)
+          Obx(
+            () => GestureDetector(
+              onTap: controller.cycleStatusFilter,
+              child: Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: size.width * 0.03,
+                  vertical: size.height * 0.005,
                 ),
-                const Icon(
-                  Icons.keyboard_arrow_down_rounded,
-                  color: AppColors.primaryColor,
-                  size: AppDimensions.iconSizeMedium,
+                decoration: BoxDecoration(
+                  color: _filterBadgeColor(controller.statusFilter.value)
+                      .withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(AppDimensions.radiusPill),
                 ),
-              ],
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      controller.statusFilter.value.isEmpty
+                          ? 'ALL'
+                          : controller.statusFilter.value.toUpperCase(),
+                      style: AppTypography.bodySmall.copyWith(
+                        color: _filterBadgeColor(controller.statusFilter.value),
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const Icon(
+                      Icons.keyboard_arrow_down_rounded,
+                      color: AppColors.primaryColor,
+                      size: AppDimensions.iconSizeMedium,
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Color _filterBadgeColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'approved':
+        return AppColors.successColor;
+      case 'declined':
+        return AppColors.errorColor;
+      case 'reported':
+        return AppColors.warningColor;
+      default:
+        return AppColors.primaryColor;
+    }
+  }
+
+  Widget _sectionHeader(Size size) {
+    return Text(
+      'Your Chat',
+      style: AppTypography.bodyMedium.copyWith(
+        color: AppColors.textHeadingColor,
+        fontWeight: FontWeight.w700,
       ),
     );
   }
@@ -171,7 +206,10 @@ class ChatListView extends GetView<ChatListController> {
         enabled: isLoading && controller.conversations.isEmpty,
         child: ListView.separated(
           itemCount: data.isEmpty && isLoading ? 6 : data.length,
-          separatorBuilder: (_, __) => AppDimensions.spacingLarge.sh,
+          separatorBuilder: (_, __) => const Divider(
+            height: AppDimensions.spacing2XLarge,
+            color: Color(0xFFF1F1F1),
+          ),
           itemBuilder: (_, index) {
             if (data.isEmpty) {
               return _chatTile(
@@ -185,6 +223,10 @@ class ChatListView extends GetView<ChatListController> {
                   unreadCount: 0,
                   lastMessage: null,
                   updatedAt: null,
+                  createdAt: null,
+                  durationHours: 0,
+                  status: '',
+                  consultationId: '',
                 ),
               );
             }
@@ -198,86 +240,146 @@ class ChatListView extends GetView<ChatListController> {
 
   Widget _chatTile(Size size, ChatConversation conversation) {
     final timeText = _formatTime(conversation.lastActivityAt);
+    final status = conversation.status.toLowerCase();
+    final hasStatus =
+        status == 'approved' || status == 'declined' || status == 'reported';
 
     return InkWell(
       onTap: () => controller.openConversation(conversation),
       borderRadius: BorderRadius.circular(AppDimensions.radiusLarge),
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: size.width * 0.065,
-            backgroundColor: AppColors.whiteColor,
-            child: ClipOval(
-              child: Image.asset(
-                _dummyAvatar,
-                width: size.width * 0.13,
-                height: size.width * 0.13,
-                fit: BoxFit.cover,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          vertical: AppDimensions.spacingSmall,
+        ),
+        child: Row(
+          children: [
+            CircleAvatar(
+              radius: size.width * 0.065,
+              backgroundColor: AppColors.whiteColor,
+              child: ClipOval(
+                child: Image.asset(
+                  _dummyAvatar,
+                  width: size.width * 0.13,
+                  height: size.width * 0.13,
+                  fit: BoxFit.cover,
+                ),
               ),
             ),
-          ),
-          AppDimensions.spacingLarge.sw,
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  conversation.displayName,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTypography.bodyMedium.copyWith(
-                    color: AppColors.textHeadingColor,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                AppDimensions.spacingXSmall.sh,
-                Text(
-                  conversation.lastMessagePreview.isNotEmpty
-                      ? conversation.lastMessagePreview
-                      : 'No messages yet',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTypography.bodySmall.copyWith(
-                    color: AppColors.textBodyColor.withValues(alpha: 0.8),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              if (timeText.isNotEmpty)
-                Text(
-                  timeText,
-                  style: AppTypography.caption.copyWith(
-                    color: AppColors.textBodyColor.withValues(alpha: 0.7),
-                  ),
-                ),
-              AppDimensions.spacingXSmall.sh,
-              if (conversation.unreadCount > 0)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppDimensions.spacingSmall,
-                    vertical: AppDimensions.spacingExtraSmall,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.errorColor,
-                    borderRadius: BorderRadius.circular(
-                      AppDimensions.radiusPill,
-                    ),
-                  ),
-                  child: Text(
-                    conversation.unreadCount.toString(),
-                    style: AppTypography.caption.copyWith(
-                      color: AppColors.whiteColor,
+            AppDimensions.spacingLarge.sw,
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    conversation.displayName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTypography.bodyMedium.copyWith(
+                      color: AppColors.textHeadingColor,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                ),
-            ],
-          ),
-        ],
+                  AppDimensions.spacingXSmall.sh,
+                  Text(
+                    conversation.lastMessagePreview.isNotEmpty
+                        ? conversation.lastMessagePreview
+                        : 'No messages yet',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.textBodyColor.withValues(alpha: 0.8),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            AppDimensions.spacingMedium.sw,
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                if (hasStatus)
+                  _statusBadge(status)
+                else if (timeText.isNotEmpty)
+                  Text(
+                    timeText,
+                    style: AppTypography.caption.copyWith(
+                      color: AppColors.textBodyColor.withValues(alpha: 0.7),
+                    ),
+                  ),
+                if (!hasStatus && conversation.unreadCount > 0) ...[
+                  AppDimensions.spacingXSmall.sh,
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppDimensions.spacingSmall,
+                      vertical: AppDimensions.spacingExtraSmall,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.errorColor,
+                      borderRadius: BorderRadius.circular(
+                        AppDimensions.radiusPill,
+                      ),
+                    ),
+                    child: Text(
+                      conversation.unreadCount.toString(),
+                      style: AppTypography.caption.copyWith(
+                        color: AppColors.whiteColor,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _statusBadge(String status) {
+    Color color;
+    String label;
+    bool outlined;
+
+    switch (status) {
+      case 'approved':
+        color = AppColors.successColor;
+        label = 'APPROVE';
+        outlined = false;
+        break;
+      case 'declined':
+        color = AppColors.errorColor;
+        label = 'DECLINED';
+        outlined = true;
+        break;
+      case 'reported':
+        color = AppColors.warningColor;
+        label = 'REPORT';
+        outlined = true;
+        break;
+      default:
+        color = AppColors.textBodyColor;
+        label = status.toUpperCase();
+        outlined = true;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppDimensions.spacingLarge,
+        vertical: AppDimensions.spacingXSmall,
+      ),
+      decoration: BoxDecoration(
+        color: outlined ? Colors.transparent : color.withValues(alpha: 0.12),
+        border: outlined ? Border.all(color: color.withValues(alpha: 0.4)) : null,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusPill),
+      ),
+      child: Text(
+        label,
+        style: AppTypography.captionLarge.copyWith(
+          color: color,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 0.5,
+        ),
       ),
     );
   }
@@ -285,11 +387,26 @@ class ChatListView extends GetView<ChatListController> {
   String _formatTime(DateTime? value) {
     if (value == null) return '';
     final local = value.toLocal();
-    final hour = local.hour;
-    final minute = local.minute;
-    final h = hour % 12 == 0 ? 12 : hour % 12;
-    final suffix = hour >= 12 ? 'PM' : 'AM';
-    final mm = minute.toString().padLeft(2, '0');
-    return '${h.toString().padLeft(2, '0')}:$mm $suffix';
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final dateOnly = DateTime(local.year, local.month, local.day);
+
+    if (dateOnly == today) {
+      final hour = local.hour;
+      final minute = local.minute;
+      final h = hour % 12 == 0 ? 12 : hour % 12;
+      final suffix = hour >= 12 ? 'PM' : 'AM';
+      final mm = minute.toString().padLeft(2, '0');
+      return '${h.toString().padLeft(2, '0')}:$mm $suffix';
+    }
+
+    final diff = today.difference(dateOnly).inDays;
+    if (diff == 1) return 'Yesterday';
+    if (diff < 7) {
+      const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+      return days[local.weekday - 1];
+    }
+
+    return '${local.day}/${local.month}/${local.year}';
   }
 }
