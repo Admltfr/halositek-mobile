@@ -73,7 +73,7 @@ class AwardForm extends StatelessWidget {
         _field('award description', 'Describe the award..', descriptionController, maxLines: 7, maxWords: 30),
         28.0.sh,
         _verificationBox(),
-        48.0.sh,
+        36.0.sh,
         Row(
           children: [
             Expanded(
@@ -84,7 +84,7 @@ class AwardForm extends StatelessWidget {
                   side: BorderSide(color: AppColors.errorColor),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimensions.radiusMedium)),
                 ),
-                child: Text(cancelLabel, style: AppTypography.bodyMedium.copyWith(color: AppColors.errorColor)),
+                child: Text(cancelLabel, style: AppTypography.bodySmall.copyWith(color: AppColors.errorColor)),
               ),
             ),
             12.0.sw,
@@ -95,7 +95,7 @@ class AwardForm extends StatelessWidget {
                     isSubmitting
                         ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2))
                         : const Icon(Icons.add_rounded, size: 16),
-                label: Text(submitLabel),
+                label: Text(submitLabel, style: AppTypography.bodySmall.copyWith(fontWeight: FontWeight.w700)),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primaryColor,
                   foregroundColor: AppColors.textWhiteColor,
@@ -183,7 +183,7 @@ class AwardForm extends StatelessWidget {
             errorBorder: _border(color: AppColors.errorColor),
             focusedErrorBorder: _border(color: AppColors.errorColor),
           ),
-          style: AppTypography.bodyMedium.copyWith(color: AppColors.textHeadingColor),
+          style: AppTypography.bodySmall.copyWith(color: AppColors.textHeadingColor),
         ),
       ],
     );

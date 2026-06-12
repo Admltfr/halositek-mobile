@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart';
 import 'package:halositek/app/core/constants/app_colors.dart';
 import 'package:halositek/app/core/constants/app_dimensions.dart';
@@ -37,10 +38,10 @@ class AwardDetailView extends GetView<AwardDetailController> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _topBar(),
-                  24.0.sh,
+                  18.0.sh,
                   Text(
                     'Verification Proof',
-                    style: AppTypography.bodyMedium.copyWith(color: AppColors.textHeadingColor, fontWeight: FontWeight.w700),
+                    style: AppTypography.bodyLarge.copyWith(color: AppColors.textHeadingColor, fontWeight: FontWeight.w700),
                   ),
                   14.0.sh,
                   _proofImage(award),
@@ -59,7 +60,7 @@ class AwardDetailView extends GetView<AwardDetailController> {
                   12.0.sh,
                   Text(
                     award.description.isEmpty ? '-' : award.description,
-                    style: AppTypography.bodyMedium.copyWith(
+                    style: AppTypography.bodySmall.copyWith(
                       color: AppColors.textBodyColor,
                       fontWeight: FontWeight.w400,
                       height: 1.6,
@@ -100,7 +101,7 @@ class AwardDetailView extends GetView<AwardDetailController> {
   }
 
   Widget _proofImage(Award award) {
-    final url = award.verificationFileUrl.trim();
+    final url = _awardImageUrl(award);
 
     return Container(
       width: double.infinity,
@@ -125,6 +126,19 @@ class AwardDetailView extends GetView<AwardDetailController> {
     );
   }
 
+  String _awardImageUrl(Award award) {
+    final path = award.verificationFileUrl.trim();
+    if (path.isEmpty) return '';
+    if (path.startsWith('http://') || path.startsWith('https://')) return path;
+
+    final baseUrl = (dotenv.env['BASEURL'] ?? '').trim();
+    if (baseUrl.isEmpty) return path;
+
+    final normalizedBase = baseUrl.endsWith('/') ? baseUrl.substring(0, baseUrl.length - 1) : baseUrl;
+    final normalizedPath = path.startsWith('/') ? path.substring(1) : path;
+    return '$normalizedBase/$normalizedPath';
+  }
+
   Widget _infoCard(Award award) {
     return Container(
       width: double.infinity,
@@ -147,7 +161,7 @@ class AwardDetailView extends GetView<AwardDetailController> {
                 children: [
                   Text(
                     'STATUS',
-                    style: AppTypography.captionLarge.copyWith(
+                    style: AppTypography.caption.copyWith(
                       color: AppColors.textBodyColor.withValues(alpha: 0.86),
                       fontWeight: FontWeight.w700,
                       letterSpacing: 1.2,
@@ -160,7 +174,7 @@ class AwardDetailView extends GetView<AwardDetailController> {
                       6.0.sw,
                       Text(
                         award.isApproved ? 'Verified' : 'Submission',
-                        style: AppTypography.bodyMedium.copyWith(
+                        style: AppTypography.bodySmall.copyWith(
                           color: award.isApproved ? AppColors.successColor : AppColors.warningColor,
                           fontWeight: FontWeight.w700,
                         ),
@@ -186,7 +200,7 @@ class AwardDetailView extends GetView<AwardDetailController> {
           children: [
             Text(
               label,
-              style: AppTypography.captionLarge.copyWith(
+              style: AppTypography.caption.copyWith(
                 color: AppColors.textBodyColor.withValues(alpha: 0.86),
                 fontWeight: FontWeight.w700,
                 letterSpacing: 1.2,
@@ -196,7 +210,7 @@ class AwardDetailView extends GetView<AwardDetailController> {
             Text(
               value.trim().isEmpty ? '-' : value,
               textAlign: TextAlign.left,
-              style: AppTypography.bodyMedium.copyWith(
+              style: AppTypography.bodySmall.copyWith(
                 color: AppColors.textHeadingColor,
                 fontWeight: FontWeight.w700,
                 height: 1.25,
@@ -228,7 +242,7 @@ class AwardDetailView extends GetView<AwardDetailController> {
               ),
               child: Text(
                 controller.isDeleting.value ? 'Deleting...' : 'Delete Design',
-                style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.w700),
+                style: AppTypography.bodySmall.copyWith(fontWeight: FontWeight.w700),
               ),
             ),
           ),
@@ -240,7 +254,7 @@ class AwardDetailView extends GetView<AwardDetailController> {
               icon: const Icon(Icons.edit_outlined, size: 18),
               label: Text(
                 'Edit Design',
-                style: AppTypography.bodyMedium.copyWith(color: AppColors.textWhiteColor, fontWeight: FontWeight.w700),
+                style: AppTypography.bodySmall.copyWith(color: AppColors.textWhiteColor, fontWeight: FontWeight.w700),
               ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primaryColor,

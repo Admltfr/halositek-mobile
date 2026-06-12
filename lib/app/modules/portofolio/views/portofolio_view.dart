@@ -6,6 +6,7 @@ import 'package:halositek/app/core/constants/app_extensions.dart';
 import 'package:halositek/app/core/constants/app_typography.dart';
 import 'package:halositek/app/data/models/award.dart';
 import 'package:halositek/app/data/models/catalog.dart';
+import 'package:halositek/app/modules/profile/widgets/profile_formatters.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 
 import '../controllers/portofolio_controller.dart';
@@ -18,29 +19,57 @@ class PortofolioView extends GetView<PortofolioController> {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+
     return Scaffold(
       backgroundColor: AppColors.whiteColor,
+      floatingActionButton: FloatingActionButton(
+        elevation: 8,
+        backgroundColor: AppColors.primaryColor,
+        foregroundColor: AppColors.whiteColor,
+        shape: const CircleBorder(),
+        onPressed: controller.startConsultationChat,
+        child: const Icon(Icons.smart_toy_outlined),
+      ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppDimensions.pageHorizontalPadding,
-            vertical: AppDimensions.pageVerticalPadding,
+        child: RefreshIndicator(
+          color: AppColors.primaryColor,
+          onRefresh: controller.refreshPortofolio,
+          child: SingleChildScrollView(
+            padding: EdgeInsets.symmetric(
+              horizontal: size.width * 0.05,
+              vertical: size.height * 0.01,
+            ),
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: Column(
+              children: [
+                _topBar(),
+                18.0.sh,
+                _architectOverview(),
+                24.0.sh,
+                _tabSwitch(),
+                22.0.sh,
+                _tabContent(),
+              ],
+            ),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _topBar(),
-              AppDimensions.spacingLarge.sh,
-              _profileCard(),
-              AppDimensions.spacingLarge.sh,
-              _priceAndChat(),
-              AppDimensions.spacingXLarge.sh,
-              _tabSwitch(),
-              AppDimensions.spacingLarge.sh,
-              _tabContent(),
-              AppDimensions.spacingSemibold.sh,
-            ],
-          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _architectOverview() {
+    return Obx(
+      () => Skeletonizer(
+        enabled: controller.isLoadingArchitect.value,
+        child: Column(
+          children: [
+            _profileHeader(),
+            22.0.sh,
+            _stats(),
+            22.0.sh,
+            _priceAndChat(),
+          ],
         ),
       ),
     );
@@ -48,211 +77,223 @@ class PortofolioView extends GetView<PortofolioController> {
 
   Widget _topBar() {
     return SizedBox(
-      height: 32,
+      height: 40,
       child: Row(
         children: [
           InkWell(
-            borderRadius: BorderRadius.circular(AppDimensions.radius4XLarge),
             onTap: controller.goBack,
             child: const Padding(
-              padding: EdgeInsets.all(AppDimensions.spacingXSmall),
-              child: Icon(
-                Icons.arrow_back_ios_new_rounded,
-                size: AppDimensions.iconSizeSmall,
-                color: AppColors.textHeadingColor,
-              ),
+              padding: EdgeInsets.all(6),
+              child: Icon(Icons.arrow_back_ios_new_rounded, size: 15),
             ),
           ),
           Expanded(
-            child: Center(
-              child: Text(
-                'Architect Profile',
-                style: AppTypography.bodyMedium.copyWith(
-                  color: AppColors.textHeadingColor,
-                  fontWeight: FontWeight.w700,
-                ),
+            child: Text(
+              'Architect Profile',
+              textAlign: TextAlign.center,
+              style: AppTypography.bodyMedium.copyWith(
+                color: AppColors.textHeadingColor,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ),
-          const SizedBox(width: AppDimensions.avatarIndicatorSize / 2),
+          const SizedBox(width: 28),
         ],
       ),
     );
   }
 
-  Widget _profileCard() {
-    return Obx(() {
-      final isLoading = controller.isLoadingArchitect.value;
-      final pic = controller.profilePicture.value;
-      final name = controller.architectName.value;
-      final title = controller.architectTitle.value;
-      final exp = controller.experienceLabel.value;
-      final bioText = controller.bio.value;
-      final projCount = controller.totalProjects.value;
-      final awardCount = controller.totalAwards.value;
-
-      return Skeletonizer(
-        enabled: isLoading,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            // Center Profile Avatar with Bookmark Badge
-            Center(
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Container(
-                    width: 110,
-                    height: 110,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: const Color(0xFFFDE68A), // Light gold border
-                        width: 3.5,
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.shadowColor,
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: ClipOval(
-                      child:
-                          pic.isNotEmpty
-                              ? Image.network(
-                                pic,
-                                width: 103,
-                                height: 103,
-                                fit: BoxFit.cover,
-                                errorBuilder:
-                                    (_, __, ___) => Image.asset(
-                                      _dummyAvatar,
-                                      width: 103,
-                                      height: 103,
-                                      fit: BoxFit.cover,
-                                    ),
-                              )
-                              : Image.asset(
-                                _dummyAvatar,
-                                width: 103,
-                                height: 103,
-                                fit: BoxFit.cover,
-                              ),
-                    ),
-                  ),
-                  Positioned(
-                    bottom: -2,
-                    right: -2,
-                    child: Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: AppColors.whiteColor,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.1),
-                            blurRadius: 6,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: const Center(
-                        child: Icon(
-                          Icons.bookmark_border_rounded,
-                          color: AppColors.textHeadingColor,
-                          size: 20,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            AppDimensions.spacingXLarge.sh,
-            // Name
-            Text(
-              name,
-              textAlign: TextAlign.center,
-              style: AppTypography.headingMedium.copyWith(
-                color: AppColors.textHeadingColor,
-                fontWeight: FontWeight.w800,
-                fontSize: 22,
-              ),
-            ),
-            AppDimensions.spacingSmall.sh,
-            // Title & Experience
-            Text(
-              '$title | $exp',
-              textAlign: TextAlign.center,
-              style: AppTypography.bodyMedium.copyWith(
-                color: AppColors.primaryColor,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            AppDimensions.spacingLarge.sh,
-            // Biography
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Text(
-                bioText.isNotEmpty
-                    ? bioText
-                    : 'Specializing in sustainable modern residential architecture and urban planning with a focus on minimalist aesthetics and eco-friendly materials.',
-                textAlign: TextAlign.center,
-                style: AppTypography.bodySmall.copyWith(
-                  color: AppColors.textBodyColor.withValues(alpha: 0.85),
-                  height: 1.45,
-                ),
-              ),
-            ),
-            AppDimensions.spacing2XLarge.sh,
-            // Stats Row
-            Row(
+  Widget _profileHeader() {
+    return Obx(
+      () => Column(
+        children: [
+          SizedBox(
+            height: 138,
+            child: Stack(
+              clipBehavior: Clip.none,
+              alignment: Alignment.center,
               children: [
-                Expanded(
-                  child: _statCard(value: '$projCount', label: 'PROJECTS'),
+                Container(
+                  width: 128,
+                  height: 128,
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: AppColors.primaryColor.withValues(alpha: 0.18),
+                      width: 4,
+                    ),
+                  ),
+                  child: ClipOval(
+                    child:
+                        controller.architectPhoto.value.isNotEmpty
+                            ? Image.network(
+                              controller.architectPhoto.value,
+                              fit: BoxFit.cover,
+                              errorBuilder:
+                                  (_, __, ___) => Image.asset(
+                                    _dummyAvatar,
+                                    fit: BoxFit.cover,
+                                  ),
+                            )
+                            : Image.asset(_dummyAvatar, fit: BoxFit.cover),
+                  ),
                 ),
-                AppDimensions.spacingLarge.sw,
-                Expanded(
-                  child: _statCard(value: '$awardCount', label: 'AWARDS'),
+                Positioned(right: 0, bottom: 2, child: _saveArchitectButton()),
+                Positioned(
+                  right: 0,
+                  top: 56,
+                  child: Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: AppColors.primaryColor.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
                 ),
               ],
             ),
-          ],
+          ),
+          18.0.sh,
+          Text(
+            controller.architectName.value,
+            textAlign: TextAlign.center,
+            style: AppTypography.headingMedium.copyWith(
+              fontSize: 20,
+              color: AppColors.textHeadingColor,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          4.0.sh,
+          Text(
+            '${controller.architectTitle.value} | ${controller.experienceLabel.value}',
+            textAlign: TextAlign.center,
+            style: AppTypography.bodyMedium.copyWith(
+              color: AppColors.primaryColor,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          14.0.sh,
+          Text(
+            controller.architectBio.value,
+            textAlign: TextAlign.center,
+            style: AppTypography.bodySmall.copyWith(
+              color: AppColors.textBodyColor,
+              height: 1.55,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _saveArchitectButton() {
+    return Obx(() {
+      final isSaved = controller.isWishlisted.value == true;
+      final isLoading = controller.isSavingArchitect.value;
+
+      return InkWell(
+        customBorder: const CircleBorder(),
+        onTap: isLoading ? null : controller.toggleSaveArchitect,
+        child: Container(
+          width: 38,
+          height: 38,
+          decoration: BoxDecoration(
+            color: AppColors.whiteColor,
+            shape: BoxShape.circle,
+            border: Border.all(
+              color:
+                  isSaved
+                      ? AppColors.primaryColor.withValues(alpha: 0.32)
+                      : AppColors.primaryColor.withValues(alpha: 0.08),
+            ),
+            boxShadow: const [
+              BoxShadow(
+                color: AppColors.shadowSoftColor,
+                blurRadius: 10,
+                offset: Offset(0, 4),
+              ),
+            ],
+          ),
+          child:
+              isLoading
+                  ? const Padding(
+                    padding: EdgeInsets.all(10),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: AppColors.primaryColor,
+                    ),
+                  )
+                  : Icon(
+                    isSaved
+                        ? Icons.bookmark_rounded
+                        : Icons.bookmark_border_rounded,
+                    color:
+                        isSaved
+                            ? AppColors.primaryColor
+                            : AppColors.textHeadingColor,
+                    size: 21,
+                  ),
         ),
       );
     });
   }
 
-  Widget _statCard({required String value, required String label}) {
+  Widget _stats() {
+    return Obx(
+      () => Row(
+        children: [
+          Expanded(
+            child: _statCard(
+              controller.totalProjects.value.toString(),
+              'PROJECTS',
+            ),
+          ),
+          12.0.sw,
+          Expanded(
+            child: _statCard(controller.totalAwards.value.toString(), 'AWARDS'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _statCard(String value, String label) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+      padding: const EdgeInsets.symmetric(
+        vertical: AppDimensions.spacingMedium,
+      ),
       decoration: BoxDecoration(
         color: AppColors.whiteColor,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusXLarge),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(
-          color: const Color(0xFFF1F5F9), // Light grey border
-          width: 1.2,
+          color: AppColors.primaryColor.withValues(alpha: 0.14),
         ),
+        boxShadow: const [
+          BoxShadow(
+            color: AppColors.shadowSoftColor,
+            blurRadius: 8,
+            offset: Offset(0, 3),
+          ),
+        ],
       ),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
             value,
-            style: AppTypography.headingMedium.copyWith(
+            style: AppTypography.headingSmall.copyWith(
               color: AppColors.primaryColor,
-              fontWeight: FontWeight.w800,
-              fontSize: 20,
+              fontSize: 18,
+              fontWeight: FontWeight.w900,
             ),
           ),
-          const SizedBox(height: 4),
+          4.0.sh,
           Text(
             label,
-            style: AppTypography.captionSmall.copyWith(
-              color: AppColors.textBodyColor.withValues(alpha: 0.75),
+            style: AppTypography.bodySmall.copyWith(
+              color: AppColors.textBodyColor,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.8,
             ),
@@ -264,68 +305,61 @@ class PortofolioView extends GetView<PortofolioController> {
 
   Widget _priceAndChat() {
     return Obx(
-      () => SizedBox(
-        width: double.infinity,
-        height: 48,
-        child: ElevatedButton(
-          onPressed:
+      () => Container(
+        margin: const EdgeInsets.symmetric(horizontal: 22),
+        padding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: AppDimensions.spacingLarge,
+        ),
+        decoration: BoxDecoration(
+          color: AppColors.primaryColor,
+          borderRadius: BorderRadius.circular(AppDimensions.radiusPill),
+        ),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(AppDimensions.radiusPill),
+          onTap:
               controller.isStartingChat.value
                   ? null
                   : controller.startConsultationChat,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.primaryColor,
-            foregroundColor: AppColors.whiteColor,
-            disabledBackgroundColor: AppColors.primaryColor.withValues(
-              alpha: 0.6,
-            ),
-            shape: const StadiumBorder(),
-            elevation: 0,
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-          ),
-          child:
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Flexible(
+                child: Text(
+                  '${formatCurrency(controller.consultationFee.value)} / ${controller.consultationDuration.value} Jam',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.bodySmall.copyWith(
+                    color: AppColors.whiteColor,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+              10.0.sw,
               controller.isStartingChat.value
-                  ? const Center(
-                    child: SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          AppColors.whiteColor,
-                        ),
-                      ),
+                  ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: AppColors.whiteColor,
                     ),
                   )
-                  : Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Rp. 25.000,00 / 2 Jam',
-                        style: AppTypography.bodyMedium.copyWith(
-                          color: AppColors.whiteColor,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.chat_bubble_outline_rounded,
-                            color: AppColors.whiteColor,
-                            size: 18,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Chat Now',
-                            style: AppTypography.bodyMedium.copyWith(
-                              color: AppColors.whiteColor,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+                  : const Icon(
+                    Icons.chat_bubble_outline_rounded,
+                    color: AppColors.whiteColor,
+                    size: 16,
                   ),
+              8.0.sw,
+              Text(
+                controller.isStartingChat.value ? 'Loading...' : 'Chat Now',
+                style: AppTypography.bodySmall.copyWith(
+                  color: AppColors.whiteColor,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -334,29 +368,19 @@ class PortofolioView extends GetView<PortofolioController> {
   Widget _tabSwitch() {
     return Obx(() {
       final active = controller.activeTab.value;
-      return Container(
-        padding: const EdgeInsets.all(AppDimensions.spacingXSmall),
-        decoration: BoxDecoration(
-          color: AppColors.whiteColor,
-          borderRadius: BorderRadius.circular(AppDimensions.radiusXLarge),
-          border: Border.all(
-            color: AppColors.formBorderColor.withValues(alpha: 0.25),
+      return Row(
+        children: [
+          _tabItem(
+            title: 'Portfolio',
+            isActive: active == 0,
+            onTap: () => controller.setTab(0),
           ),
-        ),
-        child: Row(
-          children: [
-            _tabItem(
-              title: 'Portofolio',
-              isActive: active == 0,
-              onTap: () => controller.setTab(0),
-            ),
-            _tabItem(
-              title: 'Award',
-              isActive: active == 1,
-              onTap: () => controller.setTab(1),
-            ),
-          ],
-        ),
+          _tabItem(
+            title: 'Award',
+            isActive: active == 1,
+            onTap: () => controller.setTab(1),
+          ),
+        ],
       );
     });
   }
@@ -367,25 +391,25 @@ class PortofolioView extends GetView<PortofolioController> {
     required VoidCallback onTap,
   }) {
     return Expanded(
-      child: GestureDetector(
+      child: InkWell(
         onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          decoration: BoxDecoration(
-            color: isActive ? AppColors.primaryColor : AppColors.whiteColor,
-            borderRadius: BorderRadius.circular(AppDimensions.radiusLarge),
-          ),
-          child: Center(
-            child: Text(
+        child: Column(
+          children: [
+            Text(
               title,
               style: AppTypography.bodySmall.copyWith(
                 color:
-                    isActive ? AppColors.whiteColor : AppColors.textBodyColor,
-                fontWeight: FontWeight.w700,
+                    isActive ? AppColors.primaryColor : AppColors.textBodyColor,
+                fontWeight: FontWeight.w800,
               ),
             ),
-          ),
+            14.0.sh,
+            Container(
+              height: 2,
+              margin: const EdgeInsets.symmetric(horizontal: 10),
+              color: isActive ? AppColors.primaryColor : AppColors.accentColor,
+            ),
+          ],
         ),
       ),
     );
@@ -418,16 +442,16 @@ class PortofolioView extends GetView<PortofolioController> {
             : List.generate(6, (_) => Catalog.dummy());
 
     return Skeletonizer(
-      enabled: isLoading && !hasData,
+      enabled: isLoading,
       child: GridView.builder(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         itemCount: items.length,
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
-          mainAxisSpacing: AppDimensions.spacingLarge,
-          crossAxisSpacing: AppDimensions.spacingLarge,
-          childAspectRatio: 0.82,
+          mainAxisSpacing: 20,
+          crossAxisSpacing: 18,
+          childAspectRatio: 0.74,
         ),
         itemBuilder: (_, index) => _portfolioCard(items[index]),
       ),
@@ -450,16 +474,16 @@ class PortofolioView extends GetView<PortofolioController> {
         hasData ? controller.awards : List.generate(6, (_) => Award.dummy());
 
     return Skeletonizer(
-      enabled: isLoading && !hasData,
+      enabled: isLoading,
       child: GridView.builder(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         itemCount: items.length,
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
-          mainAxisSpacing: AppDimensions.spacingLarge,
-          crossAxisSpacing: AppDimensions.spacingLarge,
-          childAspectRatio: 0.82,
+          mainAxisSpacing: 20,
+          crossAxisSpacing: 18,
+          childAspectRatio: 0.74,
         ),
         itemBuilder: (_, index) => _awardCard(items[index]),
       ),
@@ -471,27 +495,13 @@ class PortofolioView extends GetView<PortofolioController> {
         catalog.imageUrls.isNotEmpty ? catalog.imageUrls : catalog.images;
     final image = images.isNotEmpty ? images.first : '';
 
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.whiteColor,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusXLarge),
-        boxShadow: const [
-          BoxShadow(
-            color: AppColors.shadowSoftColor,
-            blurRadius: 8,
-            offset: Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ClipRRect(
-            borderRadius: const BorderRadius.vertical(
-              top: Radius.circular(AppDimensions.radiusXLarge),
-            ),
-            child: AspectRatio(
-              aspectRatio: 1.1,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: SizedBox.expand(
               child:
                   image.isNotEmpty
                       ? Image.network(
@@ -504,84 +514,70 @@ class PortofolioView extends GetView<PortofolioController> {
                       : Image.asset(_dummyImage, fit: BoxFit.cover),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(8),
-            child: Text(
-              catalog.name.isNotEmpty ? catalog.name : 'Project',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: AppTypography.bodySmall.copyWith(
-                color: AppColors.textHeadingColor,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
+        ),
+        9.0.sh,
+        Text(
+          catalog.name.isNotEmpty ? catalog.name : 'Project',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: AppTypography.bodySmall.copyWith(
+            color: AppColors.textHeadingColor,
+            fontWeight: FontWeight.w900,
           ),
-        ],
-      ),
+        ),
+        2.0.sh,
+        Text(
+          _formatDate(catalog.createdAt),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: AppTypography.bodySmall.copyWith(
+            color: AppColors.textBodyColor,
+          ),
+        ),
+      ],
     );
   }
 
   Widget _awardCard(Award award) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.whiteColor,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusXLarge),
-        boxShadow: const [
-          BoxShadow(
-            color: AppColors.shadowSoftColor,
-            blurRadius: 8,
-            offset: Offset(0, 3),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child:
+                award.imageUrl.isNotEmpty
+                    ? Image.network(
+                      award.imageUrl,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      errorBuilder:
+                          (_, __, ___) =>
+                              Image.asset(_dummyImage, fit: BoxFit.cover),
+                    )
+                    : Image.asset(_dummyImage, fit: BoxFit.cover),
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ClipRRect(
-            borderRadius: const BorderRadius.vertical(
-              top: Radius.circular(AppDimensions.radiusXLarge),
-            ),
-            child: AspectRatio(
-              aspectRatio: 1.1,
-              child:
-                  award.imageUrl.isNotEmpty
-                      ? Image.network(
-                        award.imageUrl,
-                        fit: BoxFit.cover,
-                        errorBuilder:
-                            (_, __, ___) =>
-                                Image.asset(_dummyImage, fit: BoxFit.cover),
-                      )
-                      : Image.asset(_dummyImage, fit: BoxFit.cover),
-            ),
+        ),
+        9.0.sh,
+        Text(
+          award.title.isNotEmpty ? award.title : 'Award',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: AppTypography.bodySmall.copyWith(
+            color: AppColors.textHeadingColor,
+            fontWeight: FontWeight.w900,
           ),
-          Padding(
-            padding: const EdgeInsets.all(8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  award.title.isNotEmpty ? award.title : 'Award',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTypography.bodySmall.copyWith(
-                    color: AppColors.textHeadingColor,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                AppDimensions.spacingExtraSmall.sh,
-                Text(
-                  award.dateLabel,
-                  style: AppTypography.bodySmall.copyWith(
-                    color: AppColors.textBodyColor.withValues(alpha: 0.8),
-                    fontSize: AppTypography.caption.fontSize,
-                  ),
-                ),
-              ],
-            ),
+        ),
+        2.0.sh,
+        Text(
+          _formatDate(award.awardDate),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: AppTypography.bodySmall.copyWith(
+            color: AppColors.textBodyColor,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -590,10 +586,30 @@ class PortofolioView extends GetView<PortofolioController> {
       children: [
         Text(
           message,
+          textAlign: TextAlign.center,
           style: AppTypography.bodySmall.copyWith(color: AppColors.errorColor),
         ),
         TextButton(onPressed: onRetry, child: const Text('Coba Lagi')),
       ],
     );
+  }
+
+  String _formatDate(DateTime? date) {
+    if (date == null) return '-';
+    const months = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
+    return '${months[date.month - 1]}, ${date.day} ${date.year}';
   }
 }

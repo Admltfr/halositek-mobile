@@ -33,7 +33,7 @@ class PortofolioController extends GetxController {
 
   MidtransSDK? _midtrans;
 
-  final String? client_key = dotenv.env['CLIENT_KEY'];
+  final String? clientKey = dotenv.env['CLIENT_KEY'];
 
   final activeTab = 0.obs;
 
@@ -43,6 +43,7 @@ class PortofolioController extends GetxController {
   final isLoadingPortfolio = false.obs;
   final isLoadingAward = false.obs;
   final isLoadingArchitect = false.obs;
+  final isSavingArchitect = false.obs;
   final portfolioError = ''.obs;
   final awardError = ''.obs;
   final architectError = ''.obs;
@@ -52,11 +53,16 @@ class PortofolioController extends GetxController {
 
   final architectName = 'David Larsson'.obs;
   final architectTitle = 'Principal Architect'.obs;
-  final experienceLabel = "15+ Years Experience".obs;
-  final profilePicture = ''.obs;
-  final bio = ''.obs;
+  final experienceLabel = "15 Years Experience".obs;
+  final architectPhoto = ''.obs;
+  final architectBio =
+      'Specializing in sustainable modern residential architecture and urban planning with a focus on minimalist aesthetics and eco-friendly materials.'
+          .obs;
   final totalProjects = 0.obs;
   final totalAwards = 0.obs;
+  final consultationFee = 25000.obs;
+  final consultationDuration = 2.obs;
+  final isWishlisted = RxnBool();
 
   @override
   void onInit() {
@@ -74,28 +80,66 @@ class PortofolioController extends GetxController {
     nav.onPop();
   }
 
+  Future<void> refreshPortofolio() async {
+    await Future.wait([fetchArchitect(), fetchPortfolios(), fetchAwards()]);
+  }
+
   Future<void> fetchArchitect() async {
-    debugPrint('\x1B[31m ${architectId}\x1B[0m');
+    debugPrint('\x1B[31m $architectId\x1B[0m');
     try {
       isLoadingArchitect.value = true;
       architectError.value = '';
       final architect = await _architectService.getArchitectById(architectId);
       architectName.value = architect.name;
+      architectPhoto.value = architect.profilePicture;
       architectTitle.value =
           architect.headline.isNotEmpty
               ? architect.headline
               : architectTitle.value;
-      experienceLabel.value = architect.specialization.isNotEmpty
-          ? architect.specialization
-          : '15+ Years Experience';
-      profilePicture.value = architect.profilePicture;
-      bio.value = architect.bio;
+      experienceLabel.value =
+          architect.specialization.isNotEmpty
+              ? architect.specialization
+              : '${architect.totalProjects} Projects';
+      architectBio.value =
+          architect.bio.isNotEmpty ? architect.bio : architectBio.value;
       totalProjects.value = architect.totalProjects;
       totalAwards.value = architect.totalAwards;
+      consultationFee.value = architect.consultationFee;
+      consultationDuration.value =
+          architect.consultationDuration > 0
+              ? architect.consultationDuration
+              : consultationDuration.value;
+      isWishlisted.value = architect.isWishlisted;
     } catch (e) {
       architectError.value = e.toString();
     } finally {
       isLoadingArchitect.value = false;
+    }
+  }
+
+  Future<void> toggleSaveArchitect() async {
+    if (isSavingArchitect.value) return;
+
+    final architectIdValue = architectId.trim();
+    if (architectIdValue.isEmpty) {
+      Get.snackbar('Gagal', 'Architect ID tidak ditemukan');
+      return;
+    }
+
+    isSavingArchitect.value = true;
+
+    try {
+      if (isWishlisted.value == true) {
+        await _architectService.unsaveArchitect(architectIdValue);
+      } else {
+        await _architectService.saveArchitect(architectIdValue);
+      }
+
+      await fetchArchitect();
+    } catch (e) {
+      Get.snackbar('Gagal', e.toString());
+    } finally {
+      isSavingArchitect.value = false;
     }
   }
 
@@ -134,7 +178,7 @@ class PortofolioController extends GetxController {
   Future<void> _initMidtrans() async {
     _midtrans = await MidtransSDK.init(
       config: MidtransConfig(
-        clientKey: client_key ?? '',
+        clientKey: clientKey ?? '',
         merchantBaseUrl: 'https://app.sandbox.midtrans.com/',
         colorTheme: ColorTheme(
           colorPrimary: AppColors.primaryColor,
@@ -194,31 +238,24 @@ class PortofolioController extends GetxController {
     final status = await _paymentService.getStatus(transactionId);
 
     if (status.canEnterConsultation) {
-      final String conversationId;
-      final String consultationId;
-      if (status.conversationId.isNotEmpty) {
-        conversationId = status.conversationId;
-        consultationId = status.consultationId;
-      } else {
-        final newConv = await _chatService.createConversation(
-          participantIds: [architectId],
-        );
-        conversationId = newConv.id;
-        consultationId = newConv.consultationId;
-      }
+      final conversationId =
+          status.conversationId.isNotEmpty
+              ? status.conversationId
+              : (await _chatService.createConversation(
+                participantIds: [architectId],
+              )).id;
 
-      _openChat(conversationId, consultationId);
+      _openChat(conversationId);
     } else {
       Get.snackbar('Pending', 'Pembayaran belum selesai.');
     }
   }
 
-  void _openChat(String conversationId, String consultationId) {
+  void _openChat(String conversationId) {
     Get.to(
       () => const ChatDetailView(),
       binding: ChatDetailBinding(
         conversationId: conversationId,
-        consultationId: consultationId,
         title: architectName.value,
       ),
     );

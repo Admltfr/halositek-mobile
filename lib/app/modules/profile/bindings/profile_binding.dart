@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 import 'package:halositek/app/data/network/api_client.dart';
+import 'package:halositek/app/data/network/architect_service.dart';
 import 'package:halositek/app/data/network/auth_service.dart';
 import 'package:halositek/app/data/network/token_service.dart';
 
@@ -11,9 +12,16 @@ class ProfileBinding extends Bindings {
     Get.lazyPut<AuthService>(
       () => AuthService(Get.find<ApiClient>(), Get.find<TokenService>()),
     );
+    Get.lazyPut<ArchitectService>(
+      () => ArchitectService(Get.find<ApiClient>()),
+    );
 
     Get.lazyPut<ProfileController>(
-      () => ProfileController(Get.find<AuthService>()),
+      () => ProfileController(
+        Get.find<AuthService>(),
+        Get.find<TokenService>(),
+        Get.find<ArchitectService>(),
+      ),
     );
   }
 }

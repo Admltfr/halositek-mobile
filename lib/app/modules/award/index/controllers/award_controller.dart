@@ -20,6 +20,8 @@ class AwardController extends GetxController {
   final hasMore = true.obs;
   final errorMessage = ''.obs;
   final selectedStatus = 'approved'.obs;
+  final totalApproved = 0.obs;
+  final totalPending = 0.obs;
   final searchController = TextEditingController();
   final scrollController = ScrollController();
 
@@ -28,9 +30,8 @@ class AwardController extends GetxController {
   bool _isScrollRefreshRunning = false;
 
   bool get hasData => awards.isNotEmpty;
-  int get approvedCount => awards.where((award) => award.isApproved).length;
-  int get pendingCount =>
-      awards.where((award) => award.status.toLowerCase() != 'approved').length;
+  int get approvedCount => totalApproved.value;
+  int get pendingCount => totalPending.value;
 
   @override
   void onInit() {
@@ -60,9 +61,11 @@ class AwardController extends GetxController {
     final position = scrollController.position;
     if (position.pixels >= position.maxScrollExtent - 8 &&
         !_isScrollRefreshRunning &&
-        !isLoading.value) {
+        !isLoading.value &&
+        !isLoadingMore.value &&
+        hasMore.value) {
       _isScrollRefreshRunning = true;
-      fetchAwards(reset: true);
+      fetchAwards();
     }
   }
 
@@ -101,21 +104,28 @@ class AwardController extends GetxController {
       }
       errorMessage.value = '';
       final architectId = await _getCurrentArchitectId();
+      if (reset) {
+        await _fetchAwardTotals(
+          architectId: architectId,
+          search: searchController.text,
+        );
+      }
 
-      final result = await _fetchByStatus(
-        architectId: architectId,
+      final result = await _awardService.getAwardList(
         page: _page,
         perPage: _perPage,
+        architectId: architectId,
+        status: _statusQuery,
         search: searchController.text,
       );
 
       if (reset) {
-        awards.assignAll(result);
+        awards.assignAll(result.awards);
       } else {
-        awards.addAll(result);
+        awards.addAll(result.awards);
       }
 
-      hasMore.value = result.length == _perPage;
+      hasMore.value = result.meta.currentPage < result.meta.lastPage;
       if (hasMore.value) _page++;
     } catch (e) {
       errorMessage.value = e.toString();
@@ -126,55 +136,23 @@ class AwardController extends GetxController {
     }
   }
 
-  Future<List<Award>> _fetchByStatus({
+  String get _statusQuery {
+    if (selectedStatus.value == 'approved') return 'approved';
+    return 'pending';
+  }
+
+  Future<void> _fetchAwardTotals({
     required String? architectId,
-    required int page,
-    required int perPage,
     required String search,
   }) async {
-    if (selectedStatus.value == 'approved') {
-      return _awardService.getAwards(
-        page: page,
-        perPage: perPage,
-        architectId: architectId,
-        status: 'approved',
-        search: search,
-      );
-    }
-
-    final responses = await Future.wait([
-      _awardService.getAwards(
-        page: page,
-        perPage: perPage,
-        architectId: architectId,
-        status: 'pending',
-        search: search,
-      ),
-      _awardService.getAwards(
-        page: page,
-        perPage: perPage,
-        architectId: architectId,
-        status: 'declined',
-        search: search,
-      ),
-    ]);
-
-    final merged = [...responses[0], ...responses[1]];
-    final byId = <String, Award>{};
-    for (final item in merged) {
-      byId[item.id] = item;
-    }
-
-    final deduped = byId.values.toList();
-    deduped.sort((a, b) {
-      final left = a.createdAt;
-      final right = b.createdAt;
-      if (left == null && right == null) return 0;
-      if (left == null) return 1;
-      if (right == null) return -1;
-      return right.compareTo(left);
-    });
-    return deduped;
+    final result = await _awardService.getAwardList(
+      page: 1,
+      perPage: 1,
+      architectId: architectId,
+      search: search,
+    );
+    totalApproved.value = result.meta.approvedCount;
+    totalPending.value = result.meta.pendingCount;
   }
 
   void changeStatus(String? status) {

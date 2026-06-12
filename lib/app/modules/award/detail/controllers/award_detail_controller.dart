@@ -41,9 +41,16 @@ class AwardDetailController extends GetxController {
     }
   }
 
-  void openEdit() {
+  Future<void> openEdit() async {
     final nav = Get.find<NavigationController>().keyForTab(2)?.currentState;
-    nav?.pushNamed('/award/edit', arguments: award.value ?? awardId);
+    final result = await nav?.pushNamed(
+      '/award/edit',
+      arguments: award.value ?? awardId,
+    );
+
+    if (result != null) {
+      await fetchAward();
+    }
   }
 
   Future<void> deleteAward() async {
