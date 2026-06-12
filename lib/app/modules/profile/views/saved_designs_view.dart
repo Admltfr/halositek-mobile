@@ -16,7 +16,6 @@ class SavedDesignsView extends GetView<ProfileController> {
 
     return Scaffold(
       backgroundColor: AppColors.whiteColor,
-      floatingActionButton: const ProfileFab(),
       body: SafeArea(
         child: Padding(
           padding: EdgeInsets.symmetric(horizontal: size.width * 0.05, vertical: size.height * 0.01),

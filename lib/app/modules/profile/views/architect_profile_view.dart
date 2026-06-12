@@ -24,7 +24,6 @@ class ArchitectProfileView extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: AppColors.whiteColor,
-      floatingActionButton: const ProfileFab(),
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: controller.refreshProfile,

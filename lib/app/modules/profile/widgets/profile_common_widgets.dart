@@ -240,20 +240,6 @@ class PaymentHistoryCard extends StatelessWidget {
   }
 }
 
-class ProfileFab extends StatelessWidget {
-  const ProfileFab({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return FloatingActionButton(
-      onPressed: () {},
-      backgroundColor: AppColors.primaryColor,
-      foregroundColor: AppColors.whiteColor,
-      child: const Icon(Icons.business_center_outlined),
-    );
-  }
-}
-
 class _Avatar extends StatelessWidget {
   final String url;
   final double radius;

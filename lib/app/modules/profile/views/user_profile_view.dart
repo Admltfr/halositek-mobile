@@ -21,7 +21,6 @@ class UserProfileView extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: AppColors.whiteColor,
-      floatingActionButton: const ProfileFab(),
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: controller.refreshProfile,
@@ -70,7 +69,7 @@ class UserProfileView extends StatelessWidget {
                       _SectionTitle(title: 'Consultation Payment History', onViewAll: controller.openPaymentHistory),
                       14.0.sh,
                       _PaymentPreview(items: isLoading ? _dummyPayments : controller.paymentHistories),
-                      24.0.sh,
+                      48.0.sh,
                       SizedBox(
                         width: double.infinity,
                         height: 50,
