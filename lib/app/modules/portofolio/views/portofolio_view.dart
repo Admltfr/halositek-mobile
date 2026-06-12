@@ -81,118 +81,252 @@ class PortofolioView extends GetView<PortofolioController> {
   }
 
   Widget _profileCard() {
-    return Row(
-      children: [
-        CircleAvatar(
-          radius: 36,
-          backgroundColor: AppColors.whiteColor,
-          child: ClipOval(
-            child: Image.asset(
-              _dummyAvatar,
-              width: 72,
-              height: 72,
-              fit: BoxFit.cover,
+    return Obx(() {
+      final isLoading = controller.isLoadingArchitect.value;
+      final pic = controller.profilePicture.value;
+      final name = controller.architectName.value;
+      final title = controller.architectTitle.value;
+      final exp = controller.experienceLabel.value;
+      final bioText = controller.bio.value;
+      final projCount = controller.totalProjects.value;
+      final awardCount = controller.totalAwards.value;
+
+      return Skeletonizer(
+        enabled: isLoading,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // Center Profile Avatar with Bookmark Badge
+            Center(
+              child: Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Container(
+                    width: 110,
+                    height: 110,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: const Color(0xFFFDE68A), // Light gold border
+                        width: 3.5,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.shadowColor,
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: ClipOval(
+                      child:
+                          pic.isNotEmpty
+                              ? Image.network(
+                                pic,
+                                width: 103,
+                                height: 103,
+                                fit: BoxFit.cover,
+                                errorBuilder:
+                                    (_, __, ___) => Image.asset(
+                                      _dummyAvatar,
+                                      width: 103,
+                                      height: 103,
+                                      fit: BoxFit.cover,
+                                    ),
+                              )
+                              : Image.asset(
+                                _dummyAvatar,
+                                width: 103,
+                                height: 103,
+                                fit: BoxFit.cover,
+                              ),
+                    ),
+                  ),
+                  Positioned(
+                    bottom: -2,
+                    right: -2,
+                    child: Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: AppColors.whiteColor,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.1),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: const Center(
+                        child: Icon(
+                          Icons.bookmark_border_rounded,
+                          color: AppColors.textHeadingColor,
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ),
-        AppDimensions.spacingLarge.sw,
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Obx(
-                () => Text(
-                  controller.architectName.value,
-                  style: AppTypography.bodyLarge.copyWith(
-                    color: AppColors.textHeadingColor,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
+            AppDimensions.spacingXLarge.sh,
+            // Name
+            Text(
+              name,
+              textAlign: TextAlign.center,
+              style: AppTypography.headingMedium.copyWith(
+                color: AppColors.textHeadingColor,
+                fontWeight: FontWeight.w800,
+                fontSize: 22,
               ),
-              AppDimensions.spacingXSmall.sh,
-              Obx(
-                () => Text(
-                  '${controller.architectTitle.value} | ${controller.experienceLabel.value}',
-                  style: AppTypography.bodySmall.copyWith(
-                    color: AppColors.textBodyColor,
-                  ),
-                ),
+            ),
+            AppDimensions.spacingSmall.sh,
+            // Title & Experience
+            Text(
+              '$title | $exp',
+              textAlign: TextAlign.center,
+              style: AppTypography.bodyMedium.copyWith(
+                color: AppColors.primaryColor,
+                fontWeight: FontWeight.w700,
               ),
-              AppDimensions.spacingSmall.sh,
-              Text(
-                'Specializing in sustainable modern residential design.',
+            ),
+            AppDimensions.spacingLarge.sh,
+            // Biography
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Text(
+                bioText.isNotEmpty
+                    ? bioText
+                    : 'Specializing in sustainable modern residential architecture and urban planning with a focus on minimalist aesthetics and eco-friendly materials.',
+                textAlign: TextAlign.center,
                 style: AppTypography.bodySmall.copyWith(
                   color: AppColors.textBodyColor.withValues(alpha: 0.85),
-                  height: 1.25,
+                  height: 1.45,
                 ),
               ),
-            ],
-          ),
+            ),
+            AppDimensions.spacing2XLarge.sh,
+            // Stats Row
+            Row(
+              children: [
+                Expanded(
+                  child: _statCard(value: '$projCount', label: 'PROJECTS'),
+                ),
+                AppDimensions.spacingLarge.sw,
+                Expanded(
+                  child: _statCard(value: '$awardCount', label: 'AWARDS'),
+                ),
+              ],
+            ),
+          ],
         ),
-      ],
+      );
+    });
+  }
+
+  Widget _statCard({required String value, required String label}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+      decoration: BoxDecoration(
+        color: AppColors.whiteColor,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusXLarge),
+        border: Border.all(
+          color: const Color(0xFFF1F5F9), // Light grey border
+          width: 1.2,
+        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            value,
+            style: AppTypography.headingMedium.copyWith(
+              color: AppColors.primaryColor,
+              fontWeight: FontWeight.w800,
+              fontSize: 20,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: AppTypography.captionSmall.copyWith(
+              color: AppColors.textBodyColor.withValues(alpha: 0.75),
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.8,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
   Widget _priceAndChat() {
     return Obx(
-      () => Row(
-        children: [
-          Expanded(
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              decoration: BoxDecoration(
-                color: AppColors.secondaryColor.withValues(alpha: 0.18),
-                borderRadius: BorderRadius.circular(AppDimensions.radiusLarge),
-              ),
-              child: Center(
-                child: Text(
-                  'Rp 25.000 / 3 jam',
-                  style: AppTypography.bodySmall.copyWith(
-                    color: AppColors.primaryColor,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
+      () => SizedBox(
+        width: double.infinity,
+        height: 48,
+        child: ElevatedButton(
+          onPressed:
+              controller.isStartingChat.value
+                  ? null
+                  : controller.startConsultationChat,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.primaryColor,
+            foregroundColor: AppColors.whiteColor,
+            disabledBackgroundColor: AppColors.primaryColor.withValues(
+              alpha: 0.6,
             ),
+            shape: const StadiumBorder(),
+            elevation: 0,
+            padding: const EdgeInsets.symmetric(horizontal: 24),
           ),
-          AppDimensions.spacingSemibold.sw,
-          Expanded(
-            child: ElevatedButton.icon(
-              onPressed:
-                  controller.isStartingChat.value
-                      ? null
-                      : controller.startConsultationChat,
-              icon:
-                  controller.isStartingChat.value
-                      ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                      : const Icon(
-                        Icons.chat_bubble_outline,
-                        size: AppDimensions.iconSizeSmall + 1,
+          child:
+              controller.isStartingChat.value
+                  ? const Center(
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          AppColors.whiteColor,
+                        ),
                       ),
-              label: Text(
-                controller.isStartingChat.value ? 'Loading...' : 'Chat Now',
-                style: AppTypography.bodySmall.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              style: ElevatedButton.styleFrom(
-                elevation: 0,
-                backgroundColor: AppColors.primaryColor,
-                foregroundColor: AppColors.whiteColor,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(
-                    AppDimensions.radiusLarge,
+                    ),
+                  )
+                  : Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Rp. 25.000,00 / 2 Jam',
+                        style: AppTypography.bodyMedium.copyWith(
+                          color: AppColors.whiteColor,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.chat_bubble_outline_rounded,
+                            color: AppColors.whiteColor,
+                            size: 18,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Chat Now',
+                            style: AppTypography.bodyMedium.copyWith(
+                              color: AppColors.whiteColor,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
-                ),
-                padding: const EdgeInsets.symmetric(vertical: 12),
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

@@ -1,3 +1,5 @@
+import 'package:halositek/app/data/network/api_client.dart';
+
 class ChatConversation {
   final String id;
   final String name;
@@ -7,6 +9,13 @@ class ChatConversation {
   final int unreadCount;
   final ChatMessage? lastMessage;
   final DateTime? updatedAt;
+  final DateTime? createdAt;
+  final int durationHours;
+  final String status; // e.g. '', 'approved', 'declined', 'reported'
+  final String consultationId;
+  final String? architectName;
+  final String? architectHeadline;
+  final String? userName;
 
   const ChatConversation({
     required this.id,
@@ -17,6 +26,13 @@ class ChatConversation {
     required this.unreadCount,
     required this.lastMessage,
     required this.updatedAt,
+    required this.createdAt,
+    required this.durationHours,
+    required this.status,
+    required this.consultationId,
+    this.architectName,
+    this.architectHeadline,
+    this.userName,
   });
 
   factory ChatConversation.fromJson(Map<String, dynamic> json) {
@@ -25,6 +41,16 @@ class ChatConversation {
         lastMessageRaw is Map
             ? ChatMessage.fromJson(lastMessageRaw.cast<String, dynamic>())
             : null;
+
+    final architectRaw = json['architect'];
+    final userRaw = json['user'];
+
+    final parsedArchitectName =
+        architectRaw is Map ? (architectRaw['name'] ?? '').toString() : null;
+    final parsedArchitectHeadline =
+        architectRaw is Map ? (architectRaw['headline'] ?? '').toString() : null;
+    final parsedUserName =
+        userRaw is Map ? (userRaw['name'] ?? '').toString() : null;
 
     return ChatConversation(
       id: (json['id'] ?? '').toString(),
@@ -35,10 +61,20 @@ class ChatConversation {
       unreadCount: _toInt(json['unread_count']),
       lastMessage: lastMessage,
       updatedAt: _parseDate(json['updated_at']),
+      createdAt: _parseDate(json['created_at']),
+      durationHours: _toInt(json['duration_hours']),
+      status: (json['status'] ?? '').toString().toLowerCase(),
+      consultationId: (json['consultation_id'] ?? '').toString(),
+      architectName: parsedArchitectName,
+      architectHeadline: parsedArchitectHeadline,
+      userName: parsedUserName,
     );
   }
 
   String get displayName {
+    if (architectName != null && architectName!.trim().isNotEmpty) {
+      return architectName!;
+    }
     if (name.trim().isNotEmpty) return name;
     return isGroup ? 'Group Chat' : 'Conversation';
   }
@@ -46,6 +82,19 @@ class ChatConversation {
   String get lastMessagePreview => lastMessage?.displayBody ?? '';
 
   DateTime? get lastActivityAt => lastMessage?.createdAt ?? updatedAt;
+
+  /// Returns the datetime when this session expires (null if no duration set)
+  DateTime? get sessionExpiredAt {
+    if (createdAt == null || durationHours <= 0) return null;
+    return createdAt!.add(Duration(hours: durationHours));
+  }
+
+  /// Whether the consultation session has expired
+  bool get isExpired {
+    final expiry = sessionExpiredAt;
+    if (expiry == null) return false;
+    return DateTime.now().isAfter(expiry);
+  }
 
   static int _toInt(dynamic value) {
     if (value is int) return value;
@@ -97,6 +146,7 @@ class ChatMessage {
   factory ChatMessage.fromJson(Map<String, dynamic> json) {
     final body = (json['body'] ?? '').toString();
     final content = (json['content'] ?? '').toString();
+    final attachmentVal = json['attachment_url']?.toString() ?? json['attachment']?.toString();
 
     return ChatMessage(
       id: (json['id'] ?? '').toString(),
@@ -106,7 +156,7 @@ class ChatMessage {
       content: content,
       role: (json['role'] ?? '').toString(),
       type: (json['type'] ?? 'text').toString(),
-      attachment: json['attachment']?.toString(),
+      attachment: attachmentVal,
       readAt: _parseDate(json['read_at']),
       isMine: json['is_mine'] == true,
       sender:
@@ -121,6 +171,35 @@ class ChatMessage {
   }
 
   String get displayBody => body.isNotEmpty ? body : content;
+
+  String? get attachmentUrl {
+    if (attachment == null || attachment!.isEmpty) return null;
+    if (attachment!.startsWith('http://') || attachment!.startsWith('https://')) {
+      return attachment;
+    }
+    final base = ApiClient.baseUrl ?? '';
+    final cleanBase = base.endsWith('/') ? base.substring(0, base.length - 1) : base;
+    final cleanAttachment = attachment!.startsWith('/') ? attachment! : '/$attachment';
+    return '$cleanBase$cleanAttachment';
+  }
+
+  /// True if this message contains an image (attachment or type == 'image')
+  bool get hasImage =>
+      (type == 'image') ||
+      (attachment != null &&
+          attachment!.isNotEmpty &&
+          _isImageUrl(attachment!));
+
+  static bool _isImageUrl(String url) {
+    final lower = url.toLowerCase();
+    return lower.endsWith('.jpg') ||
+        lower.endsWith('.jpeg') ||
+        lower.endsWith('.png') ||
+        lower.endsWith('.gif') ||
+        lower.endsWith('.webp') ||
+        lower.contains('/image') ||
+        lower.contains('images/');
+  }
 
   static DateTime? _parseDate(dynamic value) {
     return DateTime.tryParse((value ?? '').toString());
@@ -139,6 +218,32 @@ class ChatSender {
       id: (json['id'] ?? '').toString(),
       name: (json['name'] ?? '').toString(),
       email: (json['email'] ?? '').toString(),
+    );
+  }
+}
+
+class ChatReport {
+  final String id;
+  final String conversationId;
+  final String reason;
+  final String status; // 'pending', 'resolved', etc.
+  final DateTime? createdAt;
+
+  const ChatReport({
+    required this.id,
+    required this.conversationId,
+    required this.reason,
+    required this.status,
+    required this.createdAt,
+  });
+
+  factory ChatReport.fromJson(Map<String, dynamic> json) {
+    return ChatReport(
+      id: (json['id'] ?? '').toString(),
+      conversationId: (json['conversation_id'] ?? '').toString(),
+      reason: (json['reason'] ?? '').toString(),
+      status: (json['status'] ?? 'pending').toString(),
+      createdAt: DateTime.tryParse((json['created_at'] ?? '').toString()),
     );
   }
 }

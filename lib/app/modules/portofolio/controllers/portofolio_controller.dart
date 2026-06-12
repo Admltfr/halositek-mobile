@@ -52,7 +52,11 @@ class PortofolioController extends GetxController {
 
   final architectName = 'David Larsson'.obs;
   final architectTitle = 'Principal Architect'.obs;
-  final experienceLabel = "15 Years Experience".obs;
+  final experienceLabel = "15+ Years Experience".obs;
+  final profilePicture = ''.obs;
+  final bio = ''.obs;
+  final totalProjects = 0.obs;
+  final totalAwards = 0.obs;
 
   @override
   void onInit() {
@@ -81,7 +85,13 @@ class PortofolioController extends GetxController {
           architect.headline.isNotEmpty
               ? architect.headline
               : architectTitle.value;
-      experienceLabel.value = '${architect.totalProjects} Projects';
+      experienceLabel.value = architect.specialization.isNotEmpty
+          ? architect.specialization
+          : '15+ Years Experience';
+      profilePicture.value = architect.profilePicture;
+      bio.value = architect.bio;
+      totalProjects.value = architect.totalProjects;
+      totalAwards.value = architect.totalAwards;
     } catch (e) {
       architectError.value = e.toString();
     } finally {
@@ -184,24 +194,31 @@ class PortofolioController extends GetxController {
     final status = await _paymentService.getStatus(transactionId);
 
     if (status.canEnterConsultation) {
-      final conversationId =
-          status.conversationId.isNotEmpty
-              ? status.conversationId
-              : (await _chatService.createConversation(
-                participantIds: [architectId],
-              )).id;
+      final String conversationId;
+      final String consultationId;
+      if (status.conversationId.isNotEmpty) {
+        conversationId = status.conversationId;
+        consultationId = status.consultationId;
+      } else {
+        final newConv = await _chatService.createConversation(
+          participantIds: [architectId],
+        );
+        conversationId = newConv.id;
+        consultationId = newConv.consultationId;
+      }
 
-      _openChat(conversationId);
+      _openChat(conversationId, consultationId);
     } else {
       Get.snackbar('Pending', 'Pembayaran belum selesai.');
     }
   }
 
-  void _openChat(String conversationId) {
+  void _openChat(String conversationId, String consultationId) {
     Get.to(
       () => const ChatDetailView(),
       binding: ChatDetailBinding(
         conversationId: conversationId,
+        consultationId: consultationId,
         title: architectName.value,
       ),
     );
