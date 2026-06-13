@@ -20,6 +20,7 @@ class Catalog {
 
   final int likesCount;
   final bool liked;
+  final bool saved;
   final String status;
 
   final Architect? architect;
@@ -41,6 +42,7 @@ class Catalog {
     required this.areaRaw,
     required this.likesCount,
     required this.liked,
+    required this.saved,
     required this.status,
     required this.architect,
     required this.createdAt,
@@ -61,8 +63,13 @@ class Catalog {
       layoutImageUrls: _toStringList(json['layout_image_urls']),
       highlightFeatures: (json['highlight_features'] ?? '').toString(),
       areaRaw: (json['area'] ?? '').toString(),
-      likesCount: (json['likes_count'] ?? 0) as int,
-      liked: json['liked'] == true,
+      likesCount: _toInt(json['likes_count']),
+      liked: _toBool(json['is_liked']) ?? _toBool(json['liked']) ?? false,
+      saved:
+          _toBool(json['is_saved']) ??
+          _toBool(json['saved']) ??
+          _toBool(json['is_wishlisted']) ??
+          false,
       status: (json['status'] ?? '').toString(),
       architect:
           json['architect'] is Map
@@ -90,6 +97,7 @@ class Catalog {
     String? areaRaw,
     int? likesCount,
     bool? liked,
+    bool? saved,
     String? status,
     Architect? architect,
     DateTime? createdAt,
@@ -110,6 +118,7 @@ class Catalog {
       areaRaw: areaRaw ?? this.areaRaw,
       likesCount: likesCount ?? this.likesCount,
       liked: liked ?? this.liked,
+      saved: saved ?? this.saved,
       status: status ?? this.status,
       architect: architect ?? this.architect,
       createdAt: createdAt ?? this.createdAt,
@@ -133,6 +142,7 @@ class Catalog {
       areaRaw: '0',
       likesCount: 0,
       liked: false,
+      saved: false,
       status: '',
       architect: null,
       createdAt: null,
@@ -155,5 +165,22 @@ class Catalog {
     final match = RegExp(r'[-+]?[0-9]*\.?[0-9]+').firstMatch(raw);
     if (match == null) return 0;
     return double.tryParse(match.group(0) ?? '') ?? 0;
+  }
+
+  static int _toInt(dynamic value) {
+    if (value is int) return value;
+    if (value is double) return value.toInt();
+    return int.tryParse(value?.toString() ?? '') ?? 0;
+  }
+
+  static bool? _toBool(dynamic value) {
+    if (value == null) return null;
+    if (value is bool) return value;
+    if (value is num) return value == 1;
+
+    final normalized = value.toString().toLowerCase().trim();
+    if (normalized == 'true' || normalized == '1') return true;
+    if (normalized == 'false' || normalized == '0') return false;
+    return null;
   }
 }

@@ -13,7 +13,11 @@ import 'package:halositek/app/modules/award/index/bindings/award_binding.dart';
 import 'package:halositek/app/modules/award/index/views/award_view.dart';
 import 'package:halositek/app/modules/chat_list/bindings/chat_list_binding.dart';
 import 'package:halositek/app/modules/chat_list/views/chat_list_view.dart';
+import 'package:halositek/app/modules/design/add/bindings/design_add_binding.dart';
+import 'package:halositek/app/modules/design/add/views/design_add_view.dart';
 import 'package:halositek/app/modules/design/bindings/design_binding.dart';
+import 'package:halositek/app/modules/design/edit/bindings/design_edit_binding.dart';
+import 'package:halositek/app/modules/design/edit/views/design_edit_view.dart';
 import 'package:halositek/app/modules/design/views/design_view.dart';
 import 'package:halositek/app/modules/detail/bindings/detail_binding.dart';
 import 'package:halositek/app/modules/detail/views/detail_view.dart';
@@ -24,6 +28,8 @@ import 'package:halositek/app/modules/portofolio/bindings/portofolio_binding.dar
 import 'package:halositek/app/modules/profile/bindings/profile_binding.dart';
 import 'package:halositek/app/modules/profile/edit/bindings/profile_edit_binding.dart';
 import 'package:halositek/app/modules/profile/edit/views/profile_edit_view.dart';
+import 'package:halositek/app/modules/profile/user_edit/bindings/user_profile_edit_binding.dart';
+import 'package:halositek/app/modules/profile/user_edit/views/user_profile_edit_view.dart';
 import 'package:halositek/app/modules/profile/views/payment_history_view.dart';
 import 'package:halositek/app/modules/profile/views/profile_view.dart';
 import 'package:halositek/app/modules/profile/views/saved_architects_view.dart';
@@ -31,6 +37,8 @@ import 'package:halositek/app/modules/profile/views/saved_designs_view.dart';
 import 'package:halositek/app/core/constants/app_colors.dart';
 import 'package:halositek/app/data/models/award.dart';
 import 'package:halositek/app/data/models/architect.dart';
+import 'package:halositek/app/data/models/catalog.dart';
+import 'package:halositek/app/data/models/user.dart';
 
 import '../controllers/navigation_controller.dart';
 
@@ -177,6 +185,25 @@ class NavigationView extends GetView<NavigationController> {
         page: () => const DetailView(),
         binding: DetailBinding(catalogId: catalogId),
       );
+    } else if (settings.name == _TabRoutes.designAdd) {
+      return GetPageRoute(
+        routeName: _TabRoutes.designAdd,
+        page: () => const DesignAddView(),
+        binding: DesignAddBinding(),
+      );
+    } else if (settings.name == _TabRoutes.designEdit) {
+      final arg = settings.arguments;
+      final initialCatalog = arg is Catalog ? arg : null;
+      final catalogId = arg is String ? arg : initialCatalog?.id ?? '';
+
+      return GetPageRoute(
+        routeName: _TabRoutes.designEdit,
+        page: () => const DesignEditView(),
+        binding: DesignEditBinding(
+          catalogId: catalogId,
+          initialCatalog: initialCatalog,
+        ),
+      );
     }
 
     return _fallbackRoute('Unknown Design route');
@@ -247,13 +274,19 @@ class NavigationView extends GetView<NavigationController> {
         binding: ProfileBinding(),
       );
     } else if (settings.name == _TabRoutes.profileEdit) {
+      final arg = settings.arguments;
+
       if (!controller.isArchitect) {
-        return _fallbackRoute('Edit Profile hanya tersedia untuk architect');
+        final initialUser = arg is UserProfile ? arg : null;
+
+        return GetPageRoute(
+          routeName: _TabRoutes.profileEdit,
+          page: () => const UserProfileEditView(),
+          binding: UserProfileEditBinding(initialUser: initialUser),
+        );
       }
 
-      final arg = settings.arguments;
       final initialArchitect = arg is Architect ? arg : null;
-
       return GetPageRoute(
         routeName: _TabRoutes.profileEdit,
         page: () => const ProfileEditView(),
@@ -289,6 +322,8 @@ class NavigationView extends GetView<NavigationController> {
 class _TabRoutes {
   static const root = '/';
   static const detail = '/detail';
+  static const designAdd = '/design/add';
+  static const designEdit = '/design/edit';
   static const portofolio = '/portofolio';
   static const chatList = '/chats';
   static const awardDetail = '/award/detail';

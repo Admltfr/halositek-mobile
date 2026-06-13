@@ -31,6 +31,10 @@ class LoginController extends GetxController {
     Get.toNamed('/register');
   }
 
+  void gotoForgotPassword() {
+    Get.toNamed('/forgot-password');
+  }
+
   @override
   void onReady() {
     super.onReady();

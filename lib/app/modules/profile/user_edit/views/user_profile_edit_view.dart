@@ -2,20 +2,19 @@ import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart';
 import 'package:halositek/app/core/constants/app_colors.dart';
 import 'package:halositek/app/core/constants/app_dimensions.dart';
 import 'package:halositek/app/core/constants/app_extensions.dart';
 import 'package:halositek/app/core/constants/app_typography.dart';
+import 'package:halositek/app/modules/profile/widgets/profile_common_widgets.dart';
 import 'package:skeletonizer/skeletonizer.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-import '../controllers/profile_edit_controller.dart';
+import '../controllers/user_profile_edit_controller.dart';
 
-class ProfileEditView extends GetView<ProfileEditController> {
-  const ProfileEditView({super.key});
-
-  static const String _fallbackImage = 'assets/images/bg-image.png';
+class UserProfileEditView extends GetView<UserProfileEditController> {
+  const UserProfileEditView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -37,59 +36,34 @@ class ProfileEditView extends GetView<ProfileEditController> {
                   12.0.sh,
                   _avatar(),
                   24.0.sh,
-                  _sectionTitle('Personal Information'),
-                  18.0.sh,
-                  _label('Full Name'),
-                  _input(controller.nameController, errorKey: 'name'),
-                  16.0.sh,
-                  _label('Professional Title'),
-                  _input(controller.headlineController, errorKey: 'headline'),
-                  16.0.sh,
-                  _label('Bio'),
-                  _input(controller.bioController, maxLines: 4, errorKey: 'bio'),
-                  16.0.sh,
-                  _passwordCard(),
-                  16.0.sh,
-                  _label('Years of Experience'),
-                  SizedBox(
-                    width: 106,
-                    child: _input(
-                      controller.experienceController,
-                      errorKey: 'year_of_experience',
-                      keyboardType: TextInputType.number,
-                      suffixIcon: const Icon(Icons.unfold_more_rounded, size: 18),
+                  Center(
+                    child: Text(
+                      controller.nameController.text.trim().isNotEmpty
+                          ? controller.nameController.text.trim()
+                          : '-',
+                      textAlign: TextAlign.center,
+                      style: AppTypography.headingMedium.copyWith(
+                        fontSize: 20,
+                        color: AppColors.textHeadingColor,
+                        fontWeight: FontWeight.w900,
+                      ),
                     ),
                   ),
-                  30.0.sh,
-                  _sectionTitle('Contact Details'),
-                  15.0.sh,
-                  _label('Email Address'),
-                  _input(controller.emailController, errorKey: 'email', keyboardType: TextInputType.emailAddress),
-                  30.0.sh,
-                  _sectionTitleRow('Fee (Rp)', 'Per Session (Hour)'),
-                  15.0.sh,
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _input(
-                          controller.feeController,
-                          errorKey: 'consultation_fee',
-                          keyboardType: TextInputType.number,
-                          prefixText: 'Rp. ',
-                        ),
-                      ),
-                      12.0.sw,
-                      Expanded(
-                        child: _input(
-                          controller.durationController,
-                          errorKey: 'consultation_hours',
-                          keyboardType: TextInputType.number,
-                          prefixText: '',
-                        ),
-                      ),
-                    ],
+                  36.0.sh,
+                  _sectionTitle('Personal Information'),
+                  18.0.sh,
+                  _label('Username'),
+                  _input(controller.nameController, errorKey: 'name'),
+                  16.0.sh,
+                  _label('Email'),
+                  _input(
+                    controller.emailController,
+                    errorKey: 'email',
+                    keyboardType: TextInputType.emailAddress,
                   ),
-                  32.0.sh,
+                  16.0.sh,
+                  _passwordCard(),
+                  52.0.sh,
                   _actions(),
                   28.0.sh,
                 ],
@@ -109,13 +83,19 @@ class ProfileEditView extends GetView<ProfileEditController> {
           InkWell(
             onTap: controller.goBack,
             borderRadius: BorderRadius.circular(20),
-            child: const Padding(padding: EdgeInsets.all(6), child: Icon(Icons.arrow_back_ios_new_rounded, size: 15)),
+            child: const Padding(
+              padding: EdgeInsets.all(6),
+              child: Icon(Icons.arrow_back_ios_new_rounded, size: 15),
+            ),
           ),
           Expanded(
             child: Text(
-              'Edit Profile',
+              'Your Profile',
               textAlign: TextAlign.center,
-              style: AppTypography.bodyMedium.copyWith(color: AppColors.textHeadingColor, fontWeight: FontWeight.w700),
+              style: AppTypography.bodyMedium.copyWith(
+                color: AppColors.textHeadingColor,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
           const SizedBox(width: 34),
@@ -127,14 +107,9 @@ class ProfileEditView extends GetView<ProfileEditController> {
   Widget _avatar() {
     return Center(
       child: Obx(() {
-        final url =
-            controller.architect.value!.profilePicture.startsWith('http') ||
-                    controller.architect.value!.profilePicture.startsWith('https')
-                ? controller.architect.value!.profilePicture
-                : "${dotenv.env['BASEURL']}/storage/${controller.architect.value!.profilePicture}";
-
         final photo = controller.selectedPhoto.value;
         final photoError = controller.fieldErrors['photo_profile'];
+        final url = controller.user.value?.photoProfileUrl ?? '';
 
         return Column(
           children: [
@@ -147,7 +122,10 @@ class ProfileEditView extends GetView<ProfileEditController> {
                   padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    border: Border.all(color: AppColors.secondaryColor.withValues(alpha: 0.28), width: 4),
+                    border: Border.all(
+                      color: AppColors.secondaryColor.withValues(alpha: 0.28),
+                      width: 4,
+                    ),
                   ),
                   child: ClipOval(child: _avatarImage(url, photo: photo)),
                 ),
@@ -156,16 +134,27 @@ class ProfileEditView extends GetView<ProfileEditController> {
                   bottom: 6,
                   child: InkWell(
                     onTap: controller.pickPhoto,
-                    borderRadius: BorderRadius.circular(AppDimensions.radiusMedium),
+                    borderRadius: BorderRadius.circular(
+                      AppDimensions.radiusMedium,
+                    ),
                     child: Container(
                       width: 38,
                       height: 38,
                       decoration: BoxDecoration(
                         color: AppColors.primaryColor,
-                        borderRadius: BorderRadius.circular(AppDimensions.radiusMedium),
-                        border: Border.all(color: AppColors.whiteColor, width: 3),
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.radiusMedium,
+                        ),
+                        border: Border.all(
+                          color: AppColors.whiteColor,
+                          width: 3,
+                        ),
                       ),
-                      child: const Icon(Icons.edit_outlined, color: AppColors.whiteColor, size: 18),
+                      child: const Icon(
+                        Icons.edit_outlined,
+                        color: AppColors.whiteColor,
+                        size: 18,
+                      ),
                     ),
                   ),
                 ),
@@ -175,16 +164,27 @@ class ProfileEditView extends GetView<ProfileEditController> {
                     bottom: 6,
                     child: InkWell(
                       onTap: controller.removePhoto,
-                      borderRadius: BorderRadius.circular(AppDimensions.radiusMedium),
+                      borderRadius: BorderRadius.circular(
+                        AppDimensions.radiusMedium,
+                      ),
                       child: Container(
                         width: 38,
                         height: 38,
                         decoration: BoxDecoration(
                           color: AppColors.errorColor,
-                          borderRadius: BorderRadius.circular(AppDimensions.radiusMedium),
-                          border: Border.all(color: AppColors.whiteColor, width: 3),
+                          borderRadius: BorderRadius.circular(
+                            AppDimensions.radiusMedium,
+                          ),
+                          border: Border.all(
+                            color: AppColors.whiteColor,
+                            width: 3,
+                          ),
                         ),
-                        child: const Icon(Icons.close_rounded, color: AppColors.whiteColor, size: 18),
+                        child: const Icon(
+                          Icons.close_rounded,
+                          color: AppColors.whiteColor,
+                          size: 18,
+                        ),
                       ),
                     ),
                   ),
@@ -195,7 +195,9 @@ class ProfileEditView extends GetView<ProfileEditController> {
               Text(
                 photoError,
                 textAlign: TextAlign.center,
-                style: AppTypography.bodySmall.copyWith(color: AppColors.errorColor),
+                style: AppTypography.bodySmall.copyWith(
+                  color: AppColors.errorColor,
+                ),
               ),
             ],
           ],
@@ -209,28 +211,32 @@ class ProfileEditView extends GetView<ProfileEditController> {
       return Image.file(
         File(photo.path!),
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => Image.asset(_fallbackImage, fit: BoxFit.cover),
+        errorBuilder:
+            (_, __, ___) =>
+                Image.asset(profileFallbackImage, fit: BoxFit.cover),
       );
     }
     if (url.isNotEmpty) {
       return Image.network(
-        url,
+        "${dotenv.env['BASEURL']}$url",
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => Image.asset(_fallbackImage, fit: BoxFit.cover),
+        errorBuilder:
+            (_, __, ___) =>
+                Image.asset(profileFallbackImage, fit: BoxFit.cover),
       );
     }
-    return Image.asset(_fallbackImage, fit: BoxFit.cover);
+    return Image.asset(profileFallbackImage, fit: BoxFit.cover);
   }
 
   Widget _sectionTitle(String text) {
     return Text(
       text.toUpperCase(),
-      style: AppTypography.bodySmall.copyWith(color: AppColors.primaryColor, fontWeight: FontWeight.w800, letterSpacing: 1),
+      style: AppTypography.bodySmall.copyWith(
+        color: AppColors.primaryColor,
+        fontWeight: FontWeight.w800,
+        letterSpacing: 1,
+      ),
     );
-  }
-
-  Widget _sectionTitleRow(String left, String right) {
-    return Row(children: [Expanded(child: _sectionTitle(left)), 12.0.sw, Expanded(child: _sectionTitle(right))]);
   }
 
   Widget _label(String text) {
@@ -238,36 +244,47 @@ class ProfileEditView extends GetView<ProfileEditController> {
       padding: const EdgeInsets.only(left: 4, bottom: 5),
       child: Text(
         text.toUpperCase(),
-        style: AppTypography.bodySmall.copyWith(color: AppColors.textBodyColor, fontWeight: FontWeight.w800),
+        style: AppTypography.bodySmall.copyWith(
+          color: AppColors.textBodyColor,
+          fontWeight: FontWeight.w800,
+        ),
       ),
     );
   }
 
   Widget _input(
     TextEditingController textController, {
-    int maxLines = 1,
     TextInputType? keyboardType,
-    Widget? suffixIcon,
-    String? prefixText,
     String? errorKey,
   }) {
     return Obx(() {
       final error = errorKey == null ? null : controller.fieldErrors[errorKey];
       return TextField(
         controller: textController,
-        maxLines: maxLines,
         keyboardType: keyboardType,
-        style: AppTypography.bodyMedium.copyWith(color: AppColors.textHeadingColor, fontSize: 12, height: 1.55),
+        style: AppTypography.bodyMedium.copyWith(
+          color: AppColors.textHeadingColor,
+          fontSize: 12,
+          height: 1.55,
+        ),
         decoration: InputDecoration(
-          prefixText: prefixText,
-          prefixStyle: AppTypography.bodyMedium.copyWith(color: AppColors.textHeadingColor, fontSize: 12),
-          suffixIcon: suffixIcon,
           errorText: error,
           errorMaxLines: 3,
-          errorStyle: AppTypography.bodySmall.copyWith(color: AppColors.errorColor),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          enabledBorder: _border(error == null ? AppColors.textBodyColor.withValues(alpha: 0.62) : AppColors.errorColor),
-          focusedBorder: _border(error == null ? AppColors.primaryColor : AppColors.errorColor),
+          errorStyle: AppTypography.bodySmall.copyWith(
+            color: AppColors.errorColor,
+          ),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 14,
+          ),
+          enabledBorder: _border(
+            error == null
+                ? AppColors.textBodyColor.withValues(alpha: 0.62)
+                : AppColors.errorColor,
+          ),
+          focusedBorder: _border(
+            error == null ? AppColors.primaryColor : AppColors.errorColor,
+          ),
           errorBorder: _border(AppColors.errorColor),
           focusedErrorBorder: _border(AppColors.errorColor),
           border: _border(AppColors.textBodyColor.withValues(alpha: 0.62)),
@@ -285,7 +302,11 @@ class ProfileEditView extends GetView<ProfileEditController> {
           controller: controller.passwordController,
           readOnly: true,
           obscureText: true,
-          style: AppTypography.bodyMedium.copyWith(color: AppColors.textHeadingColor, fontSize: 12, height: 1.55),
+          style: AppTypography.bodyMedium.copyWith(
+            color: AppColors.textHeadingColor,
+            fontSize: 12,
+            height: 1.55,
+          ),
           decoration: InputDecoration(
             suffixIcon: TextButton(
               onPressed: controller.openChangePasswordDialog,
@@ -298,8 +319,13 @@ class ProfileEditView extends GetView<ProfileEditController> {
                 ),
               ),
             ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            enabledBorder: _border(AppColors.textBodyColor.withValues(alpha: 0.62)),
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 14,
+            ),
+            enabledBorder: _border(
+              AppColors.textBodyColor.withValues(alpha: 0.62),
+            ),
             focusedBorder: _border(AppColors.primaryColor),
             border: _border(AppColors.textBodyColor.withValues(alpha: 0.62)),
           ),
@@ -318,10 +344,21 @@ class ProfileEditView extends GetView<ProfileEditController> {
               onPressed: controller.goBack,
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppColors.errorColor,
-                side: BorderSide(color: AppColors.errorColor.withValues(alpha: 0.28)),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimensions.radiusMedium)),
+                side: BorderSide(
+                  color: AppColors.errorColor.withValues(alpha: 0.28),
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(
+                    AppDimensions.radiusMedium,
+                  ),
+                ),
               ),
-              child: Text('Cancel Changes', style: AppTypography.bodySmall.copyWith(fontWeight: FontWeight.w800)),
+              child: Text(
+                'Cancel Changes',
+                style: AppTypography.bodySmall.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
             ),
           ),
         ),
@@ -331,21 +368,36 @@ class ProfileEditView extends GetView<ProfileEditController> {
             height: 42,
             child: Obx(
               () => ElevatedButton.icon(
-                onPressed: controller.isSubmitting.value ? null : controller.submit,
+                onPressed:
+                    controller.isSubmitting.value ? null : controller.submit,
                 icon:
                     controller.isSubmitting.value
                         ? const SizedBox(
                           width: 16,
                           height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.whiteColor),
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppColors.whiteColor,
+                          ),
                         )
                         : const Icon(Icons.save_outlined, size: 18),
-                label: Text('Save Changes', style: AppTypography.bodySmall.copyWith(fontWeight: FontWeight.w800)),
+                label: Text(
+                  'Save Changes',
+                  style: AppTypography.bodySmall.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primaryColor,
                   foregroundColor: AppColors.whiteColor,
-                  disabledBackgroundColor: AppColors.primaryColor.withValues(alpha: 0.55),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimensions.radiusMedium)),
+                  disabledBackgroundColor: AppColors.primaryColor.withValues(
+                    alpha: 0.55,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(
+                      AppDimensions.radiusMedium,
+                    ),
+                  ),
                 ),
               ),
             ),

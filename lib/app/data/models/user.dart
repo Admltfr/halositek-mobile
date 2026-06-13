@@ -66,6 +66,34 @@ class UserProfile {
     );
   }
 
+  UserProfile copyWith({
+    String? id,
+    String? name,
+    String? email,
+    String? role,
+    String? accountStatus,
+    String? photoProfileUrl,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    List<SavedProject>? savedProjects,
+    List<SavedArchitect>? savedArchitects,
+    List<PaymentHistory>? paymentHistories,
+  }) {
+    return UserProfile(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      email: email ?? this.email,
+      role: role ?? this.role,
+      accountStatus: accountStatus ?? this.accountStatus,
+      photoProfileUrl: photoProfileUrl ?? this.photoProfileUrl,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      savedProjects: savedProjects ?? this.savedProjects,
+      savedArchitects: savedArchitects ?? this.savedArchitects,
+      paymentHistories: paymentHistories ?? this.paymentHistories,
+    );
+  }
+
   static int toInt(dynamic value) {
     if (value is int) return value;
     if (value is double) return value.toInt();

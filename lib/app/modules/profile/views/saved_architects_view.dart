@@ -16,13 +16,18 @@ class SavedArchitectsView extends GetView<ProfileController> {
 
     return Scaffold(
       backgroundColor: AppColors.whiteColor,
-      floatingActionButton: const ProfileFab(),
       body: SafeArea(
         child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: size.width * 0.05, vertical: size.height * 0.01),
+          padding: EdgeInsets.symmetric(
+            horizontal: size.width * 0.05,
+            vertical: size.height * 0.01,
+          ),
           child: Column(
             children: [
-              ProfileTopBar(title: 'Saved Architect', onBack: controller.goBack),
+              ProfileTopBar(
+                title: 'Saved Architect',
+                onBack: controller.goBack,
+              ),
               const ProfileSearchField(hintText: 'Search saved architect'),
               26.0.sh,
               Expanded(
@@ -33,12 +38,18 @@ class SavedArchitectsView extends GetView<ProfileController> {
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
                         16.0.sh,
-                        Icon(Icons.people_alt_outlined, size: 32, color: AppColors.textBodyColor),
+                        Icon(
+                          Icons.people_alt_outlined,
+                          size: 32,
+                          color: AppColors.textBodyColor,
+                        ),
                         12.0.sh,
                         Text(
                           'Belum ada saved architect.',
                           textAlign: TextAlign.center,
-                          style: AppTypography.bodySmall.copyWith(color: AppColors.textBodyColor),
+                          style: AppTypography.bodySmall.copyWith(
+                            color: AppColors.textBodyColor,
+                          ),
                         ),
                       ],
                     );
@@ -46,7 +57,14 @@ class SavedArchitectsView extends GetView<ProfileController> {
                   return ListView.separated(
                     itemCount: items.length,
                     separatorBuilder: (_, __) => 16.0.sh,
-                    itemBuilder: (_, index) => SavedArchitectCard(architect: items[index]),
+                    itemBuilder:
+                        (_, index) => SavedArchitectCard(
+                          architect: items[index],
+                          onTap:
+                              () => controller.openSavedArchitectDetail(
+                                items[index],
+                              ),
+                        ),
                   );
                 }),
               ),

@@ -9,6 +9,8 @@ class DesignBinding extends Bindings {
   void dependencies() {
     Get.lazyPut<CatalogService>(() => CatalogService(Get.find<ApiClient>()));
 
-    Get.lazyPut<DesignController>(() => DesignController(Get.find<CatalogService>()));
+    Get.lazyPut<DesignController>(
+      () => DesignController(Get.find<CatalogService>()),
+    );
   }
 }

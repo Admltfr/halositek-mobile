@@ -4,14 +4,22 @@ import 'package:file_picker/file_picker.dart';
 import 'package:get/get.dart';
 import 'package:halositek/app/data/models/architect.dart';
 import 'package:halositek/app/data/network/architect_service.dart';
+import 'package:halositek/app/data/network/auth_service.dart';
 import 'package:halositek/app/data/network/token_service.dart';
 import 'package:halositek/app/modules/navigation/controllers/navigation_controller.dart';
 import 'package:halositek/app/modules/profile/controllers/profile_controller.dart';
+import 'package:halositek/app/modules/profile/widgets/change_password_dialog.dart';
 
 class ProfileEditController extends GetxController {
-  ProfileEditController(this._architectService, this._tokenService, {this.initialArchitect});
+  ProfileEditController(
+    this._architectService,
+    this._authService,
+    this._tokenService, {
+    this.initialArchitect,
+  });
 
   final ArchitectService _architectService;
+  final AuthService _authService;
   final TokenService _tokenService;
   final Architect? initialArchitect;
 
@@ -31,7 +39,8 @@ class ProfileEditController extends GetxController {
   final isSubmitting = false.obs;
   final userId = ''.obs;
 
-  String get architectId => architect.value?.id ?? initialArchitect?.id ?? userId.value;
+  String get architectId =>
+      architect.value?.id ?? initialArchitect?.id ?? userId.value;
 
   @override
   void onInit() {
@@ -75,6 +84,24 @@ class ProfileEditController extends GetxController {
     Get.find<NavigationController>().onPop();
   }
 
+  void openChangePasswordDialog() {
+    Get.dialog(
+      ChangePasswordDialog(
+        onSubmit: ({
+          required currentPassword,
+          required newPassword,
+          required newPasswordConfirmation,
+        }) {
+          return _authService.changePassword(
+            currentPassword: currentPassword,
+            newPassword: newPassword,
+            newPasswordConfirmation: newPasswordConfirmation,
+          );
+        },
+      ),
+    );
+  }
+
   Future<void> submit() async {
     if (isSubmitting.value) return;
 
@@ -112,9 +139,14 @@ class ProfileEditController extends GetxController {
     headlineController.text = value.headline;
     bioController.text = value.bio;
     emailController.text = value.email;
-    experienceController.text = value.yearOfExperience > 0 ? value.yearOfExperience.toString() : '';
-    feeController.text = value.consultationFee > 0 ? value.consultationFee.toString() : '';
-    durationController.text = value.consultationDuration > 0 ? value.consultationDuration.toString() : '';
+    experienceController.text =
+        value.yearOfExperience > 0 ? value.yearOfExperience.toString() : '';
+    feeController.text =
+        value.consultationFee > 0 ? value.consultationFee.toString() : '';
+    durationController.text =
+        value.consultationDuration > 0
+            ? value.consultationDuration.toString()
+            : '';
   }
 
   Future<dio.FormData> _payload() async {
@@ -129,7 +161,10 @@ class ProfileEditController extends GetxController {
     };
     final photo = selectedPhoto.value;
     if (photo?.path != null && photo!.path!.isNotEmpty) {
-      data['photo_profile'] = await dio.MultipartFile.fromFile(photo.path!, filename: photo.name);
+      data['photo_profile'] = await dio.MultipartFile.fromFile(
+        photo.path!,
+        filename: photo.name,
+      );
     }
 
     return dio.FormData.fromMap(data);
@@ -144,7 +179,8 @@ class ProfileEditController extends GetxController {
     final file = result?.files.single;
     if (file == null) return;
     if (file.path == null || file.path!.isEmpty) {
-      fieldErrors['photo_profile'] = 'File tidak bisa dibaca dari perangkat ini.';
+      fieldErrors['photo_profile'] =
+          'File tidak bisa dibaca dari perangkat ini.';
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
@@ -179,9 +215,13 @@ class ProfileEditController extends GetxController {
     emailController.addListener(() => _revalidateField('email'));
     headlineController.addListener(() => _revalidateField('headline'));
     bioController.addListener(() => _revalidateField('bio'));
-    experienceController.addListener(() => _revalidateField('year_of_experience'));
+    experienceController.addListener(
+      () => _revalidateField('year_of_experience'),
+    );
     feeController.addListener(() => _revalidateField('consultation_fee'));
-    durationController.addListener(() => _revalidateField('consultation_hours'));
+    durationController.addListener(
+      () => _revalidateField('consultation_hours'),
+    );
   }
 
   void _revalidateField(String field) {

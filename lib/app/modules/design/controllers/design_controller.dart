@@ -1,12 +1,23 @@
 // lib/app/modules/design/controllers/design_controller.dart
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:halositek/app/data/models/catalog.dart';
 import 'package:halositek/app/data/network/catalog_service.dart';
+import 'package:halositek/app/data/network/token_service.dart';
 import 'package:halositek/app/modules/navigation/controllers/navigation_controller.dart';
 
 class DesignController extends GetxController {
   static const int _perPage = 12;
+  static const List<String> styleFilters = [
+    'all',
+    'modern',
+    'traditional',
+    'minimalist',
+    'futuristik',
+    'industrial',
+  ];
 
   final CatalogService _catalogService;
   DesignController(this._catalogService);
@@ -17,11 +28,26 @@ class DesignController extends GetxController {
   final hasMore = true.obs;
   final catalogError = ''.obs;
   final imageIndexByCatalog = <String, int>{}.obs;
+  final selectedStyle = 'all'.obs;
+  final selectedStatus = 'approved'.obs;
+  final isStyleFilterOpen = false.obs;
+  final isArchitect = false.obs;
 
   final likingCatalogIds = <String>{}.obs;
   final ScrollController scrollController = ScrollController();
 
+  final searchController = TextEditingController();
+
   int _page = 1;
+  Timer? _searchDebounce;
+  bool _isScrollFetchRunning = false;
+
+  int get designCount => catalogs.length;
+
+  String get selectedStyleLabel {
+    if (selectedStyle.value == 'all') return 'All Design';
+    return _capitalize(selectedStyle.value);
+  }
 
   bool isCatalogLiking(String catalogId) =>
       likingCatalogIds.contains(catalogId);
@@ -39,27 +65,62 @@ class DesignController extends GetxController {
     nav.navigateTo(tabIndex: 1, route: '/detail', arguments: catalogId);
   }
 
+  void goBack() {
+    Get.find<NavigationController>().onPop();
+  }
+
   @override
   void onInit() {
     super.onInit();
     scrollController.addListener(_onScroll);
-    fetchCatalogs(reset: true);
+    searchController.addListener(_onSearchChanged);
+    _bootstrap();
   }
 
   @override
   void onClose() {
     scrollController.removeListener(_onScroll);
+    searchController.removeListener(_onSearchChanged);
+    _searchDebounce?.cancel();
     scrollController.dispose();
+    searchController.dispose();
     super.onClose();
+  }
+
+  Future<void> _bootstrap() async {
+    final tokenService = Get.find<TokenService>();
+    final role = (await tokenService.getRole() ?? '').trim().toLowerCase();
+    isArchitect.value = role == 'architect';
+    await fetchCatalogs(reset: true);
   }
 
   void _onScroll() {
     if (!scrollController.hasClients) return;
 
-    final triggerPoint = scrollController.position.maxScrollExtent - 200;
-    if (scrollController.position.pixels >= triggerPoint) {
+    final position = scrollController.position;
+    if (position.pixels >= position.maxScrollExtent - 8 &&
+        !_isScrollFetchRunning &&
+        !isLoadingCatalog.value &&
+        !isLoadingMore.value &&
+        hasMore.value) {
+      _isScrollFetchRunning = true;
       loadMoreCatalogs();
     }
+  }
+
+  void _onSearchChanged() {
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(const Duration(milliseconds: 500), () {
+      fetchCatalogs(reset: true);
+    });
+  }
+
+  Future<String?> _getCurrentArchitectId() async {
+    if (!isArchitect.value) return null;
+    final tokenService = Get.find<TokenService>();
+    final userId = await tokenService.getUserId();
+    final normalized = userId?.trim() ?? '';
+    return normalized.isEmpty ? null : normalized;
   }
 
   Future<void> fetchCatalogs({bool reset = false}) async {
@@ -84,6 +145,10 @@ class DesignController extends GetxController {
       final result = await _catalogService.getCatalogs(
         page: _page,
         perPage: _perPage,
+        search: searchController.text,
+        style: selectedStyle.value == 'all' ? null : selectedStyle.value,
+        architectId: await _getCurrentArchitectId(),
+        status: isArchitect.value ? selectedStatus.value : null,
       );
 
       if (reset) {
@@ -101,12 +166,52 @@ class DesignController extends GetxController {
     } finally {
       isLoadingCatalog.value = false;
       isLoadingMore.value = false;
+      _isScrollFetchRunning = false;
     }
   }
 
   Future<void> loadMoreCatalogs() async {
     if (!hasMore.value || isLoadingCatalog.value || isLoadingMore.value) return;
     await fetchCatalogs();
+  }
+
+  void toggleStyleFilter() {
+    isStyleFilterOpen.value = !isStyleFilterOpen.value;
+  }
+
+  void changeStyle(String style) {
+    if (!styleFilters.contains(style) || style == selectedStyle.value) {
+      isStyleFilterOpen.value = false;
+      return;
+    }
+    selectedStyle.value = style;
+    isStyleFilterOpen.value = false;
+    fetchCatalogs(reset: true);
+  }
+
+  void changeStatus(String status) {
+    if (status == selectedStatus.value) return;
+    selectedStatus.value = status;
+    fetchCatalogs(reset: true);
+  }
+
+  Future<void> openUploadDesign() async {
+    final nav = Get.find<NavigationController>().keyForTab(1)?.currentState;
+    if (nav == null) return;
+    final result = await nav.pushNamed('/design/add');
+    if (result != null) {
+      await fetchCatalogs(reset: true);
+    }
+  }
+
+  Future<void> openEditDesign(Catalog catalog) async {
+    if (catalog.id.trim().isEmpty) return;
+    final nav = Get.find<NavigationController>().keyForTab(1)?.currentState;
+    if (nav == null) return;
+    final result = await nav.pushNamed('/design/edit', arguments: catalog);
+    if (result != null) {
+      await fetchCatalogs(reset: true);
+    }
   }
 
   Future<void> toggleCatalogLike(String id) async {
@@ -137,5 +242,10 @@ class DesignController extends GetxController {
     } finally {
       likingCatalogIds.remove(id);
     }
+  }
+
+  String _capitalize(String value) {
+    if (value.isEmpty) return value;
+    return '${value[0].toUpperCase()}${value.substring(1)}';
   }
 }

@@ -24,13 +24,15 @@ class ArchitectProfileView extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: AppColors.whiteColor,
-      floatingActionButton: const ProfileFab(),
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: controller.refreshProfile,
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: EdgeInsets.symmetric(horizontal: size.width * 0.05, vertical: size.height * 0.01),
+            padding: EdgeInsets.symmetric(
+              horizontal: size.width * 0.05,
+              vertical: size.height * 0.01,
+            ),
             child: Obx(() {
               final architect = controller.architect.value;
               final isLoading = controller.isLoading.value;
@@ -39,14 +41,23 @@ class ArchitectProfileView extends StatelessWidget {
               if (hasError && architect == null) {
                 return Column(
                   children: [
-                    ProfileTopBar(title: 'Your Profile', onBack: controller.goBack, onLogout: controller.logout),
+                    ProfileTopBar(
+                      title: 'Your Profile',
+                      onBack: controller.goBack,
+                      onLogout: controller.logout,
+                    ),
                     80.0.sh,
                     Text(
                       controller.errorMessage.value,
                       textAlign: TextAlign.center,
-                      style: AppTypography.bodySmall.copyWith(color: AppColors.errorColor),
+                      style: AppTypography.bodySmall.copyWith(
+                        color: AppColors.errorColor,
+                      ),
                     ),
-                    TextButton(onPressed: controller.fetchArchitect, child: const Text('Coba Lagi')),
+                    TextButton(
+                      onPressed: controller.fetchArchitect,
+                      child: const Text('Coba Lagi'),
+                    ),
                   ],
                 );
               }
@@ -59,9 +70,16 @@ class ArchitectProfileView extends StatelessWidget {
                   absorbing: isLoading,
                   child: Column(
                     children: [
-                      ProfileTopBar(title: 'Your Profile', onBack: controller.goBack, onLogout: controller.logout),
+                      ProfileTopBar(
+                        title: 'Your Profile',
+                        onBack: controller.goBack,
+                        onLogout: controller.logout,
+                      ),
                       12.0.sh,
-                      _Header(architect: profile, onEdit: controller.openEditProfile),
+                      _Header(
+                        architect: profile,
+                        onEdit: controller.openEditProfile,
+                      ),
                       24.0.sh,
                       _Stats(architect: profile),
                       24.0.sh,
@@ -69,7 +87,10 @@ class ArchitectProfileView extends StatelessWidget {
                       26.0.sh,
                       _Tabs(controller: controller),
                       18.0.sh,
-                      _TabBody(controller: controller, isProfileLoading: isLoading),
+                      _TabBody(
+                        controller: controller,
+                        isProfileLoading: isLoading,
+                      ),
                       24.0.sh,
                     ],
                   ),
@@ -94,7 +115,8 @@ Architect _dummyArchitect() {
     createdAt: null,
     updatedAt: null,
     headline: 'Residential Specialist',
-    bio: 'Experienced architect focused on thoughtful residential and interior design.',
+    bio:
+        'Experienced architect focused on thoughtful residential and interior design.',
     location: 'Jakarta',
     status: 'approved',
     specialization: 'Modern Minimalist',
@@ -196,17 +218,25 @@ class _Header extends StatelessWidget {
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(color: AppColors.secondaryColor.withValues(alpha: 0.28), width: 4),
+                border: Border.all(
+                  color: AppColors.secondaryColor.withValues(alpha: 0.28),
+                  width: 4,
+                ),
               ),
               child: ClipOval(
                 child:
                     architect.profilePicture.isNotEmpty
                         ? Image.network(
-                          architect.profilePicture.startsWith('http') || architect.profilePicture.startsWith('https')
+                          architect.profilePicture.startsWith('http') ||
+                                  architect.profilePicture.startsWith('https')
                               ? architect.profilePicture
                               : "${dotenv.env['BASEURL']}/storage/${architect.profilePicture}",
                           fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => Image.asset(profileFallbackImage, fit: BoxFit.cover),
+                          errorBuilder:
+                              (_, __, ___) => Image.asset(
+                                profileFallbackImage,
+                                fit: BoxFit.cover,
+                              ),
                         )
                         : Image.asset(profileFallbackImage, fit: BoxFit.cover),
               ),
@@ -222,10 +252,16 @@ class _Header extends StatelessWidget {
                   height: 38,
                   decoration: BoxDecoration(
                     color: AppColors.primaryColor,
-                    borderRadius: BorderRadius.circular(AppDimensions.radiusMedium),
+                    borderRadius: BorderRadius.circular(
+                      AppDimensions.radiusMedium,
+                    ),
                     border: Border.all(color: AppColors.whiteColor, width: 3),
                   ),
-                  child: const Icon(Icons.edit_square, color: AppColors.whiteColor, size: 18),
+                  child: const Icon(
+                    Icons.edit_square,
+                    color: AppColors.whiteColor,
+                    size: 18,
+                  ),
                 ),
               ),
             ),
@@ -245,7 +281,10 @@ class _Header extends StatelessWidget {
         Text(
           subtitle.isNotEmpty ? subtitle : 'Architect',
           textAlign: TextAlign.center,
-          style: AppTypography.bodyLarge.copyWith(color: AppColors.primaryColor, fontWeight: FontWeight.w700),
+          style: AppTypography.bodyLarge.copyWith(
+            color: AppColors.primaryColor,
+            fontWeight: FontWeight.w700,
+          ),
         ),
         14.0.sh,
         Text(
@@ -253,7 +292,10 @@ class _Header extends StatelessWidget {
               ? architect.bio
               : 'Lengkapi bio untuk menampilkan ringkasan keahlian dan pengalaman arsitektur Anda.',
           textAlign: TextAlign.center,
-          style: AppTypography.bodySmall.copyWith(color: AppColors.textBodyColor, height: 1.55),
+          style: AppTypography.bodySmall.copyWith(
+            color: AppColors.textBodyColor,
+            height: 1.55,
+          ),
         ),
       ],
     );
@@ -269,9 +311,19 @@ class _Stats extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Expanded(child: _StatCard(value: architect.totalProjects.toString(), label: 'PROJECTS')),
+        Expanded(
+          child: _StatCard(
+            value: architect.totalProjects.toString(),
+            label: 'PROJECTS',
+          ),
+        ),
         12.0.sw,
-        Expanded(child: _StatCard(value: architect.totalAwards.toString(), label: 'AWARDS')),
+        Expanded(
+          child: _StatCard(
+            value: architect.totalAwards.toString(),
+            label: 'AWARDS',
+          ),
+        ),
       ],
     );
   }
@@ -289,14 +341,28 @@ class _StatCard extends StatelessWidget {
       height: 74,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(AppDimensions.radiusXLarge),
-        border: Border.all(color: AppColors.primaryColor.withValues(alpha: 0.16)),
+        border: Border.all(
+          color: AppColors.primaryColor.withValues(alpha: 0.16),
+        ),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(value, style: AppTypography.headingSmall.copyWith(color: AppColors.primaryColor, fontSize: 21)),
+          Text(
+            value,
+            style: AppTypography.headingSmall.copyWith(
+              color: AppColors.primaryColor,
+              fontSize: 21,
+            ),
+          ),
           5.0.sh,
-          Text(label, style: AppTypography.bodySmall.copyWith(color: AppColors.textBodyColor, fontWeight: FontWeight.w600)),
+          Text(
+            label,
+            style: AppTypography.bodySmall.copyWith(
+              color: AppColors.textBodyColor,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ],
       ),
     );
@@ -322,14 +388,20 @@ class _FeeButton extends StatelessWidget {
           Expanded(
             child: Text(
               '${formatCurrency(architect.consultationFee)} / hour',
-              style: AppTypography.bodySmall.copyWith(color: AppColors.whiteColor, fontWeight: FontWeight.w800),
+              style: AppTypography.bodySmall.copyWith(
+                color: AppColors.whiteColor,
+                fontWeight: FontWeight.w800,
+              ),
             ),
           ),
           const Icon(Icons.arrow_forward_rounded, color: AppColors.whiteColor),
           22.0.sw,
           Text(
             'Your Fee',
-            style: AppTypography.bodySmall.copyWith(color: AppColors.whiteColor, fontWeight: FontWeight.w800),
+            style: AppTypography.bodySmall.copyWith(
+              color: AppColors.whiteColor,
+              fontWeight: FontWeight.w800,
+            ),
           ),
         ],
       ),
@@ -365,12 +437,16 @@ class _Tabs extends StatelessWidget {
             Text(
               label,
               style: AppTypography.bodyMedium.copyWith(
-                color: active ? AppColors.primaryColor : AppColors.textBodyColor,
+                color:
+                    active ? AppColors.primaryColor : AppColors.textBodyColor,
                 fontWeight: FontWeight.w800,
               ),
             ),
             12.0.sh,
-            Container(height: 2, color: active ? AppColors.primaryColor : AppColors.accentColor),
+            Container(
+              height: 2,
+              color: active ? AppColors.primaryColor : AppColors.accentColor,
+            ),
           ],
         ),
       ),
@@ -389,9 +465,15 @@ class _TabBody extends StatelessWidget {
     return Obx(() {
       switch (controller.selectedTab.value) {
         case ProfileTab.portfolio:
-          return _PortfolioGrid(projects: isProfileLoading ? _dummyProjects : controller.projects);
+          return _PortfolioGrid(
+            projects: isProfileLoading ? _dummyProjects : controller.projects,
+            onTap: controller.openPortfolioProjectDetail,
+          );
         case ProfileTab.award:
-          return _AwardGrid(awards: isProfileLoading ? _dummyAwards : controller.awards);
+          return _AwardGrid(
+            awards: isProfileLoading ? _dummyAwards : controller.awards,
+            onTap: controller.openArchitectAwardDetail,
+          );
         case ProfileTab.earnings:
           return _EarningsList(controller: controller);
       }
@@ -401,8 +483,9 @@ class _TabBody extends StatelessWidget {
 
 class _PortfolioGrid extends StatelessWidget {
   final List<ArchitectProject> projects;
+  final ValueChanged<ArchitectProject> onTap;
 
-  const _PortfolioGrid({required this.projects});
+  const _PortfolioGrid({required this.projects, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -420,54 +503,72 @@ class _PortfolioGrid extends StatelessWidget {
         mainAxisSpacing: 18,
         childAspectRatio: 0.72,
       ),
-      itemBuilder: (_, index) => _ProjectCard(project: projects[index]),
+      itemBuilder:
+          (_, index) => _ProjectCard(
+            project: projects[index],
+            onTap: () => onTap(projects[index]),
+          ),
     );
   }
 }
 
 class _ProjectCard extends StatelessWidget {
   final ArchitectProject project;
+  final VoidCallback? onTap;
 
-  const _ProjectCard({required this.project});
+  const _ProjectCard({required this.project, this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    final images = project.imageUrls.isNotEmpty ? project.imageUrls : project.images;
+    final images =
+        project.imageUrls.isNotEmpty ? project.imageUrls : project.images;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(AppDimensions.radiusMedium),
-            child: SizedBox.expand(
-              child:
-                  images.isNotEmpty
-                      ? Image.network(
-                        images.first,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => Image.asset(profileFallbackImage, fit: BoxFit.cover),
-                      )
-                      : Image.asset(profileFallbackImage, fit: BoxFit.cover),
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppDimensions.radiusMedium),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(AppDimensions.radiusMedium),
+              child: SizedBox.expand(
+                child:
+                    images.isNotEmpty
+                        ? Image.network(
+                          images.first,
+                          fit: BoxFit.cover,
+                          errorBuilder:
+                              (_, __, ___) => Image.asset(
+                                profileFallbackImage,
+                                fit: BoxFit.cover,
+                              ),
+                        )
+                        : Image.asset(profileFallbackImage, fit: BoxFit.cover),
+              ),
             ),
           ),
-        ),
-        8.0.sh,
-        Text(
-          project.name.isNotEmpty ? project.name : '-',
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: AppTypography.bodyMedium.copyWith(color: AppColors.textHeadingColor, fontWeight: FontWeight.w800),
-        ),
-      ],
+          8.0.sh,
+          Text(
+            project.name.isNotEmpty ? project.name : '-',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AppTypography.bodyMedium.copyWith(
+              color: AppColors.textHeadingColor,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
 
 class _AwardGrid extends StatelessWidget {
   final List<ArchitectAward> awards;
+  final ValueChanged<ArchitectAward> onTap;
 
-  const _AwardGrid({required this.awards});
+  const _AwardGrid({required this.awards, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -485,43 +586,59 @@ class _AwardGrid extends StatelessWidget {
         mainAxisSpacing: 22,
         childAspectRatio: 0.72,
       ),
-      itemBuilder: (_, index) => _AwardCard(award: awards[index]),
+      itemBuilder:
+          (_, index) => _AwardCard(
+            award: awards[index],
+            onTap: () => onTap(awards[index]),
+          ),
     );
   }
 }
 
 class _AwardCard extends StatelessWidget {
   final ArchitectAward award;
+  final VoidCallback? onTap;
 
-  const _AwardCard({required this.award});
+  const _AwardCard({required this.award, this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(AppDimensions.radiusMedium),
-            child:
-                award.verificationFileUrl.isNotEmpty
-                    ? Image.network(
-                      award.verificationFileUrl,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Image.asset(profileFallbackImage, fit: BoxFit.cover),
-                    )
-                    : Image.asset(profileFallbackImage, fit: BoxFit.cover),
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppDimensions.radiusMedium),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(AppDimensions.radiusMedium),
+              child:
+                  award.verificationFileUrl.isNotEmpty
+                      ? Image.network(
+                        award.verificationFileUrl,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                        errorBuilder:
+                            (_, __, ___) => Image.asset(
+                              profileFallbackImage,
+                              fit: BoxFit.cover,
+                            ),
+                      )
+                      : Image.asset(profileFallbackImage, fit: BoxFit.cover),
+            ),
           ),
-        ),
-        8.0.sh,
-        Text(
-          award.name.isNotEmpty ? award.name : '-',
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: AppTypography.bodyMedium.copyWith(color: AppColors.textHeadingColor, fontWeight: FontWeight.w800),
-        ),
-      ],
+          8.0.sh,
+          Text(
+            award.name.isNotEmpty ? award.name : '-',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AppTypography.bodyMedium.copyWith(
+              color: AppColors.textHeadingColor,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -533,7 +650,9 @@ class _EarningsList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isLoading = controller.isLoadingEarnings.value && controller.earnings.value.earnings.isEmpty;
+    final isLoading =
+        controller.isLoadingEarnings.value &&
+        controller.earnings.value.earnings.isEmpty;
     final data =
         isLoading
             ? const ArchitectEarnings(
@@ -541,7 +660,12 @@ class _EarningsList extends StatelessWidget {
               totalTaxPaid: 0,
               totalNetEarnings: 0,
               earnings: _dummyEarnings,
-              meta: ArchitectEarningsMeta(currentPage: 1, lastPage: 1, perPage: 15, total: 2),
+              meta: ArchitectEarningsMeta(
+                currentPage: 1,
+                lastPage: 1,
+                perPage: 15,
+                total: 2,
+              ),
             )
             : controller.earnings.value;
 
@@ -551,9 +675,14 @@ class _EarningsList extends StatelessWidget {
           Text(
             controller.earningsError.value,
             textAlign: TextAlign.center,
-            style: AppTypography.bodySmall.copyWith(color: AppColors.errorColor),
+            style: AppTypography.bodySmall.copyWith(
+              color: AppColors.errorColor,
+            ),
           ),
-          TextButton(onPressed: controller.fetchEarnings, child: const Text('Coba Lagi')),
+          TextButton(
+            onPressed: controller.fetchEarnings,
+            child: const Text('Coba Lagi'),
+          ),
         ],
       );
     }
@@ -578,7 +707,11 @@ class _EarningsList extends StatelessWidget {
 const _dummyEarnings = <ArchitectEarningItem>[
   ArchitectEarningItem(
     consultationId: 'loading-earning-1',
-    user: ArchitectEarningUser(id: '', name: 'Client Name', email: 'client@example.com'),
+    user: ArchitectEarningUser(
+      id: '',
+      name: 'Client Name',
+      email: 'client@example.com',
+    ),
     date: null,
     grossFee: 250000,
     taxDeduction: 0,
@@ -587,7 +720,11 @@ const _dummyEarnings = <ArchitectEarningItem>[
   ),
   ArchitectEarningItem(
     consultationId: 'loading-earning-2',
-    user: ArchitectEarningUser(id: '', name: 'Client Name', email: 'client@example.com'),
+    user: ArchitectEarningUser(
+      id: '',
+      name: 'Client Name',
+      email: 'client@example.com',
+    ),
     date: null,
     grossFee: 250000,
     taxDeduction: 0,
@@ -608,8 +745,16 @@ class _EarningCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.whiteColor,
         borderRadius: BorderRadius.circular(AppDimensions.radiusXLarge),
-        border: Border.all(color: AppColors.primaryColor.withValues(alpha: 0.14)),
-        boxShadow: const [BoxShadow(color: AppColors.shadowSoftColor, blurRadius: 12, offset: Offset(0, 4))],
+        border: Border.all(
+          color: AppColors.primaryColor.withValues(alpha: 0.14),
+        ),
+        boxShadow: const [
+          BoxShadow(
+            color: AppColors.shadowSoftColor,
+            blurRadius: 12,
+            offset: Offset(0, 4),
+          ),
+        ],
       ),
       child: Row(
         children: [
@@ -620,12 +765,18 @@ class _EarningCard extends StatelessWidget {
               item.user.name.isNotEmpty ? item.user.name : 'Consultation',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: AppTypography.bodyMedium.copyWith(color: AppColors.textHeadingColor, fontWeight: FontWeight.w800),
+              style: AppTypography.bodyMedium.copyWith(
+                color: AppColors.textHeadingColor,
+                fontWeight: FontWeight.w800,
+              ),
             ),
           ),
           Text(
             '+ ${formatCurrency(item.grossFee)}',
-            style: AppTypography.bodyMedium.copyWith(color: AppColors.textHeadingColor, fontWeight: FontWeight.w800),
+            style: AppTypography.bodyMedium.copyWith(
+              color: AppColors.textHeadingColor,
+              fontWeight: FontWeight.w800,
+            ),
           ),
         ],
       ),

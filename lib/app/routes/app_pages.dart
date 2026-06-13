@@ -13,13 +13,19 @@ import '../modules/award/index/bindings/award_binding.dart';
 import '../modules/award/index/views/award_view.dart';
 import '../modules/auth/login/bindings/login_binding.dart';
 import '../modules/auth/login/views/login_view.dart';
+import '../modules/auth/forgot_password/bindings/forgot_password_binding.dart';
+import '../modules/auth/forgot_password/views/forgot_password_view.dart';
 import '../modules/auth/register/bindings/register_binding.dart';
 import '../modules/auth/register/views/register_view.dart';
 import '../modules/chat_detail/bindings/chat_detail_binding.dart';
 import '../modules/chat_detail/views/chat_detail_view.dart';
 import '../modules/chat_list/bindings/chat_list_binding.dart';
 import '../modules/chat_list/views/chat_list_view.dart';
+import '../modules/design/add/bindings/design_add_binding.dart';
+import '../modules/design/add/views/design_add_view.dart';
 import '../modules/design/bindings/design_binding.dart';
+import '../modules/design/edit/bindings/design_edit_binding.dart';
+import '../modules/design/edit/views/design_edit_view.dart';
 import '../modules/design/views/design_view.dart';
 import '../modules/detail/bindings/detail_binding.dart';
 import '../modules/detail/views/detail_view.dart';
@@ -63,6 +69,12 @@ class AppPages {
       transition: Transition.fadeIn,
     ),
     GetPage(
+      name: _Paths.FORGOT_PASSWORD,
+      page: () => const ForgotPasswordView(),
+      binding: ForgotPasswordBinding(),
+      transition: Transition.fadeIn,
+    ),
+    GetPage(
       name: _Paths.NAVIGATION,
       page: () => const NavigationView(),
       binding: NavigationBinding(),
@@ -80,6 +92,18 @@ class AppPages {
       binding: DesignBinding(),
       transition: Transition.fadeIn,
     ),
+    GetPage(
+      name: _Paths.DESIGN_ADD,
+      page: () => const DesignAddView(),
+      binding: DesignAddBinding(),
+      transition: Transition.fadeIn,
+    ).withRole(['architect']),
+    GetPage(
+      name: _Paths.DESIGN_EDIT,
+      page: () => const DesignEditView(),
+      binding: DesignEditBinding(),
+      transition: Transition.fadeIn,
+    ).withRole(['architect']),
     GetPage(
       name: _Paths.ARCHITECT,
       page: () => const ArchitectView(),
