@@ -1,10 +1,12 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart';
 import 'package:halositek/app/core/constants/app_colors.dart';
 import 'package:halositek/app/core/constants/app_dimensions.dart';
 import 'package:halositek/app/core/constants/app_extensions.dart';
 import 'package:halositek/app/core/constants/app_typography.dart';
+import 'package:halositek/app/data/models/chat.dart';
 import '../controllers/ai_chat_controller.dart';
 
 class AiChatView extends GetView<AiChatController> {
@@ -166,7 +168,7 @@ class AiChatView extends GetView<AiChatController> {
               final messageWidget =
                   isMine
                       ? _userBubbleLayout(size, msg.displayBody, msg.createdAt)
-                      : _aiBubbleLayout(size, msg.displayBody, msg.createdAt);
+                      : _aiBubbleLayout(size, msg, msg.createdAt);
 
               // If the welcome message is showing and no user message has been sent,
               // render suggestions below it.
@@ -176,7 +178,7 @@ class AiChatView extends GetView<AiChatController> {
                   children: [
                     if (showDateSeparator) _dateSeparator(msg.createdAt),
                     if (showDateSeparator) AppDimensions.spacingLarge.sh,
-                    _aiBubbleLayout(size, msg.displayBody, msg.createdAt),
+                    _aiBubbleLayout(size, msg, msg.createdAt),
                     AppDimensions.spacing5XLarge.sh,
                     _suggestionsHeader(),
                     AppDimensions.spacingMedium.sh,
@@ -269,8 +271,9 @@ class AiChatView extends GetView<AiChatController> {
     );
   }
 
-  Widget _aiBubbleLayout(Size size, String text, DateTime? time) {
+  Widget _aiBubbleLayout(Size size, ChatMessage message, DateTime? time) {
     final timeText = _formatTime(time);
+    final imageUrl = _resolveAiImageUrl(message);
 
     return Align(
       alignment: Alignment.centerLeft,
@@ -303,10 +306,13 @@ class AiChatView extends GetView<AiChatController> {
               children: [
                 Container(
                   constraints: BoxConstraints(maxWidth: size.width * 0.72),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppDimensions.spacingXLarge,
-                    vertical: AppDimensions.spacingLarge,
-                  ),
+                  padding:
+                      imageUrl == null
+                          ? const EdgeInsets.symmetric(
+                            horizontal: AppDimensions.spacingXLarge,
+                            vertical: AppDimensions.spacingLarge,
+                          )
+                          : EdgeInsets.zero,
                   decoration: BoxDecoration(
                     color: AppColors.subtleSurfaceColor.withValues(alpha: 0.5),
                     borderRadius: const BorderRadius.only(
@@ -316,13 +322,44 @@ class AiChatView extends GetView<AiChatController> {
                       bottomRight: Radius.circular(AppDimensions.radius2XLarge),
                     ),
                   ),
-                  child: Text(
-                    text,
-                    style: AppTypography.bodySmall.copyWith(
-                      color: AppColors.textHeadingColor,
-                      height: 1.45,
-                    ),
-                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child:
+                      imageUrl == null
+                          ? Text(
+                            message.displayBody,
+                            style: AppTypography.bodySmall.copyWith(
+                              color: AppColors.textHeadingColor,
+                              height: 1.45,
+                            ),
+                          )
+                          : Image.network(
+                            imageUrl,
+                            width: size.width * 0.72,
+                            fit: BoxFit.cover,
+                            loadingBuilder: (context, child, progress) {
+                              if (progress == null) return child;
+
+                              return SizedBox(
+                                height: size.width * 0.45,
+                                child: const Center(
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: AppColors.primaryColor,
+                                  ),
+                                ),
+                              );
+                            },
+                            errorBuilder:
+                                (_, __, ___) => SizedBox(
+                                  height: size.width * 0.45,
+                                  child: const Center(
+                                    child: Icon(
+                                      Icons.broken_image_outlined,
+                                      color: AppColors.textBodyColor,
+                                    ),
+                                  ),
+                                ),
+                          ),
                 ),
                 if (timeText.isNotEmpty) AppDimensions.spacingXSmall.sh,
                 if (timeText.isNotEmpty)
@@ -338,6 +375,29 @@ class AiChatView extends GetView<AiChatController> {
         ],
       ),
     );
+  }
+
+  String? _resolveAiImageUrl(ChatMessage message) {
+    if (message.type.toLowerCase() != 'image') return null;
+
+    final content =
+        message.content.trim().isNotEmpty
+            ? message.content.trim()
+            : message.displayBody.trim();
+    if (content.isEmpty) return null;
+    if (content.startsWith('http://') || content.startsWith('https://')) {
+      return content;
+    }
+
+    final baseUrl = (dotenv.env['BASEURL'] ?? '').trim();
+    if (baseUrl.isEmpty) return content;
+
+    final cleanBase =
+        baseUrl.endsWith('/')
+            ? baseUrl.substring(0, baseUrl.length - 1)
+            : baseUrl;
+    final cleanContent = content.startsWith('/') ? content : '/$content';
+    return '$cleanBase$cleanContent';
   }
 
   Widget _thinkingBubble(Size size) {

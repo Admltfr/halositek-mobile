@@ -23,6 +23,7 @@ class DesignController extends GetxController {
   DesignController(this._catalogService);
 
   final catalogs = <Catalog>[].obs;
+  final catalogTotal = 0.obs;
   final isLoadingCatalog = false.obs;
   final isLoadingMore = false.obs;
   final hasMore = true.obs;
@@ -42,7 +43,8 @@ class DesignController extends GetxController {
   Timer? _searchDebounce;
   bool _isScrollFetchRunning = false;
 
-  int get designCount => catalogs.length;
+  int get designCount =>
+      isArchitect.value ? catalogTotal.value : catalogs.length;
 
   String get selectedStyleLabel {
     if (selectedStyle.value == 'all') return 'All Design';
@@ -60,9 +62,18 @@ class DesignController extends GetxController {
     imageIndexByCatalog[catalogId] = index;
   }
 
-  void openDetailsFromDesign(String catalogId) {
+  Future<void> openDetailsFromDesign(String catalogId) async {
     final nav = Get.find<NavigationController>();
-    nav.navigateTo(tabIndex: 1, route: '/detail', arguments: catalogId);
+    nav.changeIndex(1);
+
+    final result = await nav
+        .keyForTab(1)
+        ?.currentState
+        ?.pushNamed('/detail', arguments: catalogId);
+
+    if (result != null) {
+      await fetchCatalogs(reset: true);
+    }
   }
 
   void goBack() {
@@ -127,6 +138,7 @@ class DesignController extends GetxController {
     if (reset) {
       _page = 1;
       hasMore.value = true;
+      catalogTotal.value = 0;
       catalogs.clear();
     } else {
       if (!hasMore.value || isLoadingCatalog.value || isLoadingMore.value) {
@@ -142,7 +154,7 @@ class DesignController extends GetxController {
       }
       catalogError.value = '';
 
-      final result = await _catalogService.getCatalogs(
+      final result = await _catalogService.getCatalogList(
         page: _page,
         perPage: _perPage,
         search: searchController.text,
@@ -152,12 +164,14 @@ class DesignController extends GetxController {
       );
 
       if (reset) {
-        catalogs.assignAll(result);
+        catalogs.assignAll(result.catalogs);
       } else {
-        catalogs.addAll(result);
+        catalogs.addAll(result.catalogs);
       }
 
-      hasMore.value = result.length == _perPage;
+      catalogTotal.value =
+          result.meta.total > 0 ? result.meta.total : catalogs.length;
+      hasMore.value = result.meta.currentPage < result.meta.lastPage;
       if (hasMore.value) {
         _page++;
       }
