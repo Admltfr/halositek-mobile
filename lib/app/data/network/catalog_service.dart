@@ -105,6 +105,17 @@ class CatalogService {
     );
   }
 
+  Future<void> deleteCatalog(String catalogId) async {
+    final response = await _apiClient.private.delete(
+      '/projects/$catalogId',
+      options: Options(
+        validateStatus: (status) => status != null && status < 500,
+      ),
+    );
+
+    return _apiClient.customResponse(response, () async {}, 'Delete Catalog');
+  }
+
   Future<void> likeCatalog(String catalogId) async {
     final response = await _apiClient.private.post(
       '/projects/$catalogId/like',

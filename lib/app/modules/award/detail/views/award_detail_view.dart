@@ -25,7 +25,12 @@ class AwardDetailView extends GetView<AwardDetailController> {
           final hasData = controller.award.value != null;
 
           if (hasError && !hasData) {
-            return Center(child: TextButton(onPressed: controller.fetchAward, child: const Text('Coba Lagi')));
+            return Center(
+              child: TextButton(
+                onPressed: controller.fetchAward,
+                child: const Text('Coba Lagi'),
+              ),
+            );
           }
 
           final award = controller.award.value ?? Award.dummy();
@@ -33,7 +38,10 @@ class AwardDetailView extends GetView<AwardDetailController> {
           return Skeletonizer(
             enabled: controller.isLoading.value,
             child: SingleChildScrollView(
-              padding: EdgeInsets.symmetric(horizontal: size.width * 0.05, vertical: size.height * 0.01),
+              padding: EdgeInsets.symmetric(
+                horizontal: size.width * 0.05,
+                vertical: size.height * 0.01,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -41,21 +49,30 @@ class AwardDetailView extends GetView<AwardDetailController> {
                   18.0.sh,
                   Text(
                     'Verification Proof',
-                    style: AppTypography.bodyLarge.copyWith(color: AppColors.textHeadingColor, fontWeight: FontWeight.w700),
+                    style: AppTypography.bodyLarge.copyWith(
+                      color: AppColors.textHeadingColor,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                   14.0.sh,
                   _proofImage(award),
                   24.0.sh,
                   Text(
                     award.name,
-                    style: AppTypography.bodyLarge.copyWith(color: AppColors.textHeadingColor, fontWeight: FontWeight.w700),
+                    style: AppTypography.bodyLarge.copyWith(
+                      color: AppColors.textHeadingColor,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                   18.0.sh,
                   _infoCard(award),
                   18.0.sh,
                   Text(
                     'Award Description',
-                    style: AppTypography.bodyLarge.copyWith(color: AppColors.textHeadingColor, fontWeight: FontWeight.w700),
+                    style: AppTypography.bodyLarge.copyWith(
+                      color: AppColors.textHeadingColor,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                   12.0.sh,
                   Text(
@@ -85,13 +102,19 @@ class AwardDetailView extends GetView<AwardDetailController> {
           InkWell(
             onTap: controller.goBack,
             borderRadius: BorderRadius.circular(18),
-            child: const Padding(padding: EdgeInsets.all(6), child: Icon(Icons.arrow_back_ios_new_rounded, size: 16)),
+            child: const Padding(
+              padding: EdgeInsets.all(6),
+              child: Icon(Icons.arrow_back_ios_new_rounded, size: 16),
+            ),
           ),
           Expanded(
             child: Text(
               'Award Details',
               textAlign: TextAlign.center,
-              style: AppTypography.bodyMedium.copyWith(color: AppColors.textHeadingColor, fontWeight: FontWeight.w700),
+              style: AppTypography.bodyMedium.copyWith(
+                color: AppColors.textHeadingColor,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
           const SizedBox(width: 28),
@@ -108,12 +131,18 @@ class AwardDetailView extends GetView<AwardDetailController> {
       height: 194,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(AppDimensions.radiusLarge),
-        border: Border.all(color: AppColors.formBorderColor.withValues(alpha: 0.22)),
+        border: Border.all(
+          color: AppColors.formBorderColor.withValues(alpha: 0.22),
+        ),
       ),
       clipBehavior: Clip.antiAlias,
       child:
           url.isNotEmpty
-              ? Image.network(url, fit: BoxFit.cover, errorBuilder: (_, __, ___) => _proofFallback())
+              ? Image.network(
+                url,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => _proofFallback(),
+              )
               : _proofFallback(),
     );
   }
@@ -122,7 +151,11 @@ class AwardDetailView extends GetView<AwardDetailController> {
     return Container(
       color: AppColors.subtleSurfaceColor,
       alignment: Alignment.center,
-      child: const Icon(Icons.workspace_premium_outlined, size: 52, color: AppColors.primaryColor),
+      child: const Icon(
+        Icons.workspace_premium_outlined,
+        size: 52,
+        color: AppColors.primaryColor,
+      ),
     );
   }
 
@@ -134,7 +167,10 @@ class AwardDetailView extends GetView<AwardDetailController> {
     final baseUrl = (dotenv.env['BASEURL'] ?? '').trim();
     if (baseUrl.isEmpty) return path;
 
-    final normalizedBase = baseUrl.endsWith('/') ? baseUrl.substring(0, baseUrl.length - 1) : baseUrl;
+    final normalizedBase =
+        baseUrl.endsWith('/')
+            ? baseUrl.substring(0, baseUrl.length - 1)
+            : baseUrl;
     final normalizedPath = path.startsWith('/') ? path.substring(1) : path;
     return '$normalizedBase/$normalizedPath';
   }
@@ -144,7 +180,9 @@ class AwardDetailView extends GetView<AwardDetailController> {
       width: double.infinity,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(AppDimensions.radiusXLarge),
-        border: Border.all(color: AppColors.formBorderColor.withValues(alpha: 0.22)),
+        border: Border.all(
+          color: AppColors.formBorderColor.withValues(alpha: 0.22),
+        ),
       ),
       child: Column(
         children: [
@@ -170,12 +208,19 @@ class AwardDetailView extends GetView<AwardDetailController> {
                   8.0.sh,
                   Row(
                     children: [
-                      const Icon(Icons.verified, color: AppColors.successColor, size: 18),
+                      const Icon(
+                        Icons.verified,
+                        color: AppColors.successColor,
+                        size: 18,
+                      ),
                       6.0.sw,
                       Text(
                         award.isApproved ? 'Verified' : 'Submission',
                         style: AppTypography.bodySmall.copyWith(
-                          color: award.isApproved ? AppColors.successColor : AppColors.warningColor,
+                          color:
+                              award.isApproved
+                                  ? AppColors.successColor
+                                  : AppColors.warningColor,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -223,7 +268,10 @@ class AwardDetailView extends GetView<AwardDetailController> {
   }
 
   Widget _divider() {
-    return Divider(height: 1, color: AppColors.formBorderColor.withValues(alpha: 0.18));
+    return Divider(
+      height: 1,
+      color: AppColors.formBorderColor.withValues(alpha: 0.18),
+    );
   }
 
   Widget _actionButtons() {
@@ -233,16 +281,27 @@ class AwardDetailView extends GetView<AwardDetailController> {
           Expanded(
             flex: 5,
             child: OutlinedButton(
-              onPressed: controller.isDeleting.value ? null : controller.deleteAward,
+              onPressed:
+                  controller.isDeleting.value
+                      ? null
+                      : controller.confirmDeleteAward,
               style: OutlinedButton.styleFrom(
-                side: BorderSide(color: AppColors.errorColor.withValues(alpha: 0.35)),
+                side: BorderSide(
+                  color: AppColors.errorColor.withValues(alpha: 0.35),
+                ),
                 foregroundColor: AppColors.errorColor,
                 minimumSize: const Size.fromHeight(44),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimensions.radiusMedium)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(
+                    AppDimensions.radiusMedium,
+                  ),
+                ),
               ),
               child: Text(
-                controller.isDeleting.value ? 'Deleting...' : 'Delete Design',
-                style: AppTypography.bodySmall.copyWith(fontWeight: FontWeight.w700),
+                controller.isDeleting.value ? 'Deleting...' : 'Delete Award',
+                style: AppTypography.bodySmall.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
           ),
@@ -254,13 +313,20 @@ class AwardDetailView extends GetView<AwardDetailController> {
               icon: const Icon(Icons.edit_outlined, size: 18),
               label: Text(
                 'Edit Design',
-                style: AppTypography.bodySmall.copyWith(color: AppColors.textWhiteColor, fontWeight: FontWeight.w700),
+                style: AppTypography.bodySmall.copyWith(
+                  color: AppColors.textWhiteColor,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primaryColor,
                 foregroundColor: AppColors.textWhiteColor,
                 minimumSize: const Size.fromHeight(44),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimensions.radiusMedium)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(
+                    AppDimensions.radiusMedium,
+                  ),
+                ),
               ),
             ),
           ),

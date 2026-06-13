@@ -29,8 +29,16 @@ class DetailView extends GetView<DetailController> {
           if (hasError && !hasData) {
             return Column(
               children: [
-                Text('Detail gagal dimuat', style: AppTypography.bodySmall.copyWith(color: AppColors.errorColor)),
-                TextButton(onPressed: controller.fetchCatalogDetail, child: const Text('Coba Lagi')),
+                Text(
+                  'Detail gagal dimuat',
+                  style: AppTypography.bodySmall.copyWith(
+                    color: AppColors.errorColor,
+                  ),
+                ),
+                TextButton(
+                  onPressed: controller.fetchCatalogDetail,
+                  child: const Text('Coba Lagi'),
+                ),
               ],
             );
           }
@@ -44,11 +52,18 @@ class DetailView extends GetView<DetailController> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   8.0.sh,
-                  Padding(padding: EdgeInsets.symmetric(horizontal: size.width * 0.05), child: _topBar(size)),
+                  Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: size.width * 0.05,
+                    ),
+                    child: _topBar(size),
+                  ),
                   8.0.sh,
                   _heroImage(size),
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: size.width * 0.05),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: size.width * 0.05,
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -56,7 +71,11 @@ class DetailView extends GetView<DetailController> {
                         _mainInfo(size, project),
 
                         if (!controller.isArchitectRole.value) ...[
-                          Divider(color: AppColors.formBorderColor.withValues(alpha: 0.25)),
+                          Divider(
+                            color: AppColors.formBorderColor.withValues(
+                              alpha: 0.25,
+                            ),
+                          ),
                           12.0.sh,
                           _architectChatRow(size),
                           16.0.sh,
@@ -67,7 +86,67 @@ class DetailView extends GetView<DetailController> {
                         _descriptionSection(project),
                         AppDimensions.spacingXLarge.sh,
                         _layoutSection(size),
-                        AppDimensions.spacing4XLarge.sh,
+                        36.0.sh,
+                        if (controller.isArchitectRole.value) ...[
+                          Row(
+                            children: [
+                              Expanded(
+                                child: OutlinedButton(
+                                  onPressed:
+                                      controller.isDeleting.value
+                                          ? null
+                                          : controller.confirmDeleteCatalog,
+                                  style: OutlinedButton.styleFrom(
+                                    minimumSize: const Size.fromHeight(42),
+                                    side: BorderSide(
+                                      color: AppColors.errorColor,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(
+                                        AppDimensions.radiusMedium,
+                                      ),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    controller.isDeleting.value
+                                        ? "Deleting..."
+                                        : "Delete Design",
+                                    style: AppTypography.bodySmall.copyWith(
+                                      color: AppColors.errorColor,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              12.0.sw,
+                              Expanded(
+                                child: ElevatedButton.icon(
+                                  onPressed: controller.openEdit,
+                                  icon: const Icon(
+                                    Icons.edit_rounded,
+                                    size: 16,
+                                  ),
+                                  label: Text(
+                                    "Edit Design",
+                                    style: AppTypography.bodySmall.copyWith(
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppColors.primaryColor,
+                                    foregroundColor: AppColors.textWhiteColor,
+                                    minimumSize: const Size.fromHeight(42),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(
+                                        AppDimensions.radiusMedium,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          36.0.sh,
+                        ],
                       ],
                     ),
                   ),
@@ -87,13 +166,19 @@ class DetailView extends GetView<DetailController> {
         children: [
           InkWell(
             onTap: controller.goBack,
-            child: const Padding(padding: EdgeInsets.all(6), child: Icon(Icons.arrow_back_ios_new_rounded, size: 15)),
+            child: const Padding(
+              padding: EdgeInsets.all(6),
+              child: Icon(Icons.arrow_back_ios_new_rounded, size: 15),
+            ),
           ),
           Expanded(
             child: Text(
               'Details',
               textAlign: TextAlign.center,
-              style: AppTypography.bodyMedium.copyWith(color: AppColors.textHeadingColor, fontWeight: FontWeight.w700),
+              style: AppTypography.bodyMedium.copyWith(
+                color: AppColors.textHeadingColor,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
           const SizedBox(width: 28),
@@ -120,7 +205,9 @@ class DetailView extends GetView<DetailController> {
                       return Image.network(
                         images[index],
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => Image.asset(_dummyImage, fit: BoxFit.cover),
+                        errorBuilder:
+                            (_, __, ___) =>
+                                Image.asset(_dummyImage, fit: BoxFit.cover),
                       );
                     },
                   )
@@ -136,12 +223,23 @@ class DetailView extends GetView<DetailController> {
               children: List.generate(images.length, (index) {
                 final isActive = index == active;
                 return Container(
-                  margin: const EdgeInsets.symmetric(horizontal: AppDimensions.spacingTiny),
-                  width: isActive ? AppDimensions.spacingMedium : AppDimensions.spacingSmall,
-                  height: isActive ? AppDimensions.spacingMedium : AppDimensions.spacingSmall,
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: AppDimensions.spacingTiny,
+                  ),
+                  width:
+                      isActive
+                          ? AppDimensions.spacingMedium
+                          : AppDimensions.spacingSmall,
+                  height:
+                      isActive
+                          ? AppDimensions.spacingMedium
+                          : AppDimensions.spacingSmall,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: isActive ? AppColors.primaryColor : AppColors.whiteColor,
+                    color:
+                        isActive
+                            ? AppColors.primaryColor
+                            : AppColors.whiteColor,
                   ),
                 );
               }),
@@ -166,17 +264,31 @@ class DetailView extends GetView<DetailController> {
                 decoration: const BoxDecoration(
                   color: AppColors.whiteColor,
                   shape: BoxShape.circle,
-                  boxShadow: [BoxShadow(color: AppColors.shadowSoftColor, blurRadius: 10, offset: Offset(0, 4))],
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.shadowSoftColor,
+                      blurRadius: 10,
+                      offset: Offset(0, 4),
+                    ),
+                  ],
                 ),
                 child:
                     isSaving
                         ? const Padding(
                           padding: EdgeInsets.all(10),
-                          child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primaryColor),
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppColors.primaryColor,
+                          ),
                         )
                         : Icon(
-                          isSaved ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
-                          color: isSaved ? AppColors.primaryColor : AppColors.textHeadingColor,
+                          isSaved
+                              ? Icons.bookmark_rounded
+                              : Icons.bookmark_border_rounded,
+                          color:
+                              isSaved
+                                  ? AppColors.primaryColor
+                                  : AppColors.textHeadingColor,
                           size: 23,
                         ),
               ),
@@ -194,7 +306,10 @@ class DetailView extends GetView<DetailController> {
         Row(
           children: [
             Container(
-              padding: EdgeInsets.symmetric(horizontal: AppDimensions.spacingSmall, vertical: AppDimensions.spacingTiny),
+              padding: EdgeInsets.symmetric(
+                horizontal: AppDimensions.spacingSmall,
+                vertical: AppDimensions.spacingTiny,
+              ),
               decoration: BoxDecoration(
                 color: AppColors.secondaryColor.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(AppDimensions.radiusXSmall),
@@ -218,9 +333,14 @@ class DetailView extends GetView<DetailController> {
             ),
             const Spacer(),
             GestureDetector(
-              onTap: controller.isArchitectRole.value ? null : controller.toggleLike,
+              onTap:
+                  controller.isArchitectRole.value
+                      ? null
+                      : controller.toggleLike,
               child: Icon(
-                p.liked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                p.liked
+                    ? Icons.favorite_rounded
+                    : Icons.favorite_border_rounded,
                 size: AppDimensions.iconSizeMedium,
                 color: p.liked ? AppColors.errorColor : AppColors.textBodyColor,
               ),
@@ -234,7 +354,10 @@ class DetailView extends GetView<DetailController> {
             Expanded(
               child: Text(
                 p.name,
-                style: AppTypography.headingSmall.copyWith(fontWeight: FontWeight.w700, color: AppColors.textHeadingColor),
+                style: AppTypography.headingSmall.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textHeadingColor,
+                ),
               ),
             ),
             12.0.sw,
@@ -258,10 +381,17 @@ class DetailView extends GetView<DetailController> {
         CircleAvatar(
           radius: 18,
           backgroundColor: AppColors.formBorderColor.withValues(alpha: 0.2),
-          backgroundImage: controller.architectPhoto.isNotEmpty ? NetworkImage(controller.architectPhoto) : null,
+          backgroundImage:
+              controller.architectPhoto.isNotEmpty
+                  ? NetworkImage(controller.architectPhoto)
+                  : null,
           child:
               controller.architectPhoto.isEmpty
-                  ? Icon(Icons.person, size: size.width * 0.045, color: AppColors.accentColor)
+                  ? Icon(
+                    Icons.person,
+                    size: size.width * 0.045,
+                    color: AppColors.accentColor,
+                  )
                   : null,
         ),
         12.0.sw,
@@ -273,7 +403,10 @@ class DetailView extends GetView<DetailController> {
                 controller.architectName,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: AppTypography.bodySmall.copyWith(color: AppColors.textHeadingColor, fontWeight: FontWeight.w800),
+                style: AppTypography.bodySmall.copyWith(
+                  color: AppColors.textHeadingColor,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
               2.0.sh,
               Text(
@@ -293,7 +426,10 @@ class DetailView extends GetView<DetailController> {
         Obx(
           () => InkWell(
             borderRadius: BorderRadius.circular(AppDimensions.radiusPill),
-            onTap: controller.isStartingChat.value ? null : controller.startConsultationChat,
+            onTap:
+                controller.isStartingChat.value
+                    ? null
+                    : controller.startConsultationChat,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
               decoration: BoxDecoration(
@@ -307,13 +443,23 @@ class DetailView extends GetView<DetailController> {
                       ? const SizedBox(
                         width: 17,
                         height: 17,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.whiteColor),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.whiteColor,
+                        ),
                       )
-                      : const Icon(Icons.chat_bubble_outline_rounded, color: AppColors.whiteColor, size: 18),
+                      : const Icon(
+                        Icons.chat_bubble_outline_rounded,
+                        color: AppColors.whiteColor,
+                        size: 18,
+                      ),
                   8.0.sw,
                   Text(
                     controller.isStartingChat.value ? 'Loading...' : 'Chat Now',
-                    style: AppTypography.bodySmall.copyWith(color: AppColors.whiteColor, fontWeight: FontWeight.w800),
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.whiteColor,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ],
               ),
@@ -336,19 +482,32 @@ class DetailView extends GetView<DetailController> {
         ),
         SizedBox(width: size.width * 0.03),
         Expanded(
-          child: _priceBox(title: 'ESTIMATED AREA', value: controller.areaDisplay, valueColor: AppColors.textHeadingColor),
+          child: _priceBox(
+            title: 'ESTIMATED AREA',
+            value: controller.areaDisplay,
+            valueColor: AppColors.textHeadingColor,
+          ),
         ),
       ],
     );
   }
 
-  Widget _priceBox({required String title, required String value, required Color valueColor}) {
+  Widget _priceBox({
+    required String title,
+    required String value,
+    required Color valueColor,
+  }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppDimensions.spacingLarge, vertical: AppDimensions.spacingLarge),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppDimensions.spacingLarge,
+        vertical: AppDimensions.spacingLarge,
+      ),
       decoration: BoxDecoration(
         color: AppColors.whiteColor,
         borderRadius: BorderRadius.circular(AppDimensions.radiusMedium),
-        border: Border.all(color: AppColors.formBorderColor.withValues(alpha: 0.2)),
+        border: Border.all(
+          color: AppColors.formBorderColor.withValues(alpha: 0.2),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -370,7 +529,11 @@ class DetailView extends GetView<DetailController> {
             child: Text(
               value,
               maxLines: 1,
-              style: AppTypography.bodyMedium.copyWith(color: valueColor, fontSize: 16, fontWeight: FontWeight.w800),
+              style: AppTypography.bodyMedium.copyWith(
+                color: valueColor,
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+              ),
             ),
           ),
         ],
@@ -380,19 +543,28 @@ class DetailView extends GetView<DetailController> {
 
   Widget _descriptionSection(Catalog p) {
     final hasHighlight = p.highlightFeatures.trim().isNotEmpty;
-    final desc = hasHighlight ? '${p.description}\n\nHighlight Features: ${p.highlightFeatures}' : p.description;
+    final desc =
+        hasHighlight
+            ? '${p.description}\n\nHighlight Features: ${p.highlightFeatures}'
+            : p.description;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'Description',
-          style: AppTypography.bodyMedium.copyWith(color: AppColors.textHeadingColor, fontWeight: FontWeight.w700),
+          style: AppTypography.bodyMedium.copyWith(
+            color: AppColors.textHeadingColor,
+            fontWeight: FontWeight.w700,
+          ),
         ),
         8.0.sh,
         Text(
           desc.trim().isEmpty ? '-' : desc,
-          style: AppTypography.bodySmall.copyWith(color: AppColors.textBodyColor, height: 1.45),
+          style: AppTypography.bodySmall.copyWith(
+            color: AppColors.textBodyColor,
+            height: 1.45,
+          ),
         ),
       ],
     );
@@ -406,7 +578,10 @@ class DetailView extends GetView<DetailController> {
       children: [
         Text(
           'Layout',
-          style: AppTypography.bodyMedium.copyWith(color: AppColors.textHeadingColor, fontWeight: FontWeight.w700),
+          style: AppTypography.bodyMedium.copyWith(
+            color: AppColors.textHeadingColor,
+            fontWeight: FontWeight.w700,
+          ),
         ),
         8.0.sh,
         if (layouts.isEmpty)
@@ -416,10 +591,16 @@ class DetailView extends GetView<DetailController> {
             decoration: BoxDecoration(
               color: AppColors.subtleSurfaceColor,
               borderRadius: BorderRadius.circular(AppDimensions.radiusMedium),
-              border: Border.all(color: AppColors.formBorderColor.withValues(alpha: 0.25)),
+              border: Border.all(
+                color: AppColors.formBorderColor.withValues(alpha: 0.25),
+              ),
             ),
             alignment: Alignment.center,
-            child: Icon(Icons.grid_4x4_rounded, color: AppColors.formBorderColor, size: size.width * 0.12),
+            child: Icon(
+              Icons.grid_4x4_rounded,
+              color: AppColors.formBorderColor,
+              size: size.width * 0.12,
+            ),
           )
         else
           SizedBox(
@@ -427,15 +608,23 @@ class DetailView extends GetView<DetailController> {
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: layouts.length,
-              separatorBuilder: (_, __) => SizedBox(width: AppDimensions.spacingSmall),
+              separatorBuilder:
+                  (_, __) => SizedBox(width: AppDimensions.spacingSmall),
               itemBuilder: (_, index) {
                 return ClipRRect(
-                  borderRadius: BorderRadius.circular(AppDimensions.radiusMedium),
+                  borderRadius: BorderRadius.circular(
+                    AppDimensions.radiusMedium,
+                  ),
                   child: Image.network(
                     layouts[index],
                     width: size.width * 0.86,
                     fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Image.asset(_dummyImage, width: size.width * 0.7, fit: BoxFit.cover),
+                    errorBuilder:
+                        (_, __, ___) => Image.asset(
+                          _dummyImage,
+                          width: size.width * 0.7,
+                          fit: BoxFit.cover,
+                        ),
                   ),
                 );
               },
