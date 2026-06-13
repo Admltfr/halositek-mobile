@@ -27,22 +27,35 @@ class UserProfileView extends StatelessWidget {
           onRefresh: controller.refreshProfile,
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: EdgeInsets.symmetric(horizontal: size.width * 0.05, vertical: size.height * 0.01),
+            padding: EdgeInsets.symmetric(
+              horizontal: size.width * 0.05,
+              vertical: size.height * 0.01,
+            ),
             child: Obx(() {
               final isLoading = controller.isLoading.value;
               final user = controller.user.value ?? _dummyUser();
 
-              if (controller.errorMessage.value.isNotEmpty && controller.user.value == null) {
+              if (controller.errorMessage.value.isNotEmpty &&
+                  controller.user.value == null) {
                 return Column(
                   children: [
-                    ProfileTopBar(title: 'Your Profile', onBack: controller.goBack, onLogout: controller.logout),
+                    ProfileTopBar(
+                      title: 'Your Profile',
+                      onBack: controller.goBack,
+                      onLogout: controller.logout,
+                    ),
                     80.0.sh,
                     Text(
                       controller.errorMessage.value,
                       textAlign: TextAlign.center,
-                      style: AppTypography.bodySmall.copyWith(color: AppColors.errorColor),
+                      style: AppTypography.bodySmall.copyWith(
+                        color: AppColors.errorColor,
+                      ),
                     ),
-                    TextButton(onPressed: controller.fetchUser, child: const Text('Coba Lagi')),
+                    TextButton(
+                      onPressed: controller.fetchUser,
+                      child: const Text('Coba Lagi'),
+                    ),
                   ],
                 );
               }
@@ -53,23 +66,59 @@ class UserProfileView extends StatelessWidget {
                   absorbing: isLoading,
                   child: Column(
                     children: [
-                      ProfileTopBar(title: 'Your Profile', onBack: controller.goBack, onLogout: controller.logout),
+                      ProfileTopBar(
+                        title: 'Your Profile',
+                        onBack: controller.goBack,
+                        onLogout: controller.logout,
+                      ),
                       12.0.sh,
-                      _UserHeader(user: user, onEdit: controller.openEditProfile),
+                      _UserHeader(
+                        user: user,
+                        onEdit: controller.openEditProfile,
+                      ),
                       24.0.sh,
-                      _PersonalData(user: user, onEdit: controller.openEditProfile),
+                      _PersonalData(
+                        user: user,
+                        onEdit: controller.openEditProfile,
+                      ),
                       24.0.sh,
-                      _SectionTitle(title: 'Saved Architect', onViewAll: controller.openSavedArchitects),
+                      _SectionTitle(
+                        title: 'Saved Architect',
+                        onViewAll: controller.openSavedArchitects,
+                      ),
                       14.0.sh,
-                      _SavedArchitectPreview(items: isLoading ? _dummySavedArchitects : controller.savedArchitects),
+                      _SavedArchitectPreview(
+                        items:
+                            isLoading
+                                ? _dummySavedArchitects
+                                : controller.savedArchitects,
+                        onTap: controller.openSavedArchitectDetail,
+                      ),
                       24.0.sh,
-                      _SectionTitle(title: 'Saved Design', onViewAll: controller.openSavedDesigns),
+                      _SectionTitle(
+                        title: 'Saved Design',
+                        onViewAll: controller.openSavedDesigns,
+                      ),
                       14.0.sh,
-                      _SavedDesignPreview(items: isLoading ? _dummySavedProjects : controller.savedProjects),
+                      _SavedDesignPreview(
+                        items:
+                            isLoading
+                                ? _dummySavedProjects
+                                : controller.savedProjects,
+                        onTap: controller.openSavedDesignDetail,
+                      ),
                       24.0.sh,
-                      _SectionTitle(title: 'Consultation Payment History', onViewAll: controller.openPaymentHistory),
+                      _SectionTitle(
+                        title: 'Consultation Payment History',
+                        onViewAll: controller.openPaymentHistory,
+                      ),
                       14.0.sh,
-                      _PaymentPreview(items: isLoading ? _dummyPayments : controller.paymentHistories),
+                      _PaymentPreview(
+                        items:
+                            isLoading
+                                ? _dummyPayments
+                                : controller.paymentHistories,
+                      ),
                       48.0.sh,
                       SizedBox(
                         width: double.infinity,
@@ -77,11 +126,20 @@ class UserProfileView extends StatelessWidget {
                         child: ElevatedButton.icon(
                           onPressed: controller.logout,
                           icon: const Icon(Icons.logout_rounded, size: 18),
-                          label: Text('LOGOUT', style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.bold)),
+                          label: Text(
+                            'LOGOUT',
+                            style: AppTypography.bodyMedium.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primaryColor,
                             foregroundColor: AppColors.whiteColor,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimensions.radiusMedium)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(
+                                AppDimensions.radiusMedium,
+                              ),
+                            ),
                           ),
                         ),
                       ),
@@ -119,7 +177,11 @@ const _dummySavedArchitects = <SavedArchitect>[
     id: 'loading-architect-1',
     name: 'Architect Name',
     photoProfileUrl: '',
-    architectProfile: SavedArchitectProfile(id: '', bio: 'Residential Specialist', location: 'Jakarta'),
+    architectProfile: SavedArchitectProfile(
+      id: '',
+      bio: 'Residential Specialist',
+      location: 'Jakarta',
+    ),
     totalProjects: 0,
     totalAwards: 0,
   ),
@@ -127,7 +189,11 @@ const _dummySavedArchitects = <SavedArchitect>[
     id: 'loading-architect-2',
     name: 'Architect Name',
     photoProfileUrl: '',
-    architectProfile: SavedArchitectProfile(id: '', bio: 'Interior Designer', location: 'Bandung'),
+    architectProfile: SavedArchitectProfile(
+      id: '',
+      bio: 'Interior Designer',
+      location: 'Bandung',
+    ),
     totalProjects: 0,
     totalAwards: 0,
   ),
@@ -135,7 +201,11 @@ const _dummySavedArchitects = <SavedArchitect>[
     id: 'loading-architect-3',
     name: 'Architect Name',
     photoProfileUrl: '',
-    architectProfile: SavedArchitectProfile(id: '', bio: 'Modern Design', location: 'Surabaya'),
+    architectProfile: SavedArchitectProfile(
+      id: '',
+      bio: 'Modern Design',
+      location: 'Surabaya',
+    ),
     totalProjects: 0,
     totalAwards: 0,
   ),
@@ -173,7 +243,11 @@ const _dummyPayments = <PaymentHistory>[
     createdAt: null,
     consultationId: '',
     conversationId: '',
-    architect: UserArchitectSummary(id: '', name: 'Architect Name', photoProfileUrl: ''),
+    architect: UserArchitectSummary(
+      id: '',
+      name: 'Architect Name',
+      photoProfileUrl: '',
+    ),
   ),
   PaymentHistory(
     id: 'loading-payment-2',
@@ -189,7 +263,11 @@ const _dummyPayments = <PaymentHistory>[
     createdAt: null,
     consultationId: '',
     conversationId: '',
-    architect: UserArchitectSummary(id: '', name: 'Architect Name', photoProfileUrl: ''),
+    architect: UserArchitectSummary(
+      id: '',
+      name: 'Architect Name',
+      photoProfileUrl: '',
+    ),
   ),
 ];
 
@@ -212,7 +290,10 @@ class _UserHeader extends StatelessWidget {
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(color: AppColors.secondaryColor.withValues(alpha: 0.28), width: 4),
+                border: Border.all(
+                  color: AppColors.secondaryColor.withValues(alpha: 0.28),
+                  width: 4,
+                ),
               ),
               child: ClipOval(
                 child:
@@ -220,7 +301,11 @@ class _UserHeader extends StatelessWidget {
                         ? Image.network(
                           "${dotenv.env['BASEURL']}${user.photoProfileUrl}",
                           fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => Image.asset(profileFallbackImage, fit: BoxFit.cover),
+                          errorBuilder:
+                              (_, __, ___) => Image.asset(
+                                profileFallbackImage,
+                                fit: BoxFit.cover,
+                              ),
                         )
                         : Image.asset(profileFallbackImage, fit: BoxFit.cover),
               ),
@@ -236,10 +321,16 @@ class _UserHeader extends StatelessWidget {
                   height: 38,
                   decoration: BoxDecoration(
                     color: AppColors.primaryColor,
-                    borderRadius: BorderRadius.circular(AppDimensions.radiusMedium),
+                    borderRadius: BorderRadius.circular(
+                      AppDimensions.radiusMedium,
+                    ),
                     border: Border.all(color: AppColors.whiteColor, width: 3),
                   ),
-                  child: const Icon(Icons.edit_square, color: AppColors.whiteColor, size: 18),
+                  child: const Icon(
+                    Icons.edit_square,
+                    color: AppColors.whiteColor,
+                    size: 18,
+                  ),
                 ),
               ),
             ),
@@ -276,14 +367,20 @@ class _PersonalData extends StatelessWidget {
             Expanded(
               child: Text(
                 'Personal Data',
-                style: AppTypography.bodyMedium.copyWith(color: AppColors.textBodyColor, fontWeight: FontWeight.w800),
+                style: AppTypography.bodyMedium.copyWith(
+                  color: AppColors.textBodyColor,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
             ),
             InkWell(
               onTap: onEdit,
               child: Text(
                 'EDIT',
-                style: AppTypography.captionLarge.copyWith(color: AppColors.primaryColor, fontWeight: FontWeight.w800),
+                style: AppTypography.captionLarge.copyWith(
+                  color: AppColors.primaryColor,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
             ),
           ],
@@ -330,7 +427,10 @@ class _DataRow extends StatelessWidget {
               6.0.sh,
               Text(
                 value.isNotEmpty ? value : '-',
-                style: AppTypography.bodyMedium.copyWith(color: AppColors.textHeadingColor, fontWeight: FontWeight.w800),
+                style: AppTypography.bodyMedium.copyWith(
+                  color: AppColors.textHeadingColor,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
             ],
           ),
@@ -353,14 +453,20 @@ class _SectionTitle extends StatelessWidget {
         Expanded(
           child: Text(
             title,
-            style: AppTypography.bodyMedium.copyWith(color: AppColors.textBodyColor, fontWeight: FontWeight.w800),
+            style: AppTypography.bodyMedium.copyWith(
+              color: AppColors.textBodyColor,
+              fontWeight: FontWeight.w800,
+            ),
           ),
         ),
         InkWell(
           onTap: onViewAll,
           child: Text(
             'VIEW ALL',
-            style: AppTypography.captionLarge.copyWith(color: AppColors.primaryColor, fontWeight: FontWeight.w800),
+            style: AppTypography.captionLarge.copyWith(
+              color: AppColors.primaryColor,
+              fontWeight: FontWeight.w800,
+            ),
           ),
         ),
       ],
@@ -370,8 +476,9 @@ class _SectionTitle extends StatelessWidget {
 
 class _SavedArchitectPreview extends StatelessWidget {
   final List<SavedArchitect> items;
+  final ValueChanged<SavedArchitect> onTap;
 
-  const _SavedArchitectPreview({required this.items});
+  const _SavedArchitectPreview({required this.items, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -385,7 +492,15 @@ class _SavedArchitectPreview extends StatelessWidget {
         scrollDirection: Axis.horizontal,
         itemCount: items.take(4).length,
         separatorBuilder: (_, __) => 12.0.sw,
-        itemBuilder: (_, index) => SizedBox(width: 72, child: SavedArchitectCard(architect: items[index], compact: true)),
+        itemBuilder:
+            (_, index) => SizedBox(
+              width: 72,
+              child: SavedArchitectCard(
+                architect: items[index],
+                compact: true,
+                onTap: () => onTap(items[index]),
+              ),
+            ),
       ),
     );
   }
@@ -393,8 +508,9 @@ class _SavedArchitectPreview extends StatelessWidget {
 
 class _SavedDesignPreview extends StatelessWidget {
   final List<SavedProject> items;
+  final ValueChanged<SavedProject> onTap;
 
-  const _SavedDesignPreview({required this.items});
+  const _SavedDesignPreview({required this.items, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -412,7 +528,11 @@ class _SavedDesignPreview extends StatelessWidget {
         mainAxisSpacing: 18,
         childAspectRatio: 0.72,
       ),
-      itemBuilder: (_, index) => SavedDesignCard(project: items[index]),
+      itemBuilder:
+          (_, index) => SavedDesignCard(
+            project: items[index],
+            onTap: () => onTap(items[index]),
+          ),
     );
   }
 }

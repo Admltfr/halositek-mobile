@@ -18,7 +18,10 @@ class SavedDesignsView extends GetView<ProfileController> {
       backgroundColor: AppColors.whiteColor,
       body: SafeArea(
         child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: size.width * 0.05, vertical: size.height * 0.01),
+          padding: EdgeInsets.symmetric(
+            horizontal: size.width * 0.05,
+            vertical: size.height * 0.01,
+          ),
           child: Column(
             children: [
               ProfileTopBar(title: 'Saved Design', onBack: controller.goBack),
@@ -32,25 +35,39 @@ class SavedDesignsView extends GetView<ProfileController> {
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
                         16.0.sh,
-                        Icon(Icons.design_services_outlined, size: 32, color: AppColors.textBodyColor),
+                        Icon(
+                          Icons.design_services_outlined,
+                          size: 32,
+                          color: AppColors.textBodyColor,
+                        ),
                         12.0.sh,
                         Text(
                           'Belum ada saved design.',
                           textAlign: TextAlign.center,
-                          style: AppTypography.bodySmall.copyWith(color: AppColors.textBodyColor),
+                          style: AppTypography.bodySmall.copyWith(
+                            color: AppColors.textBodyColor,
+                          ),
                         ),
                       ],
                     );
                   }
                   return GridView.builder(
                     itemCount: items.length,
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 30,
-                      childAspectRatio: 0.72,
-                    ),
-                    itemBuilder: (_, index) => SavedDesignCard(project: items[index]),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 30,
+                          childAspectRatio: 0.72,
+                        ),
+                    itemBuilder:
+                        (_, index) => SavedDesignCard(
+                          project: items[index],
+                          onTap:
+                              () => controller.openSavedDesignDetail(
+                                items[index],
+                              ),
+                        ),
                   );
                 }),
               ),

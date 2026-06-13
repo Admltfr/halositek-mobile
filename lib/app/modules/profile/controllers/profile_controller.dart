@@ -153,6 +153,62 @@ class ProfileController extends GetxController {
     );
   }
 
+  void openSavedArchitectDetail(SavedArchitect architect) {
+    final architectId = architect.id.trim();
+    if (architectId.isEmpty) {
+      Get.snackbar('Gagal', 'Architect ID tidak ditemukan');
+      return;
+    }
+
+    Get.find<NavigationController>().navigateTo(
+      tabIndex: 2,
+      route: '/portofolio',
+      arguments: architectId,
+    );
+  }
+
+  void openSavedDesignDetail(SavedProject project) {
+    final projectId = project.id.trim();
+    if (projectId.isEmpty) {
+      Get.snackbar('Gagal', 'Design ID tidak ditemukan');
+      return;
+    }
+
+    Get.find<NavigationController>().navigateTo(
+      tabIndex: 1,
+      route: '/detail',
+      arguments: projectId,
+    );
+  }
+
+  void openPortfolioProjectDetail(ArchitectProject project) {
+    final projectId = project.id.trim();
+    if (projectId.isEmpty) {
+      Get.snackbar('Gagal', 'Design ID tidak ditemukan');
+      return;
+    }
+
+    Get.find<NavigationController>().navigateTo(
+      tabIndex: 1,
+      route: '/detail',
+      arguments: projectId,
+    );
+  }
+
+  void openArchitectAwardDetail(ArchitectAward award) {
+    final awardId = award.id.trim();
+    if (awardId.isEmpty) {
+      Get.snackbar('Gagal', 'Award ID tidak ditemukan');
+      return;
+    }
+
+    Get.find<NavigationController>().navigateTo(
+      tabIndex: 2,
+      route: '/award/detail',
+      arguments: awardId,
+    );
+  }
+
   void openPaymentHistory() {
     Get.find<NavigationController>().navigateTo(
       tabIndex: 3,
