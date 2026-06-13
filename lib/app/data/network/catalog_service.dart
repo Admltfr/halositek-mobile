@@ -15,6 +15,26 @@ class CatalogService {
     String? architectId,
     String? status,
   }) async {
+    final result = await getCatalogList(
+      page: page,
+      perPage: perPage,
+      search: search,
+      style: style,
+      architectId: architectId,
+      status: status,
+    );
+
+    return result.catalogs;
+  }
+
+  Future<CatalogListResponse> getCatalogList({
+    int page = 1,
+    int perPage = 10,
+    String? search,
+    String? style,
+    String? architectId,
+    String? status,
+  }) async {
     final response = await _apiClient.public.get(
       '/projects',
       queryParameters: {
@@ -33,17 +53,23 @@ class CatalogService {
       ),
     );
 
-    // queryParameters
-    print('Query Parameters: ${response.requestOptions.queryParameters}');
-
     return _apiClient.customResponse(response, () async {
       final rawList = response.data?['data'];
-      if (rawList is! List) return <Catalog>[];
+      final rawMeta = response.data?['meta'];
 
-      return rawList
-          .whereType<Map>()
-          .map((e) => Catalog.fromJson(Map<String, dynamic>.from(e)))
-          .toList();
+      return CatalogListResponse(
+        catalogs:
+            rawList is List
+                ? rawList
+                    .whereType<Map>()
+                    .map((e) => Catalog.fromJson(Map<String, dynamic>.from(e)))
+                    .toList()
+                : <Catalog>[],
+        meta:
+            rawMeta is Map
+                ? CatalogMeta.fromJson(Map<String, dynamic>.from(rawMeta))
+                : CatalogMeta.empty(),
+      );
     }, 'Fetch Catalogs');
   }
 

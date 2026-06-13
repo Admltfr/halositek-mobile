@@ -264,11 +264,16 @@ class DesignView extends GetView<DesignController> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
-                    controller.designCount.toString(),
-                    style: AppTypography.headingMedium.copyWith(
-                      color: AppColors.primaryColor,
-                      fontSize: 20,
+                  Skeletonizer(
+                    enabled: controller.isLoadingCatalog.value,
+                    child: Text(
+                      controller.isLoadingCatalog.value
+                          ? '000'
+                          : controller.designCount.toString(),
+                      style: AppTypography.headingMedium.copyWith(
+                        color: AppColors.primaryColor,
+                        fontSize: 20,
+                      ),
                     ),
                   ),
                   3.0.sh,

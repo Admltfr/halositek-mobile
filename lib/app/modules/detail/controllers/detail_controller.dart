@@ -44,6 +44,7 @@ class DetailController extends GetxController {
   final isStartingChat = false.obs;
   final isArchitectRole = false.obs;
   final paymentError = ''.obs;
+  bool _hasCatalogChange = false;
 
   @override
   void onInit() {
@@ -55,7 +56,7 @@ class DetailController extends GetxController {
 
   void goBack() {
     final nav = Get.find<NavigationController>();
-    nav.onPop();
+    nav.onPop(_hasCatalogChange ? catalog.value ?? true : null);
   }
 
   Future<void> fetchCatalogDetail() async {
@@ -86,7 +87,10 @@ class DetailController extends GetxController {
     isLiking.value = true;
 
     final liked = !current.liked;
-    catalog.value = current.copyWith(liked: liked, likesCount: (current.likesCount + (liked ? 1 : -1)).clamp(0, 999999));
+    catalog.value = current.copyWith(
+      liked: liked,
+      likesCount: (current.likesCount + (liked ? 1 : -1)).clamp(0, 999999),
+    );
 
     try {
       if (liked) {
@@ -94,6 +98,7 @@ class DetailController extends GetxController {
       } else {
         await _catalogService.unlikeCatalog(current.id);
       }
+      _hasCatalogChange = true;
     } catch (_) {
       catalog.value = current;
     } finally {
@@ -115,6 +120,7 @@ class DetailController extends GetxController {
       } else {
         await _catalogService.unsaveCatalog(current.id);
       }
+      _hasCatalogChange = true;
     } catch (e) {
       catalog.value = current;
       Get.snackbar('Gagal', e.toString());
@@ -125,9 +131,13 @@ class DetailController extends GetxController {
 
   Future<void> openEdit() async {
     final nav = Get.find<NavigationController>().keyForTab(1)?.currentState;
-    final result = await nav?.pushNamed('/design/edit', arguments: catalog.value ?? catalogId);
+    final result = await nav?.pushNamed(
+      '/design/edit',
+      arguments: catalog.value ?? catalogId,
+    );
 
     if (result != null) {
+      _hasCatalogChange = true;
       await fetchCatalogDetail();
     }
   }
@@ -139,14 +149,20 @@ class DetailController extends GetxController {
       Dialog(
         backgroundColor: AppColors.whiteColor,
         insetPadding: const EdgeInsets.symmetric(horizontal: 38),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimensions.radiusMedium)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppDimensions.radiusMedium),
+        ),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
           child: Obx(
             () => Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.delete_outline_rounded, color: AppColors.errorColor, size: 44),
+                const Icon(
+                  Icons.delete_outline_rounded,
+                  color: AppColors.errorColor,
+                  size: 44,
+                ),
                 18.0.sh,
                 Text(
                   'Confirm Delete',
@@ -161,7 +177,10 @@ class DetailController extends GetxController {
                 Text(
                   'Are you sure you want to delete this\ndesign ?',
                   textAlign: TextAlign.center,
-                  style: AppTypography.bodySmall.copyWith(color: AppColors.textBodyColor, height: 1.5),
+                  style: AppTypography.bodySmall.copyWith(
+                    color: AppColors.textBodyColor,
+                    height: 1.5,
+                  ),
                 ),
                 32.0.sh,
                 SizedBox(
@@ -171,14 +190,23 @@ class DetailController extends GetxController {
                     onPressed: isDeleting.value ? null : deleteCatalog,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFFF3F46),
-                      disabledBackgroundColor: const Color(0xFFFF3F46).withValues(alpha: 0.72),
+                      disabledBackgroundColor: const Color(
+                        0xFFFF3F46,
+                      ).withValues(alpha: 0.72),
                       foregroundColor: AppColors.textWhiteColor,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimensions.radiusSmall)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.radiusSmall,
+                        ),
+                      ),
                       elevation: 0,
                     ),
                     child: Text(
                       isDeleting.value ? 'Deleting...' : 'Delete Design',
-                      style: AppTypography.bodySmall.copyWith(color: AppColors.textWhiteColor, fontWeight: FontWeight.w800),
+                      style: AppTypography.bodySmall.copyWith(
+                        color: AppColors.textWhiteColor,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                   ),
                 ),
@@ -192,12 +220,19 @@ class DetailController extends GetxController {
                       backgroundColor: const Color(0xFFF8F7F6),
                       disabledBackgroundColor: const Color(0xFFF8F7F6),
                       foregroundColor: AppColors.textBodyColor,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimensions.radiusSmall)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.radiusSmall,
+                        ),
+                      ),
                       elevation: 0,
                     ),
                     child: Text(
                       'Cancel',
-                      style: AppTypography.bodySmall.copyWith(color: const Color(0xFF475569), fontWeight: FontWeight.w800),
+                      style: AppTypography.bodySmall.copyWith(
+                        color: const Color(0xFF475569),
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                   ),
                 ),
@@ -220,7 +255,7 @@ class DetailController extends GetxController {
       if (Get.isDialogOpen == true) {
         Get.back<void>();
       }
-      Get.find<NavigationController>().onPop();
+      Get.find<NavigationController>().onPop(true);
     } catch (e) {
       Get.snackbar('Delete gagal', e.toString());
     } finally {
@@ -241,7 +276,9 @@ class DetailController extends GetxController {
     paymentError.value = '';
 
     try {
-      final initiation = await _paymentService.initiate(architectId: architectIdValue);
+      final initiation = await _paymentService.initiate(
+        architectId: architectIdValue,
+      );
 
       await _midtrans?.startPaymentUiFlow(token: initiation.snapToken);
     } catch (e) {
@@ -284,7 +321,9 @@ class DetailController extends GetxController {
 
   String get architectPhoto {
     final p = catalog.value;
-    return p?.architect?.profilePicture.isNotEmpty == true ? p!.architect!.profilePicture : '';
+    return p?.architect?.profilePicture.isNotEmpty == true
+        ? p!.architect!.profilePicture
+        : '';
   }
 
   int get consultationFee {
@@ -352,7 +391,9 @@ class DetailController extends GetxController {
       final conversationId =
           status.conversationId.isNotEmpty
               ? status.conversationId
-              : (await _chatService.createConversation(participantIds: [catalog.value?.architectId ?? ''])).id;
+              : (await _chatService.createConversation(
+                participantIds: [catalog.value?.architectId ?? ''],
+              )).id;
 
       _openChat(conversationId);
     } else {
@@ -361,6 +402,12 @@ class DetailController extends GetxController {
   }
 
   void _openChat(String conversationId) {
-    Get.to(() => const ChatDetailView(), binding: ChatDetailBinding(conversationId: conversationId, title: architectName));
+    Get.to(
+      () => const ChatDetailView(),
+      binding: ChatDetailBinding(
+        conversationId: conversationId,
+        title: architectName,
+      ),
+    );
   }
 }

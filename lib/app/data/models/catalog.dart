@@ -184,3 +184,55 @@ class Catalog {
     return null;
   }
 }
+
+class CatalogListResponse {
+  final List<Catalog> catalogs;
+  final CatalogMeta meta;
+
+  const CatalogListResponse({required this.catalogs, required this.meta});
+
+  factory CatalogListResponse.empty() {
+    return CatalogListResponse(
+      catalogs: const <Catalog>[],
+      meta: CatalogMeta.empty(),
+    );
+  }
+}
+
+class CatalogMeta {
+  final int currentPage;
+  final int lastPage;
+  final int perPage;
+  final int total;
+
+  const CatalogMeta({
+    required this.currentPage,
+    required this.lastPage,
+    required this.perPage,
+    required this.total,
+  });
+
+  factory CatalogMeta.fromJson(Map<String, dynamic> json) {
+    return CatalogMeta(
+      currentPage: _toInt(json['current_page']),
+      lastPage: _toInt(json['last_page']),
+      perPage: _toInt(json['per_page']),
+      total: _toInt(json['total']),
+    );
+  }
+
+  factory CatalogMeta.empty() {
+    return const CatalogMeta(
+      currentPage: 1,
+      lastPage: 1,
+      perPage: 10,
+      total: 0,
+    );
+  }
+
+  static int _toInt(dynamic value) {
+    if (value is int) return value;
+    if (value is double) return value.toInt();
+    return int.tryParse(value?.toString() ?? '') ?? 0;
+  }
+}
