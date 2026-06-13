@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:halositek/app/core/constants/app_colors.dart';
@@ -17,11 +19,15 @@ class DesignForm extends StatelessWidget {
     required this.styles,
     required this.mediaFiles,
     required this.layoutFiles,
+    required this.mediaImageUrls,
+    required this.layoutImageUrls,
     required this.onStyleChanged,
     required this.onPickMedia,
     required this.onPickLayout,
     required this.onRemoveMedia,
     required this.onRemoveLayout,
+    required this.onRemoveMediaImage,
+    required this.onRemoveLayoutImage,
     required this.onCancel,
     required this.onSubmit,
     required this.isSubmitting,
@@ -38,11 +44,15 @@ class DesignForm extends StatelessWidget {
   final List<String> styles;
   final List<PlatformFile> mediaFiles;
   final List<PlatformFile> layoutFiles;
+  final List<String> mediaImageUrls;
+  final List<String> layoutImageUrls;
   final ValueChanged<String?> onStyleChanged;
   final VoidCallback onPickMedia;
   final VoidCallback onPickLayout;
   final ValueChanged<PlatformFile> onRemoveMedia;
   final ValueChanged<PlatformFile> onRemoveLayout;
+  final ValueChanged<String> onRemoveMediaImage;
+  final ValueChanged<String> onRemoveLayoutImage;
   final VoidCallback onCancel;
   final VoidCallback onSubmit;
   final bool isSubmitting;
@@ -56,11 +66,23 @@ class DesignForm extends StatelessWidget {
       children: [
         _sectionTitle(Icons.image_outlined, 'MEDIA DESIGN'),
         18.0.sh,
-        _uploadBox(files: mediaFiles, onPick: onPickMedia, onRemove: onRemoveMedia),
+        _uploadBox(
+          imageUrls: mediaImageUrls,
+          files: mediaFiles,
+          onPick: onPickMedia,
+          onRemoveImage: onRemoveMediaImage,
+          onRemoveFile: onRemoveMedia,
+        ),
         24.0.sh,
         _sectionTitle(Icons.image_outlined, 'LAYOUT DESIGN'),
         18.0.sh,
-        _uploadBox(files: layoutFiles, onPick: onPickLayout, onRemove: onRemoveLayout),
+        _uploadBox(
+          imageUrls: layoutImageUrls,
+          files: layoutFiles,
+          onPick: onPickLayout,
+          onRemoveImage: onRemoveLayoutImage,
+          onRemoveFile: onRemoveLayout,
+        ),
         24.0.sh,
         _sectionTitle(Icons.format_list_bulleted_rounded, 'DESIGN INFORMATIONS'),
         18.0.sh,
@@ -159,10 +181,14 @@ class DesignForm extends StatelessWidget {
   }
 
   Widget _uploadBox({
+    required List<String> imageUrls,
     required List<PlatformFile> files,
     required VoidCallback onPick,
-    required ValueChanged<PlatformFile> onRemove,
+    required ValueChanged<String> onRemoveImage,
+    required ValueChanged<PlatformFile> onRemoveFile,
   }) {
+    final hasImages = imageUrls.isNotEmpty || files.isNotEmpty;
+
     return InkWell(
       onTap: onPick,
       child: Container(
@@ -171,7 +197,7 @@ class DesignForm extends StatelessWidget {
         color: AppColors.formBorderColor.withValues(alpha: 0.24),
         padding: const EdgeInsets.all(14),
         child:
-            files.isEmpty
+            !hasImages
                 ? Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -186,13 +212,35 @@ class DesignForm extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
-                      child: ListView.separated(
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: files.length > 4 ? 4 : files.length,
-                        separatorBuilder: (_, __) => 8.0.sh,
-                        itemBuilder: (_, index) => _fileChip(files[index], onRemove),
+                      child: GridView.count(
+                        crossAxisCount: 2,
+                        mainAxisSpacing: 10,
+                        crossAxisSpacing: 10,
+                        childAspectRatio: 1.35,
+                        children: [
+                          ...imageUrls.map(
+                            (url) => _imagePreview(
+                              image: Image.network(url, fit: BoxFit.cover, errorBuilder: (_, __, ___) => _imageFallback()),
+                              onRemove: () => onRemoveImage(url),
+                            ),
+                          ),
+                          ...files.map(
+                            (file) => _imagePreview(
+                              image:
+                                  file.path == null
+                                      ? _imageFallback()
+                                      : Image.file(
+                                        File(file.path!),
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (_, __, ___) => _imageFallback(),
+                                      ),
+                              onRemove: () => onRemoveFile(file),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
+                    8.0.sh,
                     Center(
                       child: Text(
                         '+ ADD MORE',
@@ -205,26 +253,36 @@ class DesignForm extends StatelessWidget {
     );
   }
 
-  Widget _fileChip(PlatformFile file, ValueChanged<PlatformFile> onRemove) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-      decoration: BoxDecoration(color: AppColors.whiteColor, borderRadius: BorderRadius.circular(AppDimensions.radiusSmall)),
-      child: Row(
-        children: [
-          const Icon(Icons.image_outlined, size: 18, color: AppColors.primaryColor),
-          8.0.sw,
-          Expanded(
-            child: Text(
-              file.name,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: AppTypography.captionLarge.copyWith(color: AppColors.textHeadingColor),
+  Widget _imagePreview({required Widget image, required VoidCallback onRemove}) {
+    return Stack(
+      children: [
+        Positioned.fill(child: ClipRRect(borderRadius: BorderRadius.circular(AppDimensions.radiusSmall), child: image)),
+        Positioned(
+          top: 6,
+          right: 6,
+          child: InkWell(
+            onTap: onRemove,
+            child: Container(
+              width: 24,
+              height: 24,
+              decoration: const BoxDecoration(color: AppColors.whiteColor, shape: BoxShape.circle),
+              child: const Icon(Icons.close_rounded, size: 16, color: AppColors.errorColor),
             ),
           ),
-          InkWell(
-            onTap: () => onRemove(file),
-            child: const Icon(Icons.close_rounded, size: 18, color: AppColors.errorColor),
-          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _imageFallback() {
+    return Container(
+      color: AppColors.formBorderColor.withValues(alpha: 0.24),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.broken_image_outlined, size: 24, color: AppColors.textBodyColor),
+          4.0.sh,
+          Text('IMAGE', style: AppTypography.caption.copyWith(color: AppColors.textBodyColor, fontWeight: FontWeight.w800)),
         ],
       ),
     );

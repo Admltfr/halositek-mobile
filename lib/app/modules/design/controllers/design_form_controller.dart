@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart' as dio;
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart';
 import 'package:halositek/app/data/models/catalog.dart';
 import 'package:halositek/app/data/network/catalog_service.dart';
@@ -9,20 +10,10 @@ import 'package:halositek/app/modules/navigation/controllers/navigation_controll
 enum DesignFormMode { add, edit }
 
 class DesignFormController extends GetxController {
-  DesignFormController(
-    CatalogService catalogService, {
-    required this.mode,
-    this.catalogId,
-    this.initialCatalog,
-  }) : _catalogService = catalogService;
+  DesignFormController(CatalogService catalogService, {required this.mode, this.catalogId, this.initialCatalog})
+    : _catalogService = catalogService;
 
-  static const styles = [
-    'modern',
-    'traditional',
-    'minimalist',
-    'futuristik',
-    'industrial',
-  ];
+  static const styles = ['modern', 'traditional', 'minimalist', 'futuristik', 'industrial'];
 
   final CatalogService _catalogService;
   final DesignFormMode mode;
@@ -38,6 +29,8 @@ class DesignFormController extends GetxController {
   final selectedStyle = styles.first.obs;
   final mediaFiles = <PlatformFile>[].obs;
   final layoutFiles = <PlatformFile>[].obs;
+  final mediaImageUrls = <String>[].obs;
+  final layoutImageUrls = <String>[].obs;
   final catalog = Rxn<Catalog>();
   final isLoading = false.obs;
   final isSubmitting = false.obs;
@@ -46,8 +39,7 @@ class DesignFormController extends GetxController {
   String get title => isEdit ? 'Edit Design' : 'New Design';
   String get submitLabel => isEdit ? 'Save Design' : 'Submit Design';
   String get cancelLabel => isEdit ? 'Cancel Edit' : 'Cancel Design';
-  String get resolvedCatalogId =>
-      catalog.value?.id ?? initialCatalog?.id ?? catalogId ?? '';
+  String get resolvedCatalogId => catalog.value?.id ?? initialCatalog?.id ?? catalogId ?? '';
 
   @override
   void onInit() {
@@ -108,6 +100,14 @@ class DesignFormController extends GetxController {
     layoutFiles.remove(file);
   }
 
+  void removeMediaImageUrl(String url) {
+    mediaImageUrls.remove(url);
+  }
+
+  void removeLayoutImageUrl(String url) {
+    layoutImageUrls.remove(url);
+  }
+
   Future<void> submit() async {
     if (isSubmitting.value) return;
     final error = _validate();
@@ -125,10 +125,7 @@ class DesignFormController extends GetxController {
               : await _catalogService.createCatalog(payload);
       Get.find<NavigationController>().onPop(saved);
     } catch (e) {
-      Get.snackbar(
-        isEdit ? 'Design gagal diubah' : 'Design gagal disimpan',
-        e.toString(),
-      );
+      Get.snackbar(isEdit ? 'Design gagal diubah' : 'Design gagal disimpan', e.toString());
     } finally {
       isSubmitting.value = false;
     }
@@ -144,6 +141,8 @@ class DesignFormController extends GetxController {
     if (styles.contains(value.style.toLowerCase().trim())) {
       selectedStyle.value = value.style.toLowerCase().trim();
     }
+    mediaImageUrls.assignAll(_resolveImages(value.imageUrls, value.images));
+    layoutImageUrls.assignAll(_resolveImages(value.layoutImageUrls, value.layoutImages));
   }
 
   Future<void> _pickImages(RxList<PlatformFile> target) async {
@@ -160,10 +159,7 @@ class DesignFormController extends GetxController {
     final validFiles = <PlatformFile>[];
     for (final file in files) {
       if (file.path == null || file.path!.isEmpty) {
-        Get.snackbar(
-          'File tidak valid',
-          'Ada file yang tidak bisa dibaca dari perangkat ini.',
-        );
+        Get.snackbar('File tidak valid', 'Ada file yang tidak bisa dibaca dari perangkat ini.');
         continue;
       }
       if (file.size > 5 * 1024 * 1024) {
@@ -195,14 +191,10 @@ class DesignFormController extends GetxController {
     return dio.FormData.fromMap(data);
   }
 
-  Future<List<dio.MultipartFile>> _multipartFiles(
-    List<PlatformFile> files,
-  ) async {
+  Future<List<dio.MultipartFile>> _multipartFiles(List<PlatformFile> files) async {
     final result = <dio.MultipartFile>[];
     for (final file in files) {
-      result.add(
-        await dio.MultipartFile.fromFile(file.path!, filename: file.name),
-      );
+      result.add(await dio.MultipartFile.fromFile(file.path!, filename: file.name));
     }
     return result;
   }
@@ -228,5 +220,23 @@ class DesignFormController extends GetxController {
     if (!isEdit && mediaFiles.isEmpty) return 'Media design wajib diupload.';
     if (!isEdit && layoutFiles.isEmpty) return 'Layout design wajib diupload.';
     return null;
+  }
+
+  List<String> _resolveImages(List<String> urls, List<String> paths) {
+    final source = paths.isNotEmpty ? paths : urls;
+    return source.map((image) => image.trim()).where((image) => image.isNotEmpty).map(_resolveImageUrl).toList();
+  }
+
+  String _resolveImageUrl(String image) {
+    if (image.startsWith('http://') || image.startsWith('https://')) {
+      return image;
+    }
+
+    final baseUrl = (dotenv.env['BASEURL'] ?? '').trim();
+    if (baseUrl.isEmpty) return image;
+
+    final normalizedBase = baseUrl.endsWith('/') ? baseUrl.substring(0, baseUrl.length - 1) : baseUrl;
+    final normalizedPath = image.startsWith('/') ? image.substring(1) : image;
+    return '$normalizedBase$normalizedPath';
   }
 }
