@@ -9,6 +9,8 @@ abstract class Routes {
   static const NAVIGATION = _Paths.NAVIGATION;
   static const PROFILE = _Paths.PROFILE;
   static const DESIGN = _Paths.DESIGN;
+  static const DESIGN_ADD = _Paths.DESIGN_ADD;
+  static const DESIGN_EDIT = _Paths.DESIGN_EDIT;
   static const ARCHITECT = _Paths.ARCHITECT;
   static const AWARD = _Paths.AWARD;
   static const AWARD_DETAIL = _Paths.AWARD_DETAIL;
@@ -30,6 +32,8 @@ abstract class _Paths {
   static const NAVIGATION = '/navigation';
   static const PROFILE = '/profile';
   static const DESIGN = '/design';
+  static const DESIGN_ADD = '/design/add';
+  static const DESIGN_EDIT = '/design/edit';
   static const ARCHITECT = '/architect';
   static const AWARD = '/award';
   static const AWARD_DETAIL = '/award/detail';

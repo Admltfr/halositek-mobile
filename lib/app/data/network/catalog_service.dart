@@ -22,7 +22,8 @@ class CatalogService {
         'per_page': perPage,
         if (search != null && search.trim().isNotEmpty) 'search': search.trim(),
         if (style != null && style.trim().isNotEmpty) 'style': style.trim(),
-        if (architectId != null && architectId.trim().isNotEmpty) 'architect_id': architectId.trim(),
+        if (architectId != null && architectId.trim().isNotEmpty)
+          'architect_id': architectId.trim(),
         if (status != null && status.trim().isNotEmpty) 'status': status.trim(),
       },
       options: Options(
@@ -39,21 +40,28 @@ class CatalogService {
       final rawList = response.data?['data'];
       if (rawList is! List) return <Catalog>[];
 
-      return rawList.whereType<Map>().map((e) => Catalog.fromJson(Map<String, dynamic>.from(e))).toList();
+      return rawList
+          .whereType<Map>()
+          .map((e) => Catalog.fromJson(Map<String, dynamic>.from(e)))
+          .toList();
     }, 'Fetch Catalogs');
   }
 
   Future<Catalog> getCatalogById(String catalogId) async {
     final response = await _apiClient.private.get(
       '/projects/$catalogId',
-      options: Options(validateStatus: (status) => status != null && status < 500),
+      options: Options(
+        validateStatus: (status) => status != null && status < 500,
+      ),
     );
 
     return _apiClient.customResponse(response, () async {
       final rawData = response.data?['data'];
 
       if (rawData is Map && rawData['project'] is Map) {
-        return Catalog.fromJson(Map<String, dynamic>.from(rawData['project'] as Map));
+        return Catalog.fromJson(
+          Map<String, dynamic>.from(rawData['project'] as Map),
+        );
       }
 
       if (rawData is Map) {
@@ -64,10 +72,45 @@ class CatalogService {
     }, 'Fetch Catalog Detail');
   }
 
+  Future<Catalog> createCatalog(FormData payload) async {
+    final response = await _apiClient.private.post(
+      '/projects',
+      data: payload,
+      options: Options(
+        validateStatus: (status) => status != null && status < 500,
+      ),
+    );
+
+    return _apiClient.customResponse(
+      response,
+      () async => _catalogFromPayload(response.data?['data']),
+      'Create Catalog',
+      isCreated: true,
+    );
+  }
+
+  Future<Catalog> updateCatalog(String catalogId, FormData payload) async {
+    final response = await _apiClient.private.put(
+      '/projects/$catalogId',
+      data: payload,
+      options: Options(
+        validateStatus: (status) => status != null && status < 500,
+      ),
+    );
+
+    return _apiClient.customResponse(
+      response,
+      () async => _catalogFromPayload(response.data?['data']),
+      'Update Catalog',
+    );
+  }
+
   Future<void> likeCatalog(String catalogId) async {
     final response = await _apiClient.private.post(
       '/projects/$catalogId/like',
-      options: Options(validateStatus: (status) => status != null && status < 500),
+      options: Options(
+        validateStatus: (status) => status != null && status < 500,
+      ),
     );
 
     return _apiClient.customResponse(response, () async {}, 'Like Catalog');
@@ -76,7 +119,9 @@ class CatalogService {
   Future<void> unlikeCatalog(String catalogId) async {
     final response = await _apiClient.private.delete(
       '/projects/$catalogId/like',
-      options: Options(validateStatus: (status) => status != null && status < 500),
+      options: Options(
+        validateStatus: (status) => status != null && status < 500,
+      ),
     );
 
     return _apiClient.customResponse(response, () async {}, 'Unlike Catalog');
@@ -85,7 +130,9 @@ class CatalogService {
   Future<void> saveCatalog(String catalogId) async {
     final response = await _apiClient.private.post(
       '/projects/$catalogId/save',
-      options: Options(validateStatus: (status) => status != null && status < 500),
+      options: Options(
+        validateStatus: (status) => status != null && status < 500,
+      ),
     );
 
     return _apiClient.customResponse(response, () async {}, 'Save Catalog');
@@ -94,9 +141,23 @@ class CatalogService {
   Future<void> unsaveCatalog(String catalogId) async {
     final response = await _apiClient.private.delete(
       '/projects/$catalogId/save',
-      options: Options(validateStatus: (status) => status != null && status < 500),
+      options: Options(
+        validateStatus: (status) => status != null && status < 500,
+      ),
     );
 
     return _apiClient.customResponse(response, () async {}, 'Unsave Catalog');
+  }
+
+  Catalog _catalogFromPayload(dynamic raw) {
+    if (raw is Map && raw['project'] is Map) {
+      return Catalog.fromJson(Map<String, dynamic>.from(raw['project'] as Map));
+    }
+
+    if (raw is Map) {
+      return Catalog.fromJson(Map<String, dynamic>.from(raw));
+    }
+
+    return Catalog.dummy();
   }
 }

@@ -19,7 +19,11 @@ import '../modules/chat_detail/bindings/chat_detail_binding.dart';
 import '../modules/chat_detail/views/chat_detail_view.dart';
 import '../modules/chat_list/bindings/chat_list_binding.dart';
 import '../modules/chat_list/views/chat_list_view.dart';
+import '../modules/design/add/bindings/design_add_binding.dart';
+import '../modules/design/add/views/design_add_view.dart';
 import '../modules/design/bindings/design_binding.dart';
+import '../modules/design/edit/bindings/design_edit_binding.dart';
+import '../modules/design/edit/views/design_edit_view.dart';
 import '../modules/design/views/design_view.dart';
 import '../modules/detail/bindings/detail_binding.dart';
 import '../modules/detail/views/detail_view.dart';
@@ -80,6 +84,18 @@ class AppPages {
       binding: DesignBinding(),
       transition: Transition.fadeIn,
     ),
+    GetPage(
+      name: _Paths.DESIGN_ADD,
+      page: () => const DesignAddView(),
+      binding: DesignAddBinding(),
+      transition: Transition.fadeIn,
+    ).withRole(['architect']),
+    GetPage(
+      name: _Paths.DESIGN_EDIT,
+      page: () => const DesignEditView(),
+      binding: DesignEditBinding(),
+      transition: Transition.fadeIn,
+    ).withRole(['architect']),
     GetPage(
       name: _Paths.ARCHITECT,
       page: () => const ArchitectView(),

@@ -10,7 +10,14 @@ import 'package:halositek/app/modules/navigation/controllers/navigation_controll
 
 class DesignController extends GetxController {
   static const int _perPage = 12;
-  static const List<String> styleFilters = ['all', 'modern', 'traditional', 'minimalist', 'futuristik', 'industrial'];
+  static const List<String> styleFilters = [
+    'all',
+    'modern',
+    'traditional',
+    'minimalist',
+    'futuristik',
+    'industrial',
+  ];
 
   final CatalogService _catalogService;
   DesignController(this._catalogService);
@@ -42,7 +49,8 @@ class DesignController extends GetxController {
     return _capitalize(selectedStyle.value);
   }
 
-  bool isCatalogLiking(String catalogId) => likingCatalogIds.contains(catalogId);
+  bool isCatalogLiking(String catalogId) =>
+      likingCatalogIds.contains(catalogId);
 
   int getImageIndex(String catalogId) {
     return imageIndexByCatalog[catalogId] ?? 0;
@@ -187,12 +195,23 @@ class DesignController extends GetxController {
     fetchCatalogs(reset: true);
   }
 
-  void openUploadDesign() {
-    Get.snackbar('Upload Design', 'Halaman upload design akan dibuat nanti.');
+  Future<void> openUploadDesign() async {
+    final nav = Get.find<NavigationController>().keyForTab(1)?.currentState;
+    if (nav == null) return;
+    final result = await nav.pushNamed('/design/add');
+    if (result != null) {
+      await fetchCatalogs(reset: true);
+    }
   }
 
-  void openEditDesign(String catalogId) {
-    Get.snackbar('Edit Design', 'Halaman edit design akan dibuat nanti.');
+  Future<void> openEditDesign(Catalog catalog) async {
+    if (catalog.id.trim().isEmpty) return;
+    final nav = Get.find<NavigationController>().keyForTab(1)?.currentState;
+    if (nav == null) return;
+    final result = await nav.pushNamed('/design/edit', arguments: catalog);
+    if (result != null) {
+      await fetchCatalogs(reset: true);
+    }
   }
 
   Future<void> toggleCatalogLike(String id) async {
@@ -206,12 +225,17 @@ class DesignController extends GetxController {
 
     catalogs[i] = prev.copyWith(
       liked: liked,
-      likesCount: (prev.likesCount + (liked ? 1 : -1)).clamp(0, double.infinity).toInt(),
+      likesCount:
+          (prev.likesCount + (liked ? 1 : -1))
+              .clamp(0, double.infinity)
+              .toInt(),
     );
     catalogs.refresh();
 
     try {
-      await (liked ? _catalogService.likeCatalog(id) : _catalogService.unlikeCatalog(id));
+      await (liked
+          ? _catalogService.likeCatalog(id)
+          : _catalogService.unlikeCatalog(id));
     } catch (e) {
       catalogs[i] = prev;
       catalogs.refresh();
