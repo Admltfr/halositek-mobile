@@ -66,6 +66,70 @@ class AuthService {
     }, 'Login');
   }
 
+  Future<int> requestPasswordOtp({required String email}) async {
+    final response = await _apiClient.public.post(
+      '/auth/mobile/password/request-otp',
+      data: {'email': email},
+      options: Options(
+        validateStatus: (status) {
+          return status != null && status < 500;
+        },
+      ),
+    );
+
+    return _apiClient.customResponse(response, () async {
+      final data = response.data['data'];
+      final expiresInMinutes =
+          data is Map ? int.tryParse('${data['expires_in_minutes']}') : null;
+      return expiresInMinutes ?? 10;
+    }, 'Request password OTP');
+  }
+
+  Future<void> verifyPasswordOtp({
+    required String email,
+    required String otp,
+  }) async {
+    final response = await _apiClient.public.post(
+      '/auth/mobile/password/verify-otp',
+      data: {'email': email, 'otp': otp},
+      options: Options(
+        validateStatus: (status) {
+          return status != null && status < 500;
+        },
+      ),
+    );
+
+    return _apiClient.customResponse(
+      response,
+      () async {},
+      'Verify password OTP',
+    );
+  }
+
+  Future<void> resetPassword({
+    required String email,
+    required String otp,
+    required String password,
+    required String passwordConfirmation,
+  }) async {
+    final response = await _apiClient.public.post(
+      '/auth/mobile/password/reset',
+      data: {
+        'email': email,
+        'otp': otp,
+        'password': password,
+        'password_confirmation': passwordConfirmation,
+      },
+      options: Options(
+        validateStatus: (status) {
+          return status != null && status < 500;
+        },
+      ),
+    );
+
+    return _apiClient.customResponse(response, () async {}, 'Reset password');
+  }
+
   Future<String?> refreshToken(String token) async {
     final response = await _apiClient.public.post(
       '/auth/refresh-token',

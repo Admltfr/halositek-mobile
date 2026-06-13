@@ -135,7 +135,10 @@ class LoginView extends GetView<LoginController> {
                 ),
               ),
 
-              CustomTextButton(text: 'Forgot Password', onPressed: () {}),
+              CustomTextButton(
+                text: 'Forgot Password',
+                onPressed: controller.gotoForgotPassword,
+              ),
               AppDimensions.spacing2XLarge.sh,
 
               FormButton(text: 'LOGIN', onPressed: controller.login),
