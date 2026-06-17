@@ -17,7 +17,7 @@ class AuthService {
     required String role,
   }) async {
     final response = await _apiClient.public.post(
-      '/register',
+      '/auth/register',
       data: {
         'name': name,
         'email': email,
