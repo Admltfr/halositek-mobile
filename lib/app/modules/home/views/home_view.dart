@@ -36,34 +36,50 @@ class HomeView extends GetView<HomeController> {
               children: [
                 _headerSection(size),
                 AppDimensions.spacingXLarge.sh,
-                _searchSection(
-                  size,
-                  hintText:
-                      isArchitect
-                          ? 'Search Project'
-                          : 'Search Design or Architects',
-                ),
+                _searchSection(size, hintText: 'Search Design or Architects'),
                 AppDimensions.spacing2XLarge.sh,
                 if (isArchitect) ...[
-                  _performanceHeaderSection(),
-                  AppDimensions.spacingSemibold.sh,
-                  _performanceSection(size),
-                  AppDimensions.spacingXLarge.sh,
-                  _activeProjectsHeaderSection(),
-                  AppDimensions.spacingSemibold.sh,
-                  _activeProjectSection(size),
-                  AppDimensions.spacingSemibold.sh,
+                  Obx(() {
+                    if (controller.isSearchMode) {
+                      return _searchResultSection(size);
+                    }
+
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _performanceHeaderSection(),
+                        AppDimensions.spacingSemibold.sh,
+                        _performanceSection(size),
+                        AppDimensions.spacingXLarge.sh,
+                        _activeProjectsHeaderSection(),
+                        AppDimensions.spacingSemibold.sh,
+                        _activeProjectSection(size),
+                      ],
+                    );
+                  }),
                 ] else ...[
-                  _galleryHeaderSection(),
-                  AppDimensions.spacingSemibold.sh,
-                  _catalogSection(size),
-                  AppDimensions.spacingXLarge.sh,
-                  _aiAssistantSection(size),
-                  AppDimensions.spacing2XLarge.sh,
-                  _architectHeaderSection(),
-                  AppDimensions.spacingLarge.sh,
-                  _architectSection(size),
-                  AppDimensions.spacingSemibold.sh,
+                  Obx(() {
+                    final isSearchMode = controller.isSearchMode;
+
+                    if (isSearchMode) {
+                      return _searchResultSection(size);
+                    }
+
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _galleryHeaderSection(),
+                        AppDimensions.spacingSemibold.sh,
+                        _catalogSection(size),
+                        AppDimensions.spacingXLarge.sh,
+                        _aiAssistantSection(size),
+                        AppDimensions.spacing2XLarge.sh,
+                        _architectHeaderSection(),
+                        AppDimensions.spacingLarge.sh,
+                        _architectSection(size),
+                      ],
+                    );
+                  }),
                 ],
               ],
             ),
@@ -76,7 +92,6 @@ class HomeView extends GetView<HomeController> {
   Widget _headerSection(Size size) {
     return Row(
       children: [
-        SizedBox(width: size.width * 0.12),
         Expanded(
           child: Center(
             child: Text.rich(
@@ -192,9 +207,12 @@ class HomeView extends GetView<HomeController> {
             color: AppColors.primaryColor,
             size: size.width * 0.055,
           ),
+
           SizedBox(width: size.width * 0.02),
+
           Expanded(
             child: TextField(
+              controller: controller.searchController,
               decoration: InputDecoration(
                 isCollapsed: true,
                 border: InputBorder.none,
@@ -208,9 +226,130 @@ class HomeView extends GetView<HomeController> {
               ),
             ),
           ),
+
+          Obx(() {
+            if (controller.searchQuery.value.trim().isEmpty) {
+              return const SizedBox.shrink();
+            }
+
+            return GestureDetector(
+              onTap: () {
+                controller.searchController.clear();
+
+                controller.searchQuery.value = '';
+
+                controller.searchedArchitects.clear();
+                controller.searchedCatalogs.clear();
+              },
+              child: Icon(
+                Icons.close_rounded,
+                color: AppColors.textBodyColor,
+                size: size.width * 0.05,
+              ),
+            );
+          }),
         ],
       ),
     );
+  }
+
+  Widget _searchResultSection(Size size) {
+    return Obx(() {
+      if (!controller.isSearchMode) {
+        return const SizedBox.shrink();
+      }
+
+      if (controller.isSearching.value) {
+        return const Center(child: CircularProgressIndicator());
+      }
+
+      if (controller.searchedArchitects.isEmpty &&
+          controller.searchedCatalogs.isEmpty) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 40),
+          child: Center(
+            child: Text('No result found', style: AppTypography.bodyMedium),
+          ),
+        );
+      }
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (controller.searchedArchitects.isNotEmpty) ...[
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Architects',
+                    style: AppTypography.headingSmall.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                CustomTextButton(
+                  text: 'See all',
+                  onPressed: () => controller.openArchitectFromHome(),
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: AppColors.primaryColor,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+
+            12.0.sh,
+
+            ...controller.searchedArchitects.map(
+              (architect) => Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: _architectCard(size: size, architect: architect),
+              ),
+            ),
+
+            20.0.sh,
+          ],
+
+          if (controller.searchedCatalogs.isNotEmpty) ...[
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Designs',
+                    style: AppTypography.headingSmall.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                CustomTextButton(
+                  text: 'See all',
+                  onPressed: () => controller.openDesignFromHome(),
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: AppColors.primaryColor,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+
+            12.0.sh,
+
+            ...controller.searchedCatalogs.map(
+              (catalog) => Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: _catalogItem(
+                  size: size,
+                  catalog: catalog,
+                  onTap: () => controller.openDetailsFromHome(catalog.id),
+                ),
+              ),
+            ),
+
+            20.0.sh,
+          ],
+        ],
+      );
+    });
   }
 
   Widget _galleryHeaderSection() {
@@ -245,10 +384,9 @@ class HomeView extends GetView<HomeController> {
     return Obx(() {
       final isLoading = controller.isLoadingCatalog.value;
       final hasError = controller.catalogError.value.isNotEmpty;
-      // final hasData = controller.catalogs.isNotEmpty;
+      final hasData = controller.catalogs.isNotEmpty;
 
-      // if (hasError && !hasData) {
-      if (hasError) {
+      if (hasError && !hasData) {
         return Column(
           children: [
             Text(
@@ -265,7 +403,6 @@ class HomeView extends GetView<HomeController> {
         );
       }
 
-      // final catalogs = hasData ? controller.catalogs.take(3).toList() : List.generate(3, (_) => Catalog.dummy());
       // final catalogs = hasData ? controller.catalogs.take(3).toList() : List.generate(3, (_) => Catalog.dummy());
       final catalogs = controller.catalogs.take(3).toList();
 
@@ -294,8 +431,7 @@ class HomeView extends GetView<HomeController> {
             ),
           ),
 
-          // if (!isLoading && !hasData)
-          if (!isLoading)
+          if (!isLoading && !hasData)
             Padding(
               padding: const EdgeInsets.only(top: AppDimensions.spacingXLarge),
               child: Text(
@@ -519,6 +655,33 @@ class HomeView extends GetView<HomeController> {
                             : Image.asset(_dummyImage, fit: BoxFit.cover),
                   ),
                 ),
+                Obx(
+                  () =>
+                      controller.isArchitect.value &&
+                              catalog.architectId ==
+                                  controller.currentArchitectId.value
+                          ? Positioned(
+                            top: size.width * 0.025,
+                            right: size.width * 0.025,
+                            child: GestureDetector(
+                              onTap: () => controller.openEditDesign(catalog),
+                              child: Container(
+                                width: size.width * 0.085,
+                                height: size.width * 0.085,
+                                decoration: const BoxDecoration(
+                                  color: AppColors.whiteColor,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  Icons.edit_rounded,
+                                  size: size.width * 0.045,
+                                  color: AppColors.primaryColor,
+                                ),
+                              ),
+                            ),
+                          )
+                          : const SizedBox.shrink(),
+                ),
                 // Positioned(
                 //   top: size.width * 0.02,
                 //   right: size.width * 0.02,
@@ -662,79 +825,84 @@ class HomeView extends GetView<HomeController> {
   }
 
   Widget _aiAssistantSection(Size size) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.symmetric(
-        horizontal: size.width * 0.04,
-        vertical: size.height * 0.018,
-      ),
-      decoration: BoxDecoration(
-        color: AppColors.primaryColor,
-        borderRadius: BorderRadius.circular(AppDimensions.radius2XLarge),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: size.width * 0.12,
-            height: size.width * 0.12,
-            decoration: BoxDecoration(
-              color: AppColors.whiteColor.withValues(alpha: 0.18),
-              shape: BoxShape.circle,
+    return Skeletonizer(
+      enabled: controller.isLoadingArchitect.value,
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.symmetric(
+          horizontal: size.width * 0.04,
+          vertical: size.height * 0.018,
+        ),
+        decoration: BoxDecoration(
+          color: AppColors.primaryColor,
+          borderRadius: BorderRadius.circular(AppDimensions.radius2XLarge),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: size.width * 0.12,
+              height: size.width * 0.12,
+              decoration: BoxDecoration(
+                color: AppColors.whiteColor.withValues(alpha: 0.18),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.smart_toy_outlined,
+                color: AppColors.whiteColor,
+                size: size.width * 0.058,
+              ),
             ),
-            child: Icon(
-              Icons.smart_toy_outlined,
-              color: AppColors.whiteColor,
-              size: size.width * 0.058,
+            SizedBox(width: size.width * 0.03),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'AI Architecture\nAssistant',
+                    style: AppTypography.bodyLarge.copyWith(
+                      color: AppColors.whiteColor,
+                      fontWeight: FontWeight.w700,
+                      height: 1.12,
+                    ),
+                  ),
+                  AppDimensions.spacingXSmall.sh,
+                  Text(
+                    'Describe your dream home and let AI\n'
+                    'generate a concept for you.',
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.whiteColor.withValues(alpha: 0.88),
+                      height: 1.2,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          SizedBox(width: size.width * 0.03),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'AI Architecture\nAssistant',
-                  style: AppTypography.bodyLarge.copyWith(
-                    color: AppColors.whiteColor,
-                    fontWeight: FontWeight.w700,
-                    height: 1.12,
+            ElevatedButton(
+              onPressed: controller.openAiChatFromHome,
+              style: ElevatedButton.styleFrom(
+                elevation: 0,
+                backgroundColor: AppColors.whiteColor,
+                foregroundColor: AppColors.primaryColor,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(
+                    AppDimensions.radiusLarge,
                   ),
                 ),
-                AppDimensions.spacingXSmall.sh,
-                Text(
-                  'Describe your dream home and let AI\n'
-                  'generate a concept for you.',
-                  style: AppTypography.bodySmall.copyWith(
-                    color: AppColors.whiteColor.withValues(alpha: 0.88),
-                    height: 1.2,
-                  ),
+                padding: EdgeInsets.symmetric(
+                  horizontal: size.width * 0.045,
+                  vertical: size.height * 0.012,
                 ),
-              ],
-            ),
-          ),
-          ElevatedButton(
-            onPressed: controller.openAiChatFromHome,
-            style: ElevatedButton.styleFrom(
-              elevation: 0,
-              backgroundColor: AppColors.whiteColor,
-              foregroundColor: AppColors.primaryColor,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppDimensions.radiusLarge),
               ),
-              padding: EdgeInsets.symmetric(
-                horizontal: size.width * 0.045,
-                vertical: size.height * 0.012,
+              child: Text(
+                'Chat Now',
+                style: AppTypography.bodySmall.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.primaryColor,
+                ),
               ),
             ),
-            child: Text(
-              'Chat Now',
-              style: AppTypography.bodySmall.copyWith(
-                fontWeight: FontWeight.w700,
-                color: AppColors.primaryColor,
-              ),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -812,6 +980,128 @@ class HomeView extends GetView<HomeController> {
     });
   }
 
+  Widget _architectCard({required Size size, required Architect architect}) {
+    final projectsCount = controller.projectCompletedCount(architect);
+    final hiddenCount = controller.hiddenProjectsCount(architect);
+    final isPlaceholder = architect.id.isEmpty;
+
+    return GestureDetector(
+      onTap:
+          isPlaceholder
+              ? null
+              : () => controller.openArchitectPortofolio(architect),
+      child: Container(
+        width: double.infinity,
+        padding: EdgeInsets.all(size.width * 0.03),
+        decoration: BoxDecoration(
+          color: AppColors.whiteColor,
+          borderRadius: BorderRadius.circular(AppDimensions.radiusLarge),
+          border: Border.all(
+            color: AppColors.formBorderColor.withValues(alpha: 0.25),
+          ),
+          boxShadow: const [
+            BoxShadow(
+              color: AppColors.shadowSoftColor,
+              blurRadius: 10,
+              offset: Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: size.width * 0.078,
+                  backgroundColor: AppColors.whiteColor,
+                  child: ClipOval(
+                    child:
+                        architect.profilePicture.isNotEmpty
+                            ? Image.network(
+                              architect.profilePicture,
+                              width: size.width * 0.156,
+                              height: size.width * 0.156,
+                              fit: BoxFit.cover,
+                              errorBuilder:
+                                  (_, __, ___) => Image.asset(
+                                    _dummyAvatar,
+                                    width: size.width * 0.156,
+                                    height: size.width * 0.156,
+                                    fit: BoxFit.cover,
+                                  ),
+                            )
+                            : Image.asset(
+                              _dummyAvatar,
+                              width: size.width * 0.156,
+                              height: size.width * 0.156,
+                              fit: BoxFit.cover,
+                            ),
+                  ),
+                ),
+                AppDimensions.spacingSemibold.sw,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        architect.name.isNotEmpty ? architect.name : '-',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTypography.bodyMedium.copyWith(
+                          color: AppColors.textHeadingColor,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      2.0.sh,
+                      Text(
+                        architect.specialization.isNotEmpty
+                            ? architect.specialization
+                            : (architect.headline.isNotEmpty
+                                ? architect.headline
+                                : 'Architect'),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTypography.bodySmall.copyWith(
+                          color: AppColors.textBodyColor,
+                        ),
+                      ),
+                      2.0.sh,
+                      Text(
+                        '$projectsCount Projects completed',
+                        style: AppTypography.bodySmall.copyWith(
+                          color: AppColors.textBodyColor.withValues(alpha: 0.7),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            14.0.sh,
+            Row(
+              children: [
+                Expanded(
+                  child: _projectThumb(size, _projectImage(architect, 0)),
+                ),
+                6.0.sw,
+                Expanded(
+                  child: _projectThumb(size, _projectImage(architect, 1)),
+                ),
+                6.0.sw,
+                Expanded(
+                  child: _moreThumb(
+                    size: size,
+                    label: hiddenCount > 0 ? '+$hiddenCount' : '+0',
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _architectItem({
     required Size size,
     required String name,
@@ -876,6 +1166,59 @@ class HomeView extends GetView<HomeController> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  String _projectImage(Architect architect, int index) {
+    if (architect.projects.length <= index) return _dummyImage;
+
+    final project = architect.projects[index];
+    if (project.images.isNotEmpty) return project.images.first;
+    if (project.imageUrls.isNotEmpty) return project.imageUrls.first;
+    return _dummyImage;
+  }
+
+  Widget _projectThumb(Size size, String imagePath) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(AppDimensions.radiusMedium),
+      child: AspectRatio(
+        aspectRatio: 1.25,
+        child:
+            imagePath.startsWith('http') || imagePath.startsWith('https')
+                ? Image.network(
+                  imagePath,
+                  fit: BoxFit.cover,
+                  errorBuilder:
+                      (_, __, ___) =>
+                          Image.asset(_dummyImage, fit: BoxFit.cover),
+                )
+                : Image.asset(imagePath, fit: BoxFit.cover),
+      ),
+    );
+  }
+
+  Widget _moreThumb({required Size size, required String label}) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(AppDimensions.radiusMedium),
+      child: AspectRatio(
+        aspectRatio: 1.25,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            Image.asset(_dummyImage, fit: BoxFit.cover),
+            Container(color: AppColors.accentColor.withValues(alpha: 0.30)),
+            Center(
+              child: Text(
+                label,
+                style: AppTypography.bodyMedium.copyWith(
+                  color: AppColors.textWhiteColor,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
