@@ -26,7 +26,10 @@ class ArchitectView extends GetView<ArchitectController> {
           onRefresh: controller.refreshArchitects,
           child: SingleChildScrollView(
             controller: controller.scrollController,
-            padding: EdgeInsets.symmetric(horizontal: size.width * 0.05, vertical: size.height * 0.01),
+            padding: EdgeInsets.symmetric(
+              horizontal: size.width * 0.05,
+              vertical: size.height * 0.01,
+            ),
             physics: const AlwaysScrollableScrollPhysics(),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -52,13 +55,19 @@ class ArchitectView extends GetView<ArchitectController> {
         children: [
           InkWell(
             onTap: controller.goBack,
-            child: const Padding(padding: EdgeInsets.all(6), child: Icon(Icons.arrow_back_ios_new_rounded, size: 15)),
+            child: const Padding(
+              padding: EdgeInsets.all(6),
+              child: Icon(Icons.arrow_back_ios_new_rounded, size: 15),
+            ),
           ),
           Expanded(
             child: Text(
               'Architects',
               textAlign: TextAlign.center,
-              style: AppTypography.bodyMedium.copyWith(color: AppColors.textHeadingColor, fontWeight: FontWeight.w700),
+              style: AppTypography.bodyMedium.copyWith(
+                color: AppColors.textHeadingColor,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
           const SizedBox(width: 28),
@@ -77,11 +86,17 @@ class ArchitectView extends GetView<ArchitectController> {
             decoration: BoxDecoration(
               color: AppColors.whiteColor,
               borderRadius: BorderRadius.circular(AppDimensions.radiusLarge),
-              border: Border.all(color: AppColors.primaryColor.withValues(alpha: 0.20)),
+              border: Border.all(
+                color: AppColors.primaryColor.withValues(alpha: 0.20),
+              ),
             ),
             child: Row(
               children: [
-                Icon(Icons.search_rounded, color: AppColors.primaryColor, size: size.width * 0.055),
+                Icon(
+                  Icons.search_rounded,
+                  color: AppColors.primaryColor,
+                  size: size.width * 0.055,
+                ),
                 SizedBox(width: size.width * 0.025),
                 Expanded(
                   child: TextField(
@@ -91,9 +106,13 @@ class ArchitectView extends GetView<ArchitectController> {
                       isCollapsed: true,
                       border: InputBorder.none,
                       hintText: 'Search Architects',
-                      hintStyle: AppTypography.bodySmall.copyWith(color: AppColors.textBodyColor.withValues(alpha: 0.55)),
+                      hintStyle: AppTypography.bodySmall.copyWith(
+                        color: AppColors.textBodyColor.withValues(alpha: 0.55),
+                      ),
                     ),
-                    style: AppTypography.bodySmall.copyWith(color: AppColors.textHeadingColor),
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.textHeadingColor,
+                    ),
                   ),
                 ),
               ],
@@ -115,8 +134,16 @@ class ArchitectView extends GetView<ArchitectController> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(controller.errorMessage.value, style: AppTypography.bodySmall.copyWith(color: AppColors.errorColor)),
-            TextButton(onPressed: () => controller.fetchArchitects(reset: true), child: const Text('Coba Lagi')),
+            Text(
+              controller.errorMessage.value,
+              style: AppTypography.bodySmall.copyWith(
+                color: AppColors.errorColor,
+              ),
+            ),
+            TextButton(
+              onPressed: () => controller.fetchArchitects(reset: true),
+              child: const Text('Coba Lagi'),
+            ),
           ],
         );
       }
@@ -125,7 +152,8 @@ class ArchitectView extends GetView<ArchitectController> {
         return _emptyState();
       }
 
-      final architects = hasData ? controller.architects : List.generate(3, (_) => Architect.dummy());
+      // final architects = hasData ? controller.architects : List.generate(3, (_) => Architect.dummy());
+      final architects = controller.architects;
 
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -149,7 +177,10 @@ class ArchitectView extends GetView<ArchitectController> {
                 child: SizedBox(
                   width: 22,
                   height: 22,
-                  child: CircularProgressIndicator(strokeWidth: 2.2, color: AppColors.primaryColor),
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.2,
+                    color: AppColors.primaryColor,
+                  ),
                 ),
               ),
             ),
@@ -171,8 +202,16 @@ class ArchitectView extends GetView<ArchitectController> {
         decoration: BoxDecoration(
           color: AppColors.whiteColor,
           borderRadius: BorderRadius.circular(AppDimensions.radiusLarge),
-          border: Border.all(color: AppColors.formBorderColor.withValues(alpha: 0.25)),
-          boxShadow: const [BoxShadow(color: AppColors.shadowSoftColor, blurRadius: 10, offset: Offset(0, 4))],
+          border: Border.all(
+            color: AppColors.formBorderColor.withValues(alpha: 0.25),
+          ),
+          boxShadow: const [
+            BoxShadow(
+              color: AppColors.shadowSoftColor,
+              blurRadius: 10,
+              offset: Offset(0, 4),
+            ),
+          ],
         ),
         child: Column(
           children: [
@@ -223,15 +262,21 @@ class ArchitectView extends GetView<ArchitectController> {
                       Text(
                         architect.specialization.isNotEmpty
                             ? architect.specialization
-                            : (architect.headline.isNotEmpty ? architect.headline : 'Architect'),
+                            : (architect.headline.isNotEmpty
+                                ? architect.headline
+                                : 'Architect'),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: AppTypography.bodySmall.copyWith(color: AppColors.textBodyColor),
+                        style: AppTypography.bodySmall.copyWith(
+                          color: AppColors.textBodyColor,
+                        ),
                       ),
                       2.0.sh,
                       Text(
                         '$projectsCount Projects completed',
-                        style: AppTypography.bodySmall.copyWith(color: AppColors.textBodyColor.withValues(alpha: 0.7)),
+                        style: AppTypography.bodySmall.copyWith(
+                          color: AppColors.textBodyColor.withValues(alpha: 0.7),
+                        ),
                       ),
                     ],
                   ),
@@ -241,11 +286,20 @@ class ArchitectView extends GetView<ArchitectController> {
             14.0.sh,
             Row(
               children: [
-                Expanded(child: _projectThumb(size, _projectImage(architect, 0))),
+                Expanded(
+                  child: _projectThumb(size, _projectImage(architect, 0)),
+                ),
                 6.0.sw,
-                Expanded(child: _projectThumb(size, _projectImage(architect, 1))),
+                Expanded(
+                  child: _projectThumb(size, _projectImage(architect, 1)),
+                ),
                 6.0.sw,
-                Expanded(child: _moreThumb(size: size, label: hiddenCount > 0 ? '+$hiddenCount' : '+0')),
+                Expanded(
+                  child: _moreThumb(
+                    size: size,
+                    label: hiddenCount > 0 ? '+$hiddenCount' : '+0',
+                  ),
+                ),
               ],
             ),
           ],
@@ -259,26 +313,42 @@ class ArchitectView extends GetView<ArchitectController> {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: AppDimensions.spacingXLarge, vertical: AppDimensions.spacing3XLarge),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppDimensions.spacingXLarge,
+        vertical: AppDimensions.spacing3XLarge,
+      ),
       decoration: BoxDecoration(
         color: AppColors.whiteColor,
         borderRadius: BorderRadius.circular(AppDimensions.radiusLarge),
-        border: Border.all(color: AppColors.formBorderColor.withValues(alpha: 0.25)),
+        border: Border.all(
+          color: AppColors.formBorderColor.withValues(alpha: 0.25),
+        ),
       ),
       child: Column(
         children: [
-          Icon(Icons.search_off_rounded, color: AppColors.textBodyColor.withValues(alpha: 0.45), size: 36),
+          Icon(
+            Icons.search_off_rounded,
+            color: AppColors.textBodyColor.withValues(alpha: 0.45),
+            size: 36,
+          ),
           10.0.sh,
           Text(
             hasSearch ? 'Architect tidak ditemukan' : 'Belum ada architect',
             textAlign: TextAlign.center,
-            style: AppTypography.bodyMedium.copyWith(color: AppColors.textHeadingColor, fontWeight: FontWeight.w700),
+            style: AppTypography.bodyMedium.copyWith(
+              color: AppColors.textHeadingColor,
+              fontWeight: FontWeight.w700,
+            ),
           ),
           4.0.sh,
           Text(
-            hasSearch ? 'Coba gunakan kata kunci lain.' : 'Data architect belum tersedia.',
+            hasSearch
+                ? 'Coba gunakan kata kunci lain.'
+                : 'Data architect belum tersedia.',
             textAlign: TextAlign.center,
-            style: AppTypography.bodySmall.copyWith(color: AppColors.textBodyColor.withValues(alpha: 0.75)),
+            style: AppTypography.bodySmall.copyWith(
+              color: AppColors.textBodyColor.withValues(alpha: 0.75),
+            ),
           ),
         ],
       ),
@@ -304,7 +374,9 @@ class ArchitectView extends GetView<ArchitectController> {
                 ? Image.network(
                   imagePath,
                   fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Image.asset(_dummyProject, fit: BoxFit.cover),
+                  errorBuilder:
+                      (_, __, ___) =>
+                          Image.asset(_dummyProject, fit: BoxFit.cover),
                 )
                 : Image.asset(imagePath, fit: BoxFit.cover),
       ),
@@ -324,7 +396,10 @@ class ArchitectView extends GetView<ArchitectController> {
             Center(
               child: Text(
                 label,
-                style: AppTypography.bodyMedium.copyWith(color: AppColors.textWhiteColor, fontWeight: FontWeight.w700),
+                style: AppTypography.bodyMedium.copyWith(
+                  color: AppColors.textWhiteColor,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
           ],

@@ -7,6 +7,8 @@ import 'package:halositek/app/data/network/architect_service.dart';
 import 'package:halositek/app/data/network/chat_service.dart';
 import 'package:halositek/app/data/network/token_service.dart';
 import 'package:halositek/app/modules/navigation/controllers/navigation_controller.dart';
+import 'dart:async';
+import 'package:flutter/material.dart';
 
 import 'package:halositek/app/routes/app_pages.dart';
 
@@ -44,12 +46,26 @@ class HomeController extends GetxController {
 
   final likingCatalogIds = <String>{}.obs;
 
+  final searchController = TextEditingController();
+
+  final searchedCatalogs = <Catalog>[].obs;
+  final searchedArchitects = <Architect>[].obs;
+
+  final isSearching = false.obs;
+  final searchError = ''.obs;
+  final searchQuery = ''.obs;
+  final hasSearched = false.obs;
+
+  Timer? _searchDebounce;
+
   bool isCatalogLiking(String catalogId) =>
       likingCatalogIds.contains(catalogId);
 
   int getImageIndex(String catalogId) {
     return imageIndexByCatalog[catalogId] ?? 0;
   }
+
+  bool get isSearchMode => searchQuery.value.trim().isNotEmpty;
 
   void setImageIndex(String catalogId, int index) {
     imageIndexByCatalog[catalogId] = index;
@@ -70,6 +86,11 @@ class HomeController extends GetxController {
     nav.changeIndex(1);
   }
 
+  void openArchitectFromHome() {
+    final nav = Get.find<NavigationController>();
+    nav.changeIndex(2);
+  }
+
   void openChatListFromHome() {
     final nav = Get.find<NavigationController>();
     nav.navigateTo(tabIndex: 0, route: '/chats');
@@ -79,11 +100,34 @@ class HomeController extends GetxController {
     Get.toNamed(Routes.AI_CHAT);
   }
 
+  Future<void> openEditDesign(Catalog catalog) async {
+    if (catalog.id.trim().isEmpty) return;
+    final nav = Get.find<NavigationController>().keyForTab(1)?.currentState;
+    if (nav == null) return;
+    final result = await nav.pushNamed('/design/edit', arguments: catalog);
+    if (result != null) {
+      await fetchCatalogs();
+    }
+  }
+
   final count = 0.obs;
   @override
   void onInit() {
     super.onInit();
+
+    searchController.addListener(_onSearchChanged);
+
     _initializeDashboard();
+  }
+
+  void _onSearchChanged() {
+    searchQuery.value = searchController.text;
+
+    _searchDebounce?.cancel();
+
+    _searchDebounce = Timer(const Duration(milliseconds: 500), () {
+      searchDashboard();
+    });
   }
 
   Future<void> _initializeDashboard() async {
@@ -99,6 +143,49 @@ class HomeController extends GetxController {
     }
   }
 
+  Future<void> searchDashboard() async {
+    final keyword = searchController.text.trim();
+
+    if (keyword.isEmpty) {
+      hasSearched.value = false;
+      searchedCatalogs.clear();
+      searchedArchitects.clear();
+      return;
+    }
+
+    try {
+      isSearching.value = true;
+      searchError.value = '';
+
+      searchedCatalogs.clear();
+      searchedArchitects.clear();
+
+      if (isArchitect.value) {
+        final architectId = currentArchitectId.value.trim();
+        if (architectId.isEmpty) {
+          searchError.value = 'Architect ID tidak ditemukan';
+          return;
+        }
+      }
+
+      final results = await Future.wait([
+        _architectService.getArchitects(page: 1, perPage: 2, search: keyword),
+        _catalogService.getCatalogList(page: 1, perPage: 2, search: keyword),
+      ]);
+
+      searchedArchitects.assignAll(results[0] as List<Architect>);
+
+      searchedCatalogs.assignAll((results[1] as CatalogListResponse).catalogs);
+
+      hasSearched.value = true;
+    } catch (e) {
+      searchError.value = e.toString();
+      hasSearched.value = true;
+    } finally {
+      isSearching.value = false;
+    }
+  }
+
   Future<void> _loadCurrentRole() async {
     final tokenService = Get.find<TokenService>();
     final role = (await tokenService.getRole() ?? '').trim().toLowerCase();
@@ -106,6 +193,22 @@ class HomeController extends GetxController {
 
     final userId = await tokenService.getUserId();
     currentArchitectId.value = (userId ?? '').trim();
+  }
+
+  int projectCompletedCount(Architect architect) {
+    return architect.totalProjects;
+  }
+
+  int hiddenProjectsCount(Architect architect) {
+    final total = projectCompletedCount(architect);
+    if (total <= 2) return 0;
+    return total - 2;
+  }
+
+  void openArchitectPortofolio(Architect architect) {
+    final nav = Get.find<NavigationController>();
+
+    nav.navigateTo(tabIndex: 2, route: '/portofolio', arguments: architect.id);
   }
 
   Future<void> fetchArchitectPerformance() async {
@@ -144,10 +247,16 @@ class HomeController extends GetxController {
         catalogError.value = 'Architect ID tidak ditemukan';
         return;
       }
-      final result = await _catalogService.getCatalogs(
-        perPage: 6,
-        architectId: resolvedArchitectId,
-      );
+
+      final result =
+          isArchitect.value
+              ? await _catalogService.getCatalogs(
+                perPage: 6,
+                architectId: resolvedArchitectId,
+                status: 'approved',
+              )
+              : await _catalogService.getCatalogs(perPage: 6);
+
       catalogs.assignAll(result);
     } catch (e) {
       catalogError.value = e.toString();
@@ -219,5 +328,12 @@ class HomeController extends GetxController {
     } finally {
       likingCatalogIds.remove(id);
     }
+  }
+
+  @override
+  void onClose() {
+    _searchDebounce?.cancel();
+    searchController.dispose();
+    super.onClose();
   }
 }
