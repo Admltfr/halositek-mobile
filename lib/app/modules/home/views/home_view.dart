@@ -27,13 +27,22 @@ class HomeView extends GetView<HomeController> {
         child: Obx(() {
           final isArchitect = controller.isArchitect.value;
           return SingleChildScrollView(
-            padding: EdgeInsets.symmetric(horizontal: size.width * 0.05, vertical: size.height * 0.01),
+            padding: EdgeInsets.symmetric(
+              horizontal: size.width * 0.05,
+              vertical: size.height * 0.01,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _headerSection(size),
                 AppDimensions.spacingXLarge.sh,
-                _searchSection(size, hintText: isArchitect ? 'Search Project' : 'Search Design or Architects'),
+                _searchSection(
+                  size,
+                  hintText:
+                      isArchitect
+                          ? 'Search Project'
+                          : 'Search Design or Architects',
+                ),
                 AppDimensions.spacing2XLarge.sh,
                 if (isArchitect) ...[
                   _performanceHeaderSection(),
@@ -82,7 +91,10 @@ class HomeView extends GetView<HomeController> {
                   ),
                   TextSpan(
                     text: 'Sitek',
-                    style: AppTypography.headingMedium.copyWith(color: AppColors.primaryColor, fontWeight: FontWeight.w700),
+                    style: AppTypography.headingMedium.copyWith(
+                      color: AppColors.primaryColor,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ],
               ),
@@ -105,7 +117,10 @@ class HomeView extends GetView<HomeController> {
               onPressed: controller.openAiChatFromHome,
               backgroundColor: AppColors.primaryColor,
               elevation: 4,
-              child: const Icon(Icons.smart_toy_rounded, color: AppColors.whiteColor),
+              child: const Icon(
+                Icons.smart_toy_rounded,
+                color: AppColors.whiteColor,
+              ),
             ),
             const SizedBox(height: 12),
           ],
@@ -118,7 +133,10 @@ class HomeView extends GetView<HomeController> {
                 onPressed: controller.openChatListFromHome,
                 backgroundColor: AppColors.primaryColor,
                 elevation: 4,
-                child: const Icon(Icons.chat_bubble_rounded, color: AppColors.whiteColor),
+                child: const Icon(
+                  Icons.chat_bubble_rounded,
+                  color: AppColors.whiteColor,
+                ),
               ),
 
               if (controller.totalUnread.value > 0)
@@ -127,12 +145,24 @@ class HomeView extends GetView<HomeController> {
                   top: -3,
                   child: Container(
                     padding: const EdgeInsets.all(5),
-                    constraints: const BoxConstraints(minWidth: 20, minHeight: 20),
-                    decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
+                    constraints: const BoxConstraints(
+                      minWidth: 20,
+                      minHeight: 20,
+                    ),
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
                     child: Center(
                       child: Text(
-                        controller.totalUnread.value > 99 ? '15+' : '${controller.totalUnread.value}',
-                        style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                        controller.totalUnread.value > 99
+                            ? '15+'
+                            : '${controller.totalUnread.value}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
@@ -151,11 +181,17 @@ class HomeView extends GetView<HomeController> {
       decoration: BoxDecoration(
         color: AppColors.whiteColor,
         borderRadius: BorderRadius.circular(AppDimensions.radiusXLarge),
-        border: Border.all(color: AppColors.formBorderColor.withValues(alpha: 0.35)),
+        border: Border.all(
+          color: AppColors.formBorderColor.withValues(alpha: 0.35),
+        ),
       ),
       child: Row(
         children: [
-          Icon(Icons.search_rounded, color: AppColors.primaryColor, size: size.width * 0.055),
+          Icon(
+            Icons.search_rounded,
+            color: AppColors.primaryColor,
+            size: size.width * 0.055,
+          ),
           SizedBox(width: size.width * 0.02),
           Expanded(
             child: TextField(
@@ -163,9 +199,13 @@ class HomeView extends GetView<HomeController> {
                 isCollapsed: true,
                 border: InputBorder.none,
                 hintText: hintText,
-                hintStyle: AppTypography.bodySmall.copyWith(color: AppColors.textBodyColor.withValues(alpha: 0.55)),
+                hintStyle: AppTypography.bodySmall.copyWith(
+                  color: AppColors.textBodyColor.withValues(alpha: 0.55),
+                ),
               ),
-              style: AppTypography.bodyMedium.copyWith(color: AppColors.textHeadingColor),
+              style: AppTypography.bodyMedium.copyWith(
+                color: AppColors.textHeadingColor,
+              ),
             ),
           ),
         ],
@@ -179,35 +219,55 @@ class HomeView extends GetView<HomeController> {
         Expanded(
           child: Text(
             'Design Gallery',
-            style: AppTypography.headingSmall.copyWith(color: AppColors.textHeadingColor, fontWeight: FontWeight.w700),
+            style: AppTypography.headingSmall.copyWith(
+              color: AppColors.textHeadingColor,
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ),
 
         CustomTextButton(
           text: 'See all',
           onPressed: () => controller.openDesignFromHome(),
-          style: AppTypography.bodyMedium.copyWith(color: AppColors.primaryColor, fontWeight: FontWeight.w700),
+          style: AppTypography.bodyMedium.copyWith(
+            color: AppColors.primaryColor,
+            fontWeight: FontWeight.w700,
+          ),
         ),
       ],
     );
   }
 
-  Widget _catalogSection(Size size, {String emptyMessage = 'Belum ada katalog'}) {
+  Widget _catalogSection(
+    Size size, {
+    String emptyMessage = 'Belum ada katalog',
+  }) {
     return Obx(() {
       final isLoading = controller.isLoadingCatalog.value;
       final hasError = controller.catalogError.value.isNotEmpty;
-      final hasData = controller.catalogs.isNotEmpty;
+      // final hasData = controller.catalogs.isNotEmpty;
 
-      if (hasError && !hasData) {
+      // if (hasError && !hasData) {
+      if (hasError) {
         return Column(
           children: [
-            Text(controller.catalogError.value, style: AppTypography.bodySmall.copyWith(color: AppColors.errorColor)),
-            TextButton(onPressed: controller.fetchCatalogs, child: const Text('Coba Lagi')),
+            Text(
+              controller.catalogError.value,
+              style: AppTypography.bodySmall.copyWith(
+                color: AppColors.errorColor,
+              ),
+            ),
+            TextButton(
+              onPressed: controller.fetchCatalogs,
+              child: const Text('Coba Lagi'),
+            ),
           ],
         );
       }
 
-      final catalogs = hasData ? controller.catalogs.take(3).toList() : List.generate(3, (_) => Catalog.dummy());
+      // final catalogs = hasData ? controller.catalogs.take(3).toList() : List.generate(3, (_) => Catalog.dummy());
+      // final catalogs = hasData ? controller.catalogs.take(3).toList() : List.generate(3, (_) => Catalog.dummy());
+      final catalogs = controller.catalogs.take(3).toList();
 
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -218,21 +278,32 @@ class HomeView extends GetView<HomeController> {
               children: List.generate(catalogs.length, (index) {
                 final isLast = index == catalogs.length - 1;
                 return Padding(
-                  padding: EdgeInsets.only(bottom: isLast ? 0 : AppDimensions.spacingXLarge),
+                  padding: EdgeInsets.only(
+                    bottom: isLast ? 0 : AppDimensions.spacingXLarge,
+                  ),
                   child: _catalogItem(
                     size: size,
                     catalog: catalogs[index],
-                    onTap: hasData ? () => controller.openDetailsFromHome(catalogs[index].id) : null,
+                    // onTap: hasData ? () => controller.openDetailsFromHome(catalogs[index].id) : null,
+                    onTap:
+                        () =>
+                            controller.openDetailsFromHome(catalogs[index].id),
                   ),
                 );
               }),
             ),
           ),
 
-          if (!isLoading && !hasData)
+          // if (!isLoading && !hasData)
+          if (!isLoading)
             Padding(
               padding: const EdgeInsets.only(top: AppDimensions.spacingXLarge),
-              child: Text(emptyMessage, style: AppTypography.bodySmall.copyWith(color: AppColors.textBodyColor)),
+              child: Text(
+                emptyMessage,
+                style: AppTypography.bodySmall.copyWith(
+                  color: AppColors.textBodyColor,
+                ),
+              ),
             ),
         ],
       );
@@ -242,7 +313,10 @@ class HomeView extends GetView<HomeController> {
   Widget _performanceHeaderSection() {
     return Text(
       'Performance',
-      style: AppTypography.headingSmall.copyWith(color: AppColors.textHeadingColor, fontWeight: FontWeight.w700),
+      style: AppTypography.headingSmall.copyWith(
+        color: AppColors.textHeadingColor,
+        fontWeight: FontWeight.w700,
+      ),
     );
   }
 
@@ -255,8 +329,16 @@ class HomeView extends GetView<HomeController> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(controller.performanceError.value, style: AppTypography.bodySmall.copyWith(color: AppColors.errorColor)),
-            TextButton(onPressed: controller.fetchArchitectPerformance, child: const Text('Coba Lagi')),
+            Text(
+              controller.performanceError.value,
+              style: AppTypography.bodySmall.copyWith(
+                color: AppColors.errorColor,
+              ),
+            ),
+            TextButton(
+              onPressed: controller.fetchArchitectPerformance,
+              child: const Text('Coba Lagi'),
+            ),
           ],
         );
       }
@@ -288,13 +370,27 @@ class HomeView extends GetView<HomeController> {
     });
   }
 
-  Widget _performanceCard({required Size size, required IconData icon, required String label, required String value}) {
+  Widget _performanceCard({
+    required Size size,
+    required IconData icon,
+    required String label,
+    required String value,
+  }) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: size.width * 0.04, vertical: size.height * 0.018),
+      padding: EdgeInsets.symmetric(
+        horizontal: size.width * 0.04,
+        vertical: size.height * 0.018,
+      ),
       decoration: BoxDecoration(
         color: AppColors.whiteColor,
         borderRadius: BorderRadius.circular(AppDimensions.radiusXLarge),
-        boxShadow: const [BoxShadow(color: AppColors.shadowSoftColor, blurRadius: 10, offset: Offset(0, 5))],
+        boxShadow: const [
+          BoxShadow(
+            color: AppColors.shadowSoftColor,
+            blurRadius: 10,
+            offset: Offset(0, 5),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -302,15 +398,31 @@ class HomeView extends GetView<HomeController> {
           Container(
             width: size.width * 0.085,
             height: size.width * 0.085,
-            decoration: BoxDecoration(color: AppColors.secondaryColor.withValues(alpha: 0.18), shape: BoxShape.circle),
-            child: Icon(icon, color: AppColors.primaryColor, size: size.width * 0.045),
+            decoration: BoxDecoration(
+              color: AppColors.secondaryColor.withValues(alpha: 0.18),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              icon,
+              color: AppColors.primaryColor,
+              size: size.width * 0.045,
+            ),
           ),
           AppDimensions.spacingSmall.sh,
-          Text(label, style: AppTypography.bodySmall.copyWith(color: AppColors.textBodyColor, fontWeight: FontWeight.w600)),
+          Text(
+            label,
+            style: AppTypography.bodySmall.copyWith(
+              color: AppColors.textBodyColor,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
           AppDimensions.spacingXSmall.sh,
           Text(
             value,
-            style: AppTypography.headingSmall.copyWith(color: AppColors.textHeadingColor, fontWeight: FontWeight.w700),
+            style: AppTypography.headingSmall.copyWith(
+              color: AppColors.textHeadingColor,
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ],
       ),
@@ -323,13 +435,19 @@ class HomeView extends GetView<HomeController> {
         Expanded(
           child: Text(
             'Active Projects',
-            style: AppTypography.headingSmall.copyWith(color: AppColors.textHeadingColor, fontWeight: FontWeight.w700),
+            style: AppTypography.headingSmall.copyWith(
+              color: AppColors.textHeadingColor,
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ),
         CustomTextButton(
           text: 'See all',
           onPressed: () => controller.openDesignFromHome(),
-          style: AppTypography.bodyMedium.copyWith(color: AppColors.primaryColor, fontWeight: FontWeight.w700),
+          style: AppTypography.bodyMedium.copyWith(
+            color: AppColors.primaryColor,
+            fontWeight: FontWeight.w700,
+          ),
         ),
       ],
     );
@@ -339,12 +457,18 @@ class HomeView extends GetView<HomeController> {
     return _catalogSection(size, emptyMessage: 'Belum ada project');
   }
 
-  Widget _catalogItem({required Size size, required Catalog catalog, VoidCallback? onTap}) {
+  Widget _catalogItem({
+    required Size size,
+    required Catalog catalog,
+    VoidCallback? onTap,
+  }) {
     final String label = catalog.style.toUpperCase();
-    final String specs = '${catalog.area.toStringAsFixed(catalog.area % 1 == 0 ? 0 : 1)}m² • ${catalog.estimatedCost}';
+    final String specs =
+        '${catalog.area.toStringAsFixed(catalog.area % 1 == 0 ? 0 : 1)}m² • ${catalog.estimatedCost}';
     final String title = catalog.name;
     final String likesCount = catalog.likesCount.toString();
-    final images = catalog.imageUrls.isNotEmpty ? catalog.imageUrls : catalog.images;
+    final images =
+        catalog.imageUrls.isNotEmpty ? catalog.imageUrls : catalog.images;
     final activeIndex = controller.getImageIndex(catalog.id);
 
     return GestureDetector(
@@ -354,7 +478,13 @@ class HomeView extends GetView<HomeController> {
         decoration: BoxDecoration(
           color: AppColors.whiteColor,
           borderRadius: BorderRadius.circular(AppDimensions.radius2XLarge),
-          boxShadow: const [BoxShadow(color: AppColors.shadowSoftColor, blurRadius: 10, offset: Offset(0, 5))],
+          boxShadow: const [
+            BoxShadow(
+              color: AppColors.shadowSoftColor,
+              blurRadius: 10,
+              offset: Offset(0, 5),
+            ),
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -362,7 +492,9 @@ class HomeView extends GetView<HomeController> {
             Stack(
               children: [
                 ClipRRect(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(AppDimensions.radius3XLarge)),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(AppDimensions.radius3XLarge),
+                  ),
                   child: AspectRatio(
                     aspectRatio: 1.50,
                     child:
@@ -376,7 +508,11 @@ class HomeView extends GetView<HomeController> {
                                 return Image.network(
                                   images[index],
                                   fit: BoxFit.cover,
-                                  errorBuilder: (_, __, ___) => Image.asset(_dummyImage, fit: BoxFit.cover),
+                                  errorBuilder:
+                                      (_, __, ___) => Image.asset(
+                                        _dummyImage,
+                                        fit: BoxFit.cover,
+                                      ),
                                 );
                               },
                             )
@@ -406,34 +542,60 @@ class HomeView extends GetView<HomeController> {
                   right: 0,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(images.isEmpty ? 1 : images.length, (index) {
-                      final isActive = index == activeIndex;
-                      return Container(
-                        margin: const EdgeInsets.symmetric(horizontal: AppDimensions.spacingTiny),
-                        width: isActive ? AppDimensions.spacingMedium : AppDimensions.spacingSmall,
-                        height: isActive ? AppDimensions.spacingMedium : AppDimensions.spacingSmall,
-                        decoration: BoxDecoration(
-                          color: isActive ? AppColors.primaryColor : AppColors.whiteColor,
-                          shape: BoxShape.circle,
-                        ),
-                      );
-                    }),
+                    children: List.generate(
+                      images.isEmpty ? 1 : images.length,
+                      (index) {
+                        final isActive = index == activeIndex;
+                        return Container(
+                          margin: const EdgeInsets.symmetric(
+                            horizontal: AppDimensions.spacingTiny,
+                          ),
+                          width:
+                              isActive
+                                  ? AppDimensions.spacingMedium
+                                  : AppDimensions.spacingSmall,
+                          height:
+                              isActive
+                                  ? AppDimensions.spacingMedium
+                                  : AppDimensions.spacingSmall,
+                          decoration: BoxDecoration(
+                            color:
+                                isActive
+                                    ? AppColors.primaryColor
+                                    : AppColors.whiteColor,
+                            shape: BoxShape.circle,
+                          ),
+                        );
+                      },
+                    ),
                   ),
                 ),
               ],
             ),
             Padding(
-              padding: EdgeInsets.fromLTRB(size.width * 0.03, size.height * 0.010, size.width * 0.03, size.height * 0.012),
+              padding: EdgeInsets.fromLTRB(
+                size.width * 0.03,
+                size.height * 0.010,
+                size.width * 0.03,
+                size.height * 0.012,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
                       Container(
-                        padding: EdgeInsets.symmetric(horizontal: size.width * 0.018, vertical: size.height * 0.0035),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: size.width * 0.018,
+                          vertical: size.height * 0.0035,
+                        ),
                         decoration: BoxDecoration(
-                          color: AppColors.secondaryColor.withValues(alpha: 0.18),
-                          borderRadius: BorderRadius.circular(AppDimensions.radiusSmall),
+                          color: AppColors.secondaryColor.withValues(
+                            alpha: 0.18,
+                          ),
+                          borderRadius: BorderRadius.circular(
+                            AppDimensions.radiusSmall,
+                          ),
                         ),
                         child: Text(
                           label,
@@ -456,8 +618,13 @@ class HomeView extends GetView<HomeController> {
                       GestureDetector(
                         onTap: () => controller.toggleCatalogLike(catalog.id),
                         child: Icon(
-                          catalog.liked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-                          color: catalog.liked ? AppColors.errorColor : AppColors.formBorderColor,
+                          catalog.liked
+                              ? Icons.favorite_rounded
+                              : Icons.favorite_border_rounded,
+                          color:
+                              catalog.liked
+                                  ? AppColors.errorColor
+                                  : AppColors.formBorderColor,
                           size: 19,
                         ),
                       ),
@@ -477,7 +644,11 @@ class HomeView extends GetView<HomeController> {
                       ),
                       Text(
                         likesCount,
-                        style: AppTypography.bodySmall.copyWith(color: AppColors.textBodyColor.withValues(alpha: 0.75)),
+                        style: AppTypography.bodySmall.copyWith(
+                          color: AppColors.textBodyColor.withValues(
+                            alpha: 0.75,
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -493,7 +664,10 @@ class HomeView extends GetView<HomeController> {
   Widget _aiAssistantSection(Size size) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.symmetric(horizontal: size.width * 0.04, vertical: size.height * 0.018),
+      padding: EdgeInsets.symmetric(
+        horizontal: size.width * 0.04,
+        vertical: size.height * 0.018,
+      ),
       decoration: BoxDecoration(
         color: AppColors.primaryColor,
         borderRadius: BorderRadius.circular(AppDimensions.radius2XLarge),
@@ -503,8 +677,15 @@ class HomeView extends GetView<HomeController> {
           Container(
             width: size.width * 0.12,
             height: size.width * 0.12,
-            decoration: BoxDecoration(color: AppColors.whiteColor.withValues(alpha: 0.18), shape: BoxShape.circle),
-            child: Icon(Icons.smart_toy_outlined, color: AppColors.whiteColor, size: size.width * 0.058),
+            decoration: BoxDecoration(
+              color: AppColors.whiteColor.withValues(alpha: 0.18),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.smart_toy_outlined,
+              color: AppColors.whiteColor,
+              size: size.width * 0.058,
+            ),
           ),
           SizedBox(width: size.width * 0.03),
           Expanded(
@@ -523,7 +704,10 @@ class HomeView extends GetView<HomeController> {
                 Text(
                   'Describe your dream home and let AI\n'
                   'generate a concept for you.',
-                  style: AppTypography.bodySmall.copyWith(color: AppColors.whiteColor.withValues(alpha: 0.88), height: 1.2),
+                  style: AppTypography.bodySmall.copyWith(
+                    color: AppColors.whiteColor.withValues(alpha: 0.88),
+                    height: 1.2,
+                  ),
                 ),
               ],
             ),
@@ -534,12 +718,20 @@ class HomeView extends GetView<HomeController> {
               elevation: 0,
               backgroundColor: AppColors.whiteColor,
               foregroundColor: AppColors.primaryColor,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimensions.radiusLarge)),
-              padding: EdgeInsets.symmetric(horizontal: size.width * 0.045, vertical: size.height * 0.012),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppDimensions.radiusLarge),
+              ),
+              padding: EdgeInsets.symmetric(
+                horizontal: size.width * 0.045,
+                vertical: size.height * 0.012,
+              ),
             ),
             child: Text(
               'Chat Now',
-              style: AppTypography.bodySmall.copyWith(fontWeight: FontWeight.w700, color: AppColors.primaryColor),
+              style: AppTypography.bodySmall.copyWith(
+                fontWeight: FontWeight.w700,
+                color: AppColors.primaryColor,
+              ),
             ),
           ),
         ],
@@ -550,7 +742,10 @@ class HomeView extends GetView<HomeController> {
   Widget _architectHeaderSection() {
     return Text(
       'Top Architects',
-      style: AppTypography.headingSmall.copyWith(color: AppColors.textHeadingColor, fontWeight: FontWeight.w700),
+      style: AppTypography.headingSmall.copyWith(
+        color: AppColors.textHeadingColor,
+        fontWeight: FontWeight.w700,
+      ),
     );
   }
 
@@ -564,17 +759,29 @@ class HomeView extends GetView<HomeController> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(controller.architectError.value, style: AppTypography.bodySmall.copyWith(color: AppColors.errorColor)),
-            TextButton(onPressed: controller.fetchArchitects, child: const Text('Coba Lagi')),
+            Text(
+              controller.architectError.value,
+              style: AppTypography.bodySmall.copyWith(
+                color: AppColors.errorColor,
+              ),
+            ),
+            TextButton(
+              onPressed: controller.fetchArchitects,
+              child: const Text('Coba Lagi'),
+            ),
           ],
         );
       }
 
-      final sourceArchitects = hasData ? controller.architects.take(3).toList() : <Architect>[];
+      final sourceArchitects =
+          hasData ? controller.architects.take(3).toList() : <Architect>[];
 
       final architects = List<Architect>.generate(
         3,
-        (index) => index < sourceArchitects.length ? sourceArchitects[index] : Architect.dummy(),
+        (index) =>
+            index < sourceArchitects.length
+                ? sourceArchitects[index]
+                : Architect.dummy(),
       );
 
       return Skeletonizer(
@@ -593,7 +800,12 @@ class HomeView extends GetView<HomeController> {
                 },
               );
             }),
-            _architectItem(size: size, name: 'More', isMore: true, onTap: () => controller.openPortofolioFromHome()),
+            _architectItem(
+              size: size,
+              name: 'More',
+              isMore: true,
+              onTap: () => controller.openPortofolioFromHome(),
+            ),
           ],
         ),
       );
@@ -618,11 +830,18 @@ class HomeView extends GetView<HomeController> {
             onTap: onTap,
             child: CircleAvatar(
               radius: size.width * 0.058,
-              backgroundColor: isMore ? AppColors.secondaryColor.withValues(alpha: 0.22) : AppColors.whiteColor,
+              backgroundColor:
+                  isMore
+                      ? AppColors.secondaryColor.withValues(alpha: 0.22)
+                      : AppColors.whiteColor,
               child: ClipOval(
                 child:
                     isMore
-                        ? Icon(Icons.add, color: AppColors.primaryColor, size: size.width * 0.055)
+                        ? Icon(
+                          Icons.add,
+                          color: AppColors.primaryColor,
+                          size: size.width * 0.055,
+                        )
                         : (avatarUrl != null && avatarUrl.isNotEmpty)
                         ? Image.network(
                           avatarUrl,
@@ -630,10 +849,19 @@ class HomeView extends GetView<HomeController> {
                           height: imageSize,
                           fit: BoxFit.cover,
                           errorBuilder:
-                              (_, __, ___) =>
-                                  Image.asset(_dummyAvatar, width: imageSize, height: imageSize, fit: BoxFit.cover),
+                              (_, __, ___) => Image.asset(
+                                _dummyAvatar,
+                                width: imageSize,
+                                height: imageSize,
+                                fit: BoxFit.cover,
+                              ),
                         )
-                        : Image.asset(_dummyAvatar, width: imageSize, height: imageSize, fit: BoxFit.cover),
+                        : Image.asset(
+                          _dummyAvatar,
+                          width: imageSize,
+                          height: imageSize,
+                          fit: BoxFit.cover,
+                        ),
               ),
             ),
           ),
@@ -642,7 +870,10 @@ class HomeView extends GetView<HomeController> {
             name,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: AppTypography.bodySmall.copyWith(color: isMore ? AppColors.textBodyColor : AppColors.textHeadingColor),
+            style: AppTypography.bodySmall.copyWith(
+              color:
+                  isMore ? AppColors.textBodyColor : AppColors.textHeadingColor,
+            ),
           ),
         ],
       ),
