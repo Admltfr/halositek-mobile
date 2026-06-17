@@ -30,7 +30,7 @@ class RegisterController extends GetxController {
         role: role.value,
       );
 
-      Get.offNamed('/home');
+      Get.offAllNamed('/navigation', arguments: 0);
     } catch (e) {
       Get.snackbar('Registration Failed', e.toString());
     }

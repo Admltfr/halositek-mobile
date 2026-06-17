@@ -17,7 +17,7 @@ class AuthService {
     required String role,
   }) async {
     final response = await _apiClient.public.post(
-      '/register',
+      '/auth/register',
       data: {
         'name': name,
         'email': email,
@@ -32,15 +32,16 @@ class AuthService {
       ),
     );
 
-    return _apiClient.customResponse(
-      response,
-      () async {
-        _tokenService.setAccessToken(response.data['data']['access_token']);
-        _tokenService.setRefreshToken(response.data['data']['refresh_token']);
-      },
-      'Register',
-      isCreated: true,
-    );
+    return _apiClient.customResponse(response, () async {
+      final data = response.data['data'];
+      _tokenService.setAccessToken(data['access_token']);
+      _tokenService.setRefreshToken(data['refresh_token']);
+      _tokenService.setRole(data['role']);
+      final userId = (data['id'] ?? '').toString();
+      if (userId.trim().isNotEmpty) {
+        await _tokenService.setUserId(userId);
+      }
+    }, 'Register', isCreated: true);
   }
 
   Future<void> login({required String email, required String password}) async {

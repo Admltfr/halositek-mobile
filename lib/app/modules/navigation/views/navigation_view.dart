@@ -60,35 +60,50 @@ class NavigationView extends GetView<NavigationController> {
         },
         child: Scaffold(
           bottomNavigationBar: BottomNavigationBar(
+            backgroundColor: AppColors.backgroundColor,
             type: BottomNavigationBarType.fixed,
             currentIndex: controller.currentIndex.value,
             onTap: controller.changeIndex,
+            unselectedItemColor: AppColors.accentColor,
             selectedItemColor: AppColors.primaryColor,
+            unselectedIconTheme: const IconThemeData(
+              color: AppColors.accentColor,
+            ),
+            selectedIconTheme: const IconThemeData(
+              color: AppColors.primaryColor,
+            ),
             items: [
               const BottomNavigationBarItem(
-                icon: Icon(Icons.home_outlined),
-                activeIcon: Icon(Icons.home),
+                icon: ImageIcon(AssetImage('assets/icons/home.png'), size: 24),
                 label: 'Dashboard',
               ),
               const BottomNavigationBarItem(
-                icon: Icon(Icons.favorite_border),
-                activeIcon: Icon(Icons.favorite),
+                icon: ImageIcon(
+                  AssetImage('assets/icons/design.png'),
+                  size: 24,
+                ),
                 label: 'Design',
               ),
               controller.isArchitect
                   ? const BottomNavigationBarItem(
-                    icon: Icon(Icons.workspace_premium_outlined),
-                    activeIcon: Icon(Icons.workspace_premium),
+                    icon: ImageIcon(
+                      AssetImage('assets/icons/award.png'),
+                      size: 24,
+                    ),
                     label: 'Awards',
                   )
                   : const BottomNavigationBarItem(
-                    icon: Icon(Icons.architecture_outlined),
-                    activeIcon: Icon(Icons.architecture),
+                    icon: ImageIcon(
+                      AssetImage('assets/icons/architect.png'),
+                      size: 24,
+                    ),
                     label: 'Architect',
                   ),
               const BottomNavigationBarItem(
-                icon: Icon(Icons.person_outline),
-                activeIcon: Icon(Icons.person),
+                icon: ImageIcon(
+                  AssetImage('assets/icons/profile.png'),
+                  size: 24,
+                ),
                 label: 'Profile',
               ),
             ],
