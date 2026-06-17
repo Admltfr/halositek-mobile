@@ -35,7 +35,7 @@ class HomeController extends GetxController {
   final isLoadingChat = false.obs;
   final chatError = ''.obs;
   final conversations = <ChatConversation>[].obs;
-  final totalUnread = 0.obs;
+  // final totalUnread = 0.obs;
 
   final isArchitect = false.obs;
   final currentArchitectId = ''.obs;
@@ -132,7 +132,7 @@ class HomeController extends GetxController {
 
   Future<void> _initializeDashboard() async {
     await _loadCurrentRole();
-    fetchUnreadBadge();
+    // fetchUnreadBadge();
 
     if (isArchitect.value) {
       fetchArchitectPerformance();
@@ -265,26 +265,26 @@ class HomeController extends GetxController {
     }
   }
 
-  Future<void> fetchUnreadBadge() async {
-    try {
-      int total = 0;
-      isLoadingChat.value = true;
-      chatError.value = '';
+  // Future<void> fetchUnreadBadge() async {
+  //   try {
+  //     int total = 0;
+  //     isLoadingChat.value = true;
+  //     chatError.value = '';
 
-      final result = await _chatService.getConversations();
-      conversations.assignAll(result);
+  //     final result = await _chatService.getConversations();
+  //     conversations.assignAll(result);
 
-      for (var c in conversations) {
-        total += c.unreadCount;
-      }
+  //     for (var c in conversations) {
+  //       total += c.unreadCount;
+  //     }
 
-      totalUnread.value = total;
-    } catch (e) {
-      chatError.value = e.toString();
-    } finally {
-      isLoadingChat.value = false;
-    }
-  }
+  //     totalUnread.value = total;
+  //   } catch (e) {
+  //     chatError.value = e.toString();
+  //   } finally {
+  //     isLoadingChat.value = false;
+  //   }
+  // }
 
   Future<void> fetchArchitects() async {
     try {
