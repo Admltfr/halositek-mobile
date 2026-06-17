@@ -154,34 +154,34 @@ class HomeView extends GetView<HomeController> {
                 ),
               ),
 
-              if (controller.totalUnread.value > 0)
-                Positioned(
-                  right: -3,
-                  top: -3,
-                  child: Container(
-                    padding: const EdgeInsets.all(5),
-                    constraints: const BoxConstraints(
-                      minWidth: 20,
-                      minHeight: 20,
-                    ),
-                    decoration: const BoxDecoration(
-                      color: Colors.red,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Center(
-                      child: Text(
-                        controller.totalUnread.value > 99
-                            ? '15+'
-                            : '${controller.totalUnread.value}',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
+              // if (controller.totalUnread.value > 0)
+              //   Positioned(
+              //     right: -3,
+              //     top: -3,
+              //     child: Container(
+              //       padding: const EdgeInsets.all(5),
+              //       constraints: const BoxConstraints(
+              //         minWidth: 20,
+              //         minHeight: 20,
+              //       ),
+              //       decoration: const BoxDecoration(
+              //         color: Colors.red,
+              //         shape: BoxShape.circle,
+              //       ),
+              //       child: Center(
+              //         child: Text(
+              //           controller.totalUnread.value > 99
+              //               ? '15+'
+              //               : '${controller.totalUnread.value}',
+              //           style: const TextStyle(
+              //             color: Colors.white,
+              //             fontSize: 10,
+              //             fontWeight: FontWeight.bold,
+              //           ),
+              //         ),
+              //       ),
+              //     ),
+              //   ),
             ],
           ),
         ],
