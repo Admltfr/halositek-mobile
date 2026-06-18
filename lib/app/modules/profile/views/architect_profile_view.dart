@@ -83,7 +83,10 @@ class ArchitectProfileView extends StatelessWidget {
                       24.0.sh,
                       _Stats(architect: profile),
                       24.0.sh,
-                      _FeeButton(architect: profile),
+                      _FeeButton(
+                        architect: profile,
+                        onEdit: controller.openEditProfile,
+                      ),
                       26.0.sh,
                       _Tabs(controller: controller),
                       18.0.sh,
@@ -92,6 +95,30 @@ class ArchitectProfileView extends StatelessWidget {
                         isProfileLoading: isLoading,
                       ),
                       24.0.sh,
+                      SizedBox(
+                        width: double.infinity,
+                        height: 50,
+                        child: ElevatedButton.icon(
+                          onPressed: controller.logout,
+                          icon: const Icon(Icons.logout_rounded, size: 18),
+                          label: Text(
+                            'LOGOUT',
+                            style: AppTypography.bodyMedium.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primaryColor,
+                            foregroundColor: AppColors.whiteColor,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(
+                                AppDimensions.radiusMedium,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      16.0.sh,
                     ],
                   ),
                 ),
@@ -371,39 +398,46 @@ class _StatCard extends StatelessWidget {
 
 class _FeeButton extends StatelessWidget {
   final Architect architect;
+  final VoidCallback onEdit;
 
-  const _FeeButton({required this.architect});
+  const _FeeButton({required this.architect, required this.onEdit});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 50,
-      padding: const EdgeInsets.symmetric(horizontal: 22),
-      decoration: BoxDecoration(
-        color: AppColors.primaryColor,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusPill),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              '${formatCurrency(architect.consultationFee)} / hour',
+    return InkWell(
+      onTap: onEdit,
+      child: Container(
+        height: 50,
+        padding: const EdgeInsets.symmetric(horizontal: 22),
+        decoration: BoxDecoration(
+          color: AppColors.primaryColor,
+          borderRadius: BorderRadius.circular(AppDimensions.radiusPill),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                '${formatCurrency(architect.consultationFee)} / hour',
+                style: AppTypography.bodySmall.copyWith(
+                  color: AppColors.whiteColor,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+            const Icon(
+              Icons.arrow_forward_rounded,
+              color: AppColors.whiteColor,
+            ),
+            22.0.sw,
+            Text(
+              'Your Fee',
               style: AppTypography.bodySmall.copyWith(
                 color: AppColors.whiteColor,
                 fontWeight: FontWeight.w800,
               ),
             ),
-          ),
-          const Icon(Icons.arrow_forward_rounded, color: AppColors.whiteColor),
-          22.0.sw,
-          Text(
-            'Your Fee',
-            style: AppTypography.bodySmall.copyWith(
-              color: AppColors.whiteColor,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -1,3 +1,4 @@
+import 'package:halositek/app/core/constants/app_extensions.dart';
 import 'package:halositek/app/data/models/architect.dart';
 
 class Catalog {
@@ -56,11 +57,18 @@ class Catalog {
       name: (json['name'] ?? '').toString(),
       style: (json['style'] ?? '').toString(),
       description: (json['description'] ?? '').toString(),
-      images: _toStringList(json['images']),
-      imageUrls: _toStringList(json['image_urls']),
+      images: _toStringList(json['images']).map((e) => e.toImageUrl()).toList(),
+      imageUrls:
+          _toStringList(json['image_urls']).map((e) => e.toImageUrl()).toList(),
       estimatedCost: (json['estimated_cost'] ?? '').toString(),
-      layoutImages: _toStringList(json['layout_images']),
-      layoutImageUrls: _toStringList(json['layout_image_urls']),
+      layoutImages:
+          _toStringList(
+            json['layout_images'],
+          ).map((e) => e.toImageUrl()).toList(),
+      layoutImageUrls:
+          _toStringList(
+            json['layout_image_urls'],
+          ).map((e) => e.toImageUrl()).toList(),
       highlightFeatures: (json['highlight_features'] ?? '').toString(),
       areaRaw: (json['area'] ?? '').toString(),
       likesCount: _toInt(json['likes_count']),

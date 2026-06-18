@@ -221,18 +221,39 @@ class AwardView extends GetView<AwardController> {
             ),
           ),
         ),
-        Obx(
-          () => DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              value: controller.selectedStatus.value,
-              items: const [
-                DropdownMenuItem(value: 'approved', child: Text('Active')),
-                DropdownMenuItem(
-                  value: 'submission',
-                  child: Text('Submission'),
+
+        Container(
+          height: 32,
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          decoration: BoxDecoration(
+            color: AppColors.secondaryColor.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: AppColors.primaryColor.withValues(alpha: 0.22),
+            ),
+          ),
+          child: Obx(
+            () => DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                value: controller.selectedStatus.value,
+                icon: const Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  size: 18,
+                  color: AppColors.primaryColor,
                 ),
-              ],
-              onChanged: controller.changeStatus,
+                style: AppTypography.captionLarge.copyWith(
+                  color: AppColors.primaryColor,
+                  fontWeight: FontWeight.w800,
+                ),
+                items: const [
+                  DropdownMenuItem(value: 'approved', child: Text('ACTIVE')),
+                  DropdownMenuItem(
+                    value: 'submission',
+                    child: Text('SUBMISSION'),
+                  ),
+                ],
+                onChanged: controller.changeStatus,
+              ),
             ),
           ),
         ),
