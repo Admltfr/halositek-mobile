@@ -132,7 +132,11 @@ class HomeView extends GetView<HomeController> {
               onPressed: controller.openAiChatFromHome,
               backgroundColor: AppColors.primaryColor,
               elevation: 4,
-              child: ImageIcon(AssetImage('assets/icons/ai-bot.png'), size: 24, color: AppColors.whiteColor),
+              child: ImageIcon(
+                AssetImage('assets/icons/ai-bot.png'),
+                size: 24,
+                color: AppColors.whiteColor,
+              ),
             ),
             const SizedBox(height: 12),
           ],
