@@ -132,7 +132,11 @@ class HomeView extends GetView<HomeController> {
               onPressed: controller.openAiChatFromHome,
               backgroundColor: AppColors.primaryColor,
               elevation: 4,
-              child: ImageIcon(AssetImage('assets/icons/ai-bot.png'), size: 24, color: AppColors.whiteColor),
+              child: ImageIcon(
+                AssetImage('assets/icons/ai-bot.png'),
+                size: 24,
+                color: AppColors.whiteColor,
+              ),
             ),
             const SizedBox(height: 12),
           ],
@@ -704,7 +708,8 @@ class HomeView extends GetView<HomeController> {
                           ? Positioned(
                             top: size.width * 0.025,
                             right: size.width * 0.025,
-                            child: GestureDetector(
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(100),
                               onTap: () => controller.openEditDesign(catalog),
                               child: Container(
                                 width: size.width * 0.085,
