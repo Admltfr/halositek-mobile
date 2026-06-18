@@ -61,6 +61,23 @@ class ArchitectService {
     }, 'Fetch Architect Detail');
   }
 
+  Future<ArchitectPerformance> getArchitectPerformance(String id) async {
+    final response = await _apiClient.public.get(
+      '/architects/$id/performance',
+      options: Options(
+        validateStatus: (status) => status != null && status < 500,
+      ),
+    );
+
+    return _apiClient.customResponse(response, () async {
+      final raw = response.data?['data'];
+      if (raw is! Map) {
+        throw Exception('Invalid architect performance response');
+      }
+      return ArchitectPerformance.fromJson(Map<String, dynamic>.from(raw));
+    }, 'Fetch Architect Performance');
+  }
+
   Future<bool> _shouldUseAuthenticatedDetail() async {
     final token = await _tokenService.getAccessToken();
     final role = (await _tokenService.getRole() ?? '').trim().toLowerCase();

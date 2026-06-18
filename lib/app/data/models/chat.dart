@@ -1,3 +1,4 @@
+import 'package:halositek/app/core/constants/app_extensions.dart';
 import 'package:halositek/app/data/network/api_client.dart';
 
 class ChatConversation {
@@ -48,7 +49,9 @@ class ChatConversation {
     final parsedArchitectName =
         architectRaw is Map ? (architectRaw['name'] ?? '').toString() : null;
     final parsedArchitectHeadline =
-        architectRaw is Map ? (architectRaw['headline'] ?? '').toString() : null;
+        architectRaw is Map
+            ? (architectRaw['headline'] ?? '').toString()
+            : null;
     final parsedUserName =
         userRaw is Map ? (userRaw['name'] ?? '').toString() : null;
 
@@ -146,7 +149,6 @@ class ChatMessage {
   factory ChatMessage.fromJson(Map<String, dynamic> json) {
     final body = (json['body'] ?? '').toString();
     final content = (json['content'] ?? '').toString();
-    final attachmentVal = json['attachment_url']?.toString() ?? json['attachment']?.toString();
 
     return ChatMessage(
       id: (json['id'] ?? '').toString(),
@@ -156,7 +158,11 @@ class ChatMessage {
       content: content,
       role: (json['role'] ?? '').toString(),
       type: (json['type'] ?? 'text').toString(),
-      attachment: attachmentVal,
+      attachment:
+          (json['images'] as List?)
+              ?.whereType<String>()
+              .map((e) => e.toImageUrl())
+              .firstOrNull,
       readAt: _parseDate(json['read_at']),
       isMine: json['is_mine'] == true,
       sender:
@@ -174,12 +180,15 @@ class ChatMessage {
 
   String? get attachmentUrl {
     if (attachment == null || attachment!.isEmpty) return null;
-    if (attachment!.startsWith('http://') || attachment!.startsWith('https://')) {
+    if (attachment!.startsWith('http://') ||
+        attachment!.startsWith('https://')) {
       return attachment;
     }
     final base = ApiClient.baseUrl ?? '';
-    final cleanBase = base.endsWith('/') ? base.substring(0, base.length - 1) : base;
-    final cleanAttachment = attachment!.startsWith('/') ? attachment! : '/$attachment';
+    final cleanBase =
+        base.endsWith('/') ? base.substring(0, base.length - 1) : base;
+    final cleanAttachment =
+        attachment!.startsWith('/') ? attachment! : '/$attachment';
     return '$cleanBase$cleanAttachment';
   }
 

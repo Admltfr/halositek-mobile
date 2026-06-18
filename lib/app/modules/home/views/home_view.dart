@@ -132,10 +132,7 @@ class HomeView extends GetView<HomeController> {
               onPressed: controller.openAiChatFromHome,
               backgroundColor: AppColors.primaryColor,
               elevation: 4,
-              child: const Icon(
-                Icons.smart_toy_rounded,
-                color: AppColors.whiteColor,
-              ),
+              child: ImageIcon(AssetImage('assets/icons/ai-bot.png'), size: 24, color: AppColors.whiteColor),
             ),
             const SizedBox(height: 12),
           ],
@@ -276,7 +273,8 @@ class HomeView extends GetView<HomeController> {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (controller.searchedArchitects.isNotEmpty) ...[
+          if (controller.searchedArchitects.isNotEmpty &&
+              !controller.isArchitect.value) ...[
             Row(
               children: [
                 Expanded(
@@ -471,10 +469,10 @@ class HomeView extends GetView<HomeController> {
                 color: AppColors.errorColor,
               ),
             ),
-            TextButton(
-              onPressed: controller.fetchArchitectPerformance,
-              child: const Text('Coba Lagi'),
-            ),
+            // TextButton(
+            //   onPressed: controller.fetchArchitectPerformance,
+            //   child: const Text('Coba Lagi'),
+            // ),
           ],
         );
       }
@@ -486,18 +484,32 @@ class HomeView extends GetView<HomeController> {
             Expanded(
               child: _performanceCard(
                 size: size,
-                icon: Icons.home_work_outlined,
-                label: 'Total Projects',
-                value: controller.totalProjects.value.toString(),
+                icon: Icons.favorite_rounded,
+                label: 'LIKES',
+                // value: "100",
+                value: controller.totalLikes.value.toString(),
               ),
             ),
-            AppDimensions.spacingLarge.sw,
+            const SizedBox(width: 8),
+
             Expanded(
               child: _performanceCard(
                 size: size,
-                icon: Icons.workspace_premium_outlined,
-                label: 'Total Awards',
-                value: controller.totalAwards.value.toString(),
+                icon: Icons.bookmark_rounded,
+                label: 'SAVES',
+                // value: "100",
+                value: controller.totalSaved.value.toString(),
+              ),
+            ),
+            const SizedBox(width: 8),
+
+            Expanded(
+              child: _performanceCard(
+                size: size,
+                icon: Icons.calendar_month_rounded,
+                label: 'CONSULTS',
+                // value: "100",
+                value: controller.totalConsult.value.toString(),
               ),
             ),
           ],
@@ -511,57 +523,86 @@ class HomeView extends GetView<HomeController> {
     required IconData icon,
     required String label,
     required String value,
+    String? badgeText,
   }) {
-    return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: size.width * 0.04,
-        vertical: size.height * 0.018,
-      ),
-      decoration: BoxDecoration(
-        color: AppColors.whiteColor,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusXLarge),
-        boxShadow: const [
-          BoxShadow(
-            color: AppColors.shadowSoftColor,
-            blurRadius: 10,
-            offset: Offset(0, 5),
+    final double cardRadius = AppDimensions.radiusXLarge;
+
+    return Stack(
+      children: [
+        Container(
+          width: double.infinity,
+          padding: EdgeInsets.symmetric(
+            horizontal: size.width * 0.02,
+            vertical: size.height * 0.02,
           ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: size.width * 0.085,
-            height: size.width * 0.085,
-            decoration: BoxDecoration(
-              color: AppColors.secondaryColor.withValues(alpha: 0.18),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              icon,
-              color: AppColors.primaryColor,
-              size: size.width * 0.045,
+          decoration: BoxDecoration(
+            color: AppColors.whiteColor,
+            borderRadius: BorderRadius.circular(cardRadius),
+            boxShadow: const [
+              BoxShadow(
+                color: AppColors.shadowSoftColor,
+                blurRadius: 10,
+                offset: Offset(0, 5),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFFDF7F2),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: const Color(0xFFC77A33), size: 22),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                label,
+                style: AppTypography.bodySmall.copyWith(
+                  color: const Color(0xFF8A9A9E),
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.5,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                value,
+                style: AppTypography.headingSmall.copyWith(
+                  color: AppColors.textHeadingColor,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 20,
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (badgeText != null)
+          Positioned(
+            top: 0,
+            right: 0,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+              decoration: BoxDecoration(
+                color: const Color(0xFF52B788),
+                borderRadius: BorderRadius.only(
+                  topRight: Radius.circular(cardRadius),
+                  bottomLeft: const Radius.circular(8),
+                ),
+              ),
+              child: Text(
+                badgeText,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           ),
-          AppDimensions.spacingSmall.sh,
-          Text(
-            label,
-            style: AppTypography.bodySmall.copyWith(
-              color: AppColors.textBodyColor,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          AppDimensions.spacingXSmall.sh,
-          Text(
-            value,
-            style: AppTypography.headingSmall.copyWith(
-              color: AppColors.textHeadingColor,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
-      ),
+      ],
     );
   }
 
@@ -963,9 +1004,7 @@ class HomeView extends GetView<HomeController> {
                 size: size,
                 name: a.name,
                 avatarUrl: a.profilePicture,
-                onTap: () {
-                  if (isLoading && !hasData) return;
-                },
+                onTap: () => controller.openArchitectPortofolio(a),
               );
             }),
             _architectItem(
@@ -1174,8 +1213,15 @@ class HomeView extends GetView<HomeController> {
     if (architect.projects.length <= index) return _dummyImage;
 
     final project = architect.projects[index];
-    if (project.images.isNotEmpty) return project.images.first;
-    if (project.imageUrls.isNotEmpty) return project.imageUrls.first;
+
+    if (project.images.isNotEmpty) {
+      return project.images.first;
+    }
+
+    if (project.imageUrls.isNotEmpty) {
+      return project.imageUrls.first;
+    }
+
     return _dummyImage;
   }
 

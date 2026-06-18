@@ -17,12 +17,11 @@ class ProfileTopBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 48,
+      height: 40,
       child: Row(
         children: [
           InkWell(
             onTap: onBack,
-            borderRadius: BorderRadius.circular(20),
             child: const Padding(
               padding: EdgeInsets.all(6),
               child: Icon(Icons.arrow_back_ios_new_rounded, size: 15),
@@ -38,17 +37,7 @@ class ProfileTopBar extends StatelessWidget {
               ),
             ),
           ),
-          SizedBox(
-            width: 36,
-            child:
-                onLogout == null
-                    ? const SizedBox.shrink()
-                    : IconButton(
-                      tooltip: 'Logout',
-                      onPressed: onLogout,
-                      icon: const Icon(Icons.logout_rounded, size: 20),
-                    ),
-          ),
+          const SizedBox(width: 28),
         ],
       ),
     );

@@ -312,7 +312,7 @@ class AwardDetailView extends GetView<AwardDetailController> {
               onPressed: controller.openEdit,
               icon: const Icon(Icons.edit_outlined, size: 18),
               label: Text(
-                'Edit Design',
+                'Edit Award',
                 style: AppTypography.bodySmall.copyWith(
                   color: AppColors.textWhiteColor,
                   fontWeight: FontWeight.w700,

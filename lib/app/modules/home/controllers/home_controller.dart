@@ -41,8 +41,9 @@ class HomeController extends GetxController {
   final currentArchitectId = ''.obs;
   final isLoadingPerformance = false.obs;
   final performanceError = ''.obs;
-  final totalProjects = 0.obs;
-  final totalAwards = 0.obs;
+  final totalLikes = 0.obs;
+  final totalConsult = 0.obs;
+  final totalSaved = 0.obs;
 
   final likingCatalogIds = <String>{}.obs;
 
@@ -215,8 +216,9 @@ class HomeController extends GetxController {
     final architectId = currentArchitectId.value.trim();
     if (architectId.isEmpty) {
       performanceError.value = 'Architect ID tidak ditemukan';
-      totalProjects.value = 0;
-      totalAwards.value = 0;
+      totalLikes.value = 0;
+      totalConsult.value = 0;
+      totalSaved.value = 0;
       return;
     }
 
@@ -224,9 +226,13 @@ class HomeController extends GetxController {
       isLoadingPerformance.value = true;
       performanceError.value = '';
 
-      final architect = await _architectService.getArchitectById(architectId);
-      totalProjects.value = architect.totalProjects;
-      totalAwards.value = architect.totalAwards;
+      final performance = await _architectService.getArchitectPerformance(
+        architectId,
+      );
+
+      totalLikes.value = performance.likes;
+      totalConsult.value = performance.consultations;
+      totalSaved.value = performance.saved;
     } catch (e) {
       performanceError.value = e.toString();
     } finally {

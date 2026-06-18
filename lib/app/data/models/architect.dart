@@ -1,3 +1,5 @@
+import 'package:halositek/app/core/constants/app_extensions.dart';
+
 class Architect {
   final String id;
   final String name;
@@ -53,8 +55,12 @@ class Architect {
       id: (json['id'] ?? '').toString(),
       name: (json['name'] ?? '').toString(),
       email: (json['email'] ?? '').toString(),
-      profilePicture: (json['profile_picture'] ?? json['photo_profile_url'] ?? '').toString(),
-      emailVerifiedAt: DateTime.tryParse((json['email_verified_at'] ?? '').toString()),
+      profilePicture:
+          (json['profile_picture'] ?? json['photo_profile_url'] ?? '')
+              .toString(),
+      emailVerifiedAt: DateTime.tryParse(
+        (json['email_verified_at'] ?? '').toString(),
+      ),
       role: (json['role'] ?? '').toString(),
       createdAt: DateTime.tryParse((json['created_at'] ?? '').toString()),
       updatedAt: DateTime.tryParse((json['updated_at'] ?? '').toString()),
@@ -67,10 +73,13 @@ class Architect {
       totalAwards: _toInt(json['total_awards']),
       rating: _toDouble(json['rating']),
       consultationFee: _toInt(json['consultation_fee']),
-      consultationDuration: _toInt(json['consultation_duration'] ?? json['consultation_hours']),
+      consultationDuration: _toInt(
+        json['consultation_duration'] ?? json['consultation_hours'],
+      ),
       yearOfExperience: _toInt(json['year_of_experience']),
       isWishlisted: _toNullableBool(json['is_wishlisted']),
-      projects: _toMapList(json['projects']).map(ArchitectProject.fromJson).toList(),
+      projects:
+          _toMapList(json['projects']).map(ArchitectProject.fromJson).toList(),
       awards: _toMapList(json['awards']).map(ArchitectAward.fromJson).toList(),
     );
   }
@@ -177,7 +186,10 @@ class Architect {
 
   static List<Map<String, dynamic>> _toMapList(dynamic value) {
     if (value is! List) return <Map<String, dynamic>>[];
-    return value.whereType<Map>().map((e) => Map<String, dynamic>.from(e)).toList();
+    return value
+        .whereType<Map>()
+        .map((e) => Map<String, dynamic>.from(e))
+        .toList();
   }
 }
 
@@ -227,11 +239,18 @@ class ArchitectProject {
       name: (json['name'] ?? '').toString(),
       style: (json['style'] ?? '').toString(),
       description: (json['description'] ?? '').toString(),
-      images: _toStringList(json['images']),
-      imageUrls: _toStringList(json['image_urls']),
+      images: _toStringList(json['images']).map((e) => e.toImageUrl()).toList(),
+      imageUrls:
+          _toStringList(json['image_urls']).map((e) => e.toImageUrl()).toList(),
       estimatedCost: (json['estimated_cost'] ?? '').toString(),
-      layoutImages: _toStringList(json['layout_images']),
-      layoutImageUrls: _toStringList(json['layout_image_urls']),
+      layoutImages:
+          _toStringList(
+            json['layout_images'],
+          ).map((e) => e.toImageUrl()).toList(),
+      layoutImageUrls:
+          _toStringList(
+            json['layout_image_urls'],
+          ).map((e) => e.toImageUrl()).toList(),
       highlightFeatures: (json['highlight_features'] ?? '').toString(),
       area: (json['area'] ?? '').toString(),
       likesCount: Architect._toInt(json['likes_count']),
@@ -276,6 +295,26 @@ class ArchitectAward {
       description: (json['description'] ?? '').toString(),
       verificationFileUrl: (json['verification_file_url'] ?? '').toString(),
       status: (json['status'] ?? '').toString(),
+    );
+  }
+}
+
+class ArchitectPerformance {
+  final int likes;
+  final int consultations;
+  final int saved;
+
+  const ArchitectPerformance({
+    required this.likes,
+    required this.consultations,
+    required this.saved,
+  });
+
+  factory ArchitectPerformance.fromJson(Map<String, dynamic> json) {
+    return ArchitectPerformance(
+      likes: Architect._toInt(json['total_likes']),
+      saved: Architect._toInt(json['total_saves']),
+      consultations: Architect._toInt(json['total_consultations']),
     );
   }
 }
