@@ -103,12 +103,8 @@ class HomeController extends GetxController {
 
   Future<void> openEditDesign(Catalog catalog) async {
     if (catalog.id.trim().isEmpty) return;
-    final nav = Get.find<NavigationController>().keyForTab(1)?.currentState;
-    if (nav == null) return;
-    final result = await nav.pushNamed('/design/edit', arguments: catalog);
-    if (result != null) {
-      await fetchCatalogs();
-    }
+    final nav = Get.find<NavigationController>();
+    nav.navigateTo(tabIndex: 1, route: '/design/edit', arguments: catalog);
   }
 
   final count = 0.obs;

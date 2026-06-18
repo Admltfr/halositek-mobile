@@ -708,8 +708,7 @@ class HomeView extends GetView<HomeController> {
                           ? Positioned(
                             top: size.width * 0.025,
                             right: size.width * 0.025,
-                            child: InkWell(
-                              borderRadius: BorderRadius.circular(100),
+                            child: GestureDetector(
                               onTap: () => controller.openEditDesign(catalog),
                               child: Container(
                                 width: size.width * 0.085,
