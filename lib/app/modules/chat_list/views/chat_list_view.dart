@@ -523,9 +523,9 @@ class ChatListView extends GetView<ChatListController> {
   }
 
   Widget _reportTile(Size size, ChatReport report) {
-    final timeText = _formatTime(report.consultationDate);
     final status = report.actionReport.toLowerCase();
-    final hasActionStatus = status == 'approved' || status == 'declined';
+    final isApprovedOrDeclined = status == 'approved' || status == 'declined';
+    final timeText = _formatTime(report.updatedAt ?? report.consultationDate);
 
     String? displayImageUrl;
 
@@ -568,10 +568,15 @@ class ChatListView extends GetView<ChatListController> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              if (hasActionStatus)
-                _statusBadge(status)
-              else if (timeText.isNotEmpty)
-                Text(timeText, style: AppTypography.caption.copyWith(color: AppColors.textBodyColor.withValues(alpha: 0.7))),
+              if (!isApprovedOrDeclined)
+                _statusBadge('pending')
+              else ...[
+                _statusBadge(status),
+                if (timeText.isNotEmpty) ...[
+                  AppDimensions.spacingXSmall.sh,
+                  Text(timeText, style: AppTypography.caption.copyWith(color: AppColors.textBodyColor.withValues(alpha: 0.7))),
+                ],
+              ],
             ],
           ),
         ],
@@ -594,6 +599,11 @@ class ChatListView extends GetView<ChatListController> {
       case 'declined':
         color = AppColors.errorColor;
         label = 'DECLINED';
+        outlined = true;
+        break;
+      case 'pending':
+        color = AppColors.warningColor;
+        label = 'PENDING';
         outlined = true;
         break;
       default:

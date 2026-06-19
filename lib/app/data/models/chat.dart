@@ -251,6 +251,7 @@ class ChatReport {
   final double nominal;
   final String transcript;
   final String actionReport; // 'new', 'approved', 'declined'
+  final DateTime? updatedAt;
 
   const ChatReport({
     required this.id,
@@ -261,6 +262,7 @@ class ChatReport {
     required this.nominal,
     required this.transcript,
     required this.actionReport,
+    required this.updatedAt,
   });
 
   factory ChatReport.fromJson(Map<String, dynamic> json) {
@@ -277,6 +279,7 @@ class ChatReport {
       nominal: _toDouble(json['nominal']),
       transcript: (json['transcript'] ?? '').toString(),
       actionReport: (json['action_report'] ?? 'new').toString().toLowerCase(),
+      updatedAt: DateTime.tryParse((json['updated_at'] ?? '').toString()),
     );
   }
 
