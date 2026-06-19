@@ -441,52 +441,65 @@ class DetailView extends GetView<DetailController> {
         ),
         12.0.sw,
         Obx(() {
-          final canConsult =
-              architect.consultationFee > 0 &&
-              architect.consultationDuration > 0;
+          final status = controller.consultationStatus.value;
+          final isLoading = controller.isLoadingConsultationStatus.value;
+          final isProcessing = controller.isStartingChat.value;
+
+          String buttonText;
+          IconData buttonIcon;
+          Color bgColor;
+          VoidCallback? onTap;
+
+          if (isLoading || status == null) {
+            // Loading / fallback state
+            final canConsult = architect.consultationFee > 0 && architect.consultationDuration > 0;
+            bgColor = canConsult ? AppColors.primaryColor : AppColors.formBorderColor;
+            buttonText = canConsult ? 'Chat Now' : 'Tidak Tersedia';
+            buttonIcon = Icons.chat_bubble_outline_rounded;
+            onTap = canConsult && !isProcessing ? controller.handleChatButtonAction : null;
+          } else if (status.isSessionActive) {
+            // Session active
+            bgColor = AppColors.primaryColor; // green
+            buttonText = 'Open Chat';
+            buttonIcon = Icons.chat_rounded;
+            onTap = !isProcessing ? controller.handleChatButtonAction : null;
+          } else if (status.isPendingPayment) {
+            // Pending payment
+            bgColor = AppColors.primaryColor; // orange
+            buttonText = 'Finish Payment';
+            buttonIcon = Icons.payment_rounded;
+            onTap = !isProcessing ? controller.handleChatButtonAction : null;
+          } else {
+            // no_session
+            final canConsult = architect.consultationFee > 0 && architect.consultationDuration > 0;
+            bgColor = canConsult ? AppColors.primaryColor : AppColors.formBorderColor;
+            buttonText = canConsult ? 'Chat Now' : 'Tidak Tersedia';
+            buttonIcon = Icons.chat_bubble_outline_rounded;
+            onTap = canConsult && !isProcessing ? controller.handleChatButtonAction : null;
+          }
 
           return InkWell(
             borderRadius: BorderRadius.circular(AppDimensions.radiusPill),
-            onTap:
-                !canConsult || controller.isStartingChat.value
-                    ? null
-                    : controller.startConsultationChat,
+            onTap: onTap,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
               decoration: BoxDecoration(
-                color:
-                    canConsult
-                        ? AppColors.primaryColor
-                        : AppColors.formBorderColor,
+                color: bgColor,
                 borderRadius: BorderRadius.circular(AppDimensions.radiusPill),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  if (canConsult) ...[
-                    controller.isStartingChat.value
-                        ? const SizedBox(
-                          width: 17,
-                          height: 17,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: AppColors.whiteColor,
-                          ),
-                        )
-                        : const Icon(
-                          Icons.chat_bubble_outline_rounded,
-                          color: AppColors.whiteColor,
-                          size: 18,
-                        ),
-                    8.0.sw,
-                  ],
-
+                  isProcessing
+                      ? const SizedBox(
+                        width: 17,
+                        height: 17,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.whiteColor),
+                      )
+                      : Icon(buttonIcon, color: AppColors.whiteColor, size: 18),
+                  8.0.sw,
                   Text(
-                    !canConsult
-                        ? 'Konsultasi Tidak Tersedia'
-                        : controller.isStartingChat.value
-                        ? 'Loading...'
-                        : 'Chat Now',
+                    isProcessing ? 'Loading...' : buttonText,
                     style: AppTypography.bodySmall.copyWith(
                       color: AppColors.whiteColor,
                       fontWeight: FontWeight.w800,
