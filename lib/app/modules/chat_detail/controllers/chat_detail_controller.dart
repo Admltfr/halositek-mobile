@@ -40,6 +40,11 @@ class ChatDetailController extends GetxController {
   final reports = <ChatReport>[].obs;
   final isSubmittingReport = false.obs;
 
+  int _currentPage = 1;
+  int _lastPage = 1;
+  final hasMoreMessages = true.obs;
+  final isLoadingMore = false.obs;
+
   final conversationDetail = Rxn<ConversationDetailModel>();
   final otherUserName = ''.obs;
   final otherUserRole = ''.obs;
@@ -80,8 +85,16 @@ class ChatDetailController extends GetxController {
   void onInit() {
     super.onInit();
     messageController.addListener(_onMessageTextChanged);
+    scrollController.addListener(_onScroll);
     fetchMessages();
     _subscribeWebSocket();
+  }
+
+  void _onScroll() {
+    if (!scrollController.hasClients) return;
+    if (scrollController.position.pixels <= 150) {
+      loadMoreMessages();
+    }
   }
 
   @override
@@ -92,6 +105,7 @@ class ChatDetailController extends GetxController {
     messageController.removeListener(_onMessageTextChanged);
     messageController.dispose();
     reportController.dispose();
+    scrollController.removeListener(_onScroll);
     scrollController.dispose();
     _unsubscribeWebSocket();
     super.onClose();
@@ -256,6 +270,40 @@ class ChatDetailController extends GetxController {
   //  FETCH MESSAGES
   // ────────────────────────────────────────────────────────────────────
 
+  Future<void> loadMoreMessages() async {
+    if (isLoadingMore.value || !hasMoreMessages.value || isLoading.value) return;
+    
+    isLoadingMore.value = true;
+    _currentPage++;
+
+    try {
+      final messagesPage = await _chatService.getMessages(conversationId, page: _currentPage, perPage: 10);
+      final newMsgs = messagesPage.messages.reversed.toList();
+      
+      if (newMsgs.isNotEmpty) {
+        final double currentScrollOffset = scrollController.offset;
+        final double currentMaxScrollExtent = scrollController.position.maxScrollExtent;
+        
+        messages.insertAll(0, newMsgs);
+        
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (scrollController.hasClients) {
+            final double newMaxScrollExtent = scrollController.position.maxScrollExtent;
+            scrollController.jumpTo(currentScrollOffset + (newMaxScrollExtent - currentMaxScrollExtent));
+          }
+        });
+      }
+      
+      _lastPage = messagesPage.meta.lastPage;
+      hasMoreMessages.value = _currentPage < _lastPage;
+    } catch (e) {
+      _currentPage--;
+      Get.snackbar('Gagal', 'Tidak dapat memuat pesan lama', snackPosition: SnackPosition.BOTTOM);
+    } finally {
+      isLoadingMore.value = false;
+    }
+  }
+
   Future<void> fetchMessages() async {
     if (conversationId.trim().isEmpty) {
       errorMessage.value = 'Conversation ID tidak ditemukan';
@@ -265,17 +313,22 @@ class ChatDetailController extends GetxController {
     try {
       isLoading.value = true;
       errorMessage.value = '';
+      _currentPage = 1;
+      hasMoreMessages.value = true;
 
       final results = await Future.wait([
-        _chatService.getMessages(conversationId),
+        _chatService.getMessages(conversationId, page: _currentPage, perPage: 10),
         _chatService.getConversationDetail(conversationId),
       ]);
 
-      final msgs = results[0] as List<ChatMessage>;
+      final messagesPage = results[0] as MessagesPage;
       final detail = results[1] as ConversationDetailModel;
 
-      messages.assignAll(msgs.reversed.toList());
+      messages.assignAll(messagesPage.messages.reversed.toList());
       conversationDetail.value = detail;
+      
+      _lastPage = messagesPage.meta.lastPage;
+      hasMoreMessages.value = _currentPage < _lastPage;
 
       _currentUserId = await _tokenService.getUserId() ?? '';
 

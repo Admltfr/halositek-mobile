@@ -145,9 +145,17 @@ class ChatService {
     }, 'Fetch Conversation Detail');
   }
 
-  Future<List<ChatMessage>> getMessages(String conversationId) async {
+  Future<MessagesPage> getMessages(
+    String conversationId, {
+    int page = 1,
+    int perPage = 10,
+  }) async {
     final response = await _apiClient.private.get(
       '/chat/conversations/$conversationId/messages',
+      queryParameters: {
+        'page': page,
+        'per_page': perPage,
+      },
       options: Options(
         validateStatus: (status) => status != null && status < 500,
       ),
@@ -157,12 +165,19 @@ class ChatService {
 
     return _apiClient.customResponse(response, () async {
       final rawList = response.data?['data'];
-      if (rawList is! List) return <ChatMessage>[];
+      final messages = rawList is List
+          ? rawList
+              .whereType<Map>()
+              .map((e) => ChatMessage.fromJson(Map<String, dynamic>.from(e)))
+              .toList()
+          : <ChatMessage>[];
 
-      return rawList
-          .whereType<Map>()
-          .map((e) => ChatMessage.fromJson(Map<String, dynamic>.from(e)))
-          .toList();
+      final rawMeta = response.data?['meta'];
+      final meta = rawMeta is Map
+          ? ChatMeta.fromJson(Map<String, dynamic>.from(rawMeta))
+          : const ChatMeta(currentPage: 1, lastPage: 1, perPage: 10, total: 0);
+
+      return MessagesPage(messages: messages, meta: meta);
     }, 'Fetch Messages');
   }
 
@@ -429,4 +444,11 @@ class ReportsPage {
   final ChatMeta meta;
 
   const ReportsPage({required this.reports, required this.meta});
+}
+
+class MessagesPage {
+  final List<ChatMessage> messages;
+  final ChatMeta meta;
+
+  const MessagesPage({required this.messages, required this.meta});
 }

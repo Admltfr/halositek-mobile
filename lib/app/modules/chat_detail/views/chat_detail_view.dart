@@ -253,13 +253,41 @@ class ChatDetailView extends GetView<ChatDetailController> {
       }
 
       final msgs = controller.messages;
+      final showTopIndicator = !isLoading && msgs.isNotEmpty;
 
       return ListView.builder(
         controller: controller.scrollController,
         padding: EdgeInsets.symmetric(horizontal: size.width * 0.05, vertical: size.height * 0.015),
-        itemCount: msgs.length + (isLoading ? 1 : 0),
+        itemCount: msgs.length + (showTopIndicator ? 1 : 0) + (isLoading && msgs.isEmpty ? 1 : 0),
         itemBuilder: (_, index) {
-          if (isLoading && index == msgs.length) {
+          if (showTopIndicator && index == 0) {
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: AppDimensions.spacingLarge),
+              child: Center(
+                child: controller.isLoadingMore.value
+                    ? const SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryColor),
+                        ),
+                      )
+                    : (!controller.hasMoreMessages.value
+                        ? Text(
+                            'Tidak ada pesan lebih lama.',
+                            style: AppTypography.captionSmall.copyWith(
+                              color: AppColors.textBodyColor.withValues(alpha: 0.5),
+                            ),
+                          )
+                        : const SizedBox.shrink()),
+              ),
+            );
+          }
+
+          final msgIndex = showTopIndicator ? index - 1 : index;
+
+          if (isLoading && msgs.isEmpty && msgIndex == 0) {
             return Padding(
               padding: const EdgeInsets.symmetric(vertical: AppDimensions.spacingLarge),
               child: Center(
@@ -275,8 +303,8 @@ class ChatDetailView extends GetView<ChatDetailController> {
             );
           }
 
-          final msg = msgs[index];
-          final showDateSep = _shouldShowDateSeparator(msgs, index);
+          final msg = msgs[msgIndex];
+          final showDateSep = _shouldShowDateSeparator(msgs, msgIndex);
 
           return Column(
             children: [
@@ -514,31 +542,25 @@ class ChatDetailView extends GetView<ChatDetailController> {
         child: Stack(
           alignment: Alignment.topRight,
           children: [
-          Container(
-            height: size.width * 0.3,
-            width: size.width * 0.3,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(AppDimensions.radiusLarge),
-              image: DecorationImage(
-                image: FileImage(File(controller.selectedImagePath.value!)),
-                fit: BoxFit.cover,
+            Container(
+              height: size.width * 0.3,
+              width: size.width * 0.3,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(AppDimensions.radiusLarge),
+                image: DecorationImage(image: FileImage(File(controller.selectedImagePath.value!)), fit: BoxFit.cover),
               ),
             ),
-          ),
-          InkWell(
-            onTap: controller.removeSelectedImage,
-            child: Container(
-              margin: const EdgeInsets.all(4),
-              padding: const EdgeInsets.all(4),
-              decoration: const BoxDecoration(
-                color: Colors.black54,
-                shape: BoxShape.circle,
+            InkWell(
+              onTap: controller.removeSelectedImage,
+              child: Container(
+                margin: const EdgeInsets.all(4),
+                padding: const EdgeInsets.all(4),
+                decoration: const BoxDecoration(color: Colors.black54, shape: BoxShape.circle),
+                child: const Icon(Icons.close_rounded, color: Colors.white, size: 16),
               ),
-              child: const Icon(Icons.close_rounded, color: Colors.white, size: 16),
             ),
-          ),
-        ],
-      ),
+          ],
+        ),
       ),
     );
   }
@@ -557,7 +579,7 @@ class ChatDetailView extends GetView<ChatDetailController> {
           AppDimensions.spacingMedium.sw,
           Expanded(
             child: Text(
-              'Sesi konsultasi telah berakhir. Anda tidak dapat lagi mengirim pesan.',
+              'Consultation session has ended. You can no longer send messages.',
               style: AppTypography.bodySmall.copyWith(
                 color: AppColors.primaryColor,
                 fontWeight: FontWeight.w600,
