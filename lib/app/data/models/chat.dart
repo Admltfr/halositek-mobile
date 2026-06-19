@@ -76,7 +76,15 @@ class ChatConversation {
     return user?.displayImageUrl;
   }
 
-  String get lastMessagePreview => lastMessage?.displayBody ?? '';
+  String get lastMessagePreview {
+    if (lastMessage == null) return '';
+
+    if (lastMessage!.type == 'image') {
+      return 'Image';
+    }
+
+    return lastMessage!.displayBody;
+  }
 
   DateTime? get lastActivityAt => lastMessage?.createdAt ?? updatedAt;
 
@@ -152,7 +160,7 @@ class ChatMessage {
       content: content,
       role: (json['role'] ?? '').toString(),
       type: (json['type'] ?? 'text').toString(),
-      attachment: (json['images'] as List?)?.whereType<String>().map((e) => e.toImageUrl()).firstOrNull,
+      attachment: (json['attachment_url'] ?? '').toString(),
       readAt: _parseDate(json['read_at']),
       isMine: json['is_mine'] == true,
       sender: json['sender'] is Map ? ChatSender.fromJson((json['sender'] as Map).cast<String, dynamic>()) : null,
@@ -175,18 +183,7 @@ class ChatMessage {
   }
 
   /// True if this message contains an image (attachment or type == 'image')
-  bool get hasImage => (type == 'image') || (attachment != null && attachment!.isNotEmpty && _isImageUrl(attachment!));
-
-  static bool _isImageUrl(String url) {
-    final lower = url.toLowerCase();
-    return lower.endsWith('.jpg') ||
-        lower.endsWith('.jpeg') ||
-        lower.endsWith('.png') ||
-        lower.endsWith('.gif') ||
-        lower.endsWith('.webp') ||
-        lower.contains('/image') ||
-        lower.contains('images/');
-  }
+  bool get hasImage => (type == 'image') || (attachment != null && attachment!.isNotEmpty);
 
   static DateTime? _parseDate(dynamic value) {
     return DateTime.tryParse((value ?? '').toString());
