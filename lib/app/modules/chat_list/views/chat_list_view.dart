@@ -21,10 +21,7 @@ class ChatListView extends GetView<ChatListController> {
       backgroundColor: AppColors.whiteColor,
       body: SafeArea(
         child: Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: size.width * 0.05,
-            vertical: size.height * 0.01,
-          ),
+          padding: EdgeInsets.symmetric(horizontal: size.width * 0.05, vertical: size.height * 0.01),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -65,10 +62,7 @@ class ChatListView extends GetView<ChatListController> {
             child: Center(
               child: Text(
                 'Your Chats',
-                style: AppTypography.bodyMedium.copyWith(
-                  color: AppColors.textHeadingColor,
-                  fontWeight: FontWeight.w700,
-                ),
+                style: AppTypography.bodyMedium.copyWith(color: AppColors.textHeadingColor, fontWeight: FontWeight.w700),
               ),
             ),
           ),
@@ -87,32 +81,23 @@ class ChatListView extends GetView<ChatListController> {
       decoration: BoxDecoration(
         color: AppColors.whiteColor,
         borderRadius: BorderRadius.circular(AppDimensions.radiusXLarge),
-        border: Border.all(
-          color: AppColors.formBorderColor.withValues(alpha: 0.35),
-        ),
+        border: Border.all(color: AppColors.formBorderColor.withValues(alpha: 0.35)),
       ),
       child: Row(
         children: [
-          Icon(
-            Icons.search_rounded,
-            color: AppColors.primaryColor,
-            size: size.width * 0.055,
-          ),
+          Icon(Icons.search_rounded, color: AppColors.primaryColor, size: size.width * 0.055),
           SizedBox(width: size.width * 0.02),
           Expanded(
             child: TextField(
-              onChanged: (value) => controller.searchQuery.value = value,
+              controller: controller.searchController,
+              onChanged: controller.onSearchChanged,
               decoration: InputDecoration(
                 isCollapsed: true,
                 border: InputBorder.none,
                 hintText: 'Search user',
-                hintStyle: AppTypography.bodySmall.copyWith(
-                  color: AppColors.textBodyColor.withValues(alpha: 0.55),
-                ),
+                hintStyle: AppTypography.bodySmall.copyWith(color: AppColors.textBodyColor.withValues(alpha: 0.55)),
               ),
-              style: AppTypography.bodyMedium.copyWith(
-                color: AppColors.textHeadingColor,
-              ),
+              style: AppTypography.bodyMedium.copyWith(color: AppColors.textHeadingColor),
             ),
           ),
         ],
@@ -128,10 +113,7 @@ class ChatListView extends GetView<ChatListController> {
           Expanded(
             child: Text(
               'Your Chat',
-              style: AppTypography.bodyMedium.copyWith(
-                color: AppColors.textHeadingColor,
-                fontWeight: FontWeight.w700,
-              ),
+              style: AppTypography.bodyLarge.copyWith(color: AppColors.textHeadingColor, fontWeight: FontWeight.w700),
             ),
           ),
           _tabDropdownButton(size),
@@ -142,8 +124,7 @@ class ChatListView extends GetView<ChatListController> {
 
   /// Dropdown button styled like _statusFilter from design_view
   Widget _tabDropdownButton(Size size) {
-    final isConsultation =
-        controller.selectedTab.value == ChatListController.tabConsultation;
+    final isConsultation = controller.selectedTab.value == ChatListController.tabConsultation;
     final label = isConsultation ? 'CONSULTATION' : 'REPORT';
 
     return GestureDetector(
@@ -154,25 +135,18 @@ class ChatListView extends GetView<ChatListController> {
         decoration: BoxDecoration(
           color: AppColors.secondaryColor.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(18),
-          border: Border.all(
-            color: AppColors.primaryColor.withValues(alpha: 0.22),
-          ),
+          border: Border.all(color: AppColors.primaryColor.withValues(alpha: 0.22)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
               label,
-              style: AppTypography.captionLarge.copyWith(
-                color: AppColors.primaryColor,
-                fontWeight: FontWeight.w800,
-              ),
+              style: AppTypography.captionLarge.copyWith(color: AppColors.primaryColor, fontWeight: FontWeight.w800),
             ),
             const SizedBox(width: 4),
             Icon(
-              controller.isDropdownOpen.value
-                  ? Icons.keyboard_arrow_up_rounded
-                  : Icons.keyboard_arrow_down_rounded,
+              controller.isDropdownOpen.value ? Icons.keyboard_arrow_up_rounded : Icons.keyboard_arrow_down_rounded,
               size: 18,
               color: AppColors.primaryColor,
             ),
@@ -195,27 +169,13 @@ class ChatListView extends GetView<ChatListController> {
           decoration: BoxDecoration(
             color: AppColors.whiteColor,
             borderRadius: BorderRadius.circular(AppDimensions.radiusLarge),
-            border: Border.all(
-              color: AppColors.formBorderColor.withValues(alpha: 0.20),
-            ),
-            boxShadow: const [
-              BoxShadow(
-                color: AppColors.shadowSoftColor,
-                blurRadius: 10,
-                offset: Offset(0, 5),
-              ),
-            ],
+            border: Border.all(color: AppColors.formBorderColor.withValues(alpha: 0.20)),
+            boxShadow: const [BoxShadow(color: AppColors.shadowSoftColor, blurRadius: 10, offset: Offset(0, 5))],
           ),
           child: Column(
             children: [
-              _dropdownItem(
-                label: 'Consultation',
-                value: ChatListController.tabConsultation,
-              ),
-              _dropdownItem(
-                label: 'Report',
-                value: ChatListController.tabReport,
-              ),
+              _dropdownItem(label: 'Consultation', value: ChatListController.tabConsultation),
+              _dropdownItem(label: 'Report', value: ChatListController.tabReport),
             ],
           ),
         ),
@@ -230,28 +190,19 @@ class ChatListView extends GetView<ChatListController> {
       child: Container(
         height: 44,
         padding: const EdgeInsets.symmetric(horizontal: 16),
-        color: selected
-            ? AppColors.secondaryColor.withValues(alpha: 0.16)
-            : Colors.transparent,
+        color: selected ? AppColors.secondaryColor.withValues(alpha: 0.16) : Colors.transparent,
         child: Row(
           children: [
             Expanded(
               child: Text(
                 label,
                 style: AppTypography.bodySmall.copyWith(
-                  color: selected
-                      ? AppColors.primaryColor
-                      : AppColors.textHeadingColor,
+                  color: selected ? AppColors.primaryColor : AppColors.textHeadingColor,
                   fontWeight: FontWeight.w700,
                 ),
               ),
             ),
-            if (selected)
-              const Icon(
-                Icons.check_circle_rounded,
-                color: AppColors.primaryColor,
-                size: 16,
-              ),
+            if (selected) const Icon(Icons.check_circle_rounded, color: AppColors.primaryColor, size: 16),
           ],
         ),
       ),
@@ -278,56 +229,75 @@ class ChatListView extends GetView<ChatListController> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              controller.errorMessage.value,
-              style: AppTypography.bodySmall.copyWith(
-                color: AppColors.errorColor,
-              ),
-            ),
-            TextButton(
-              onPressed: controller.fetchConversations,
-              child: const Text('Coba Lagi'),
-            ),
+            Text(controller.errorMessage.value, style: AppTypography.bodySmall.copyWith(color: AppColors.errorColor)),
+            TextButton(onPressed: controller.fetchConversations, child: const Text('Coba Lagi')),
           ],
         );
       }
 
-      final data =
-          controller.filteredConversations.isNotEmpty
-              ? controller.filteredConversations
-              : <ChatConversation>[];
+      final data = controller.conversations;
+      final showLoadingMore = controller.isLoadingMoreConversations.value;
 
       return Skeletonizer(
         enabled: isLoading && controller.conversations.isEmpty,
-        child: ListView.separated(
-          itemCount: data.isEmpty && isLoading ? 6 : data.length,
-          separatorBuilder: (_, __) => const Divider(
-            height: AppDimensions.spacing2XLarge,
-            color: Color(0xFFF1F1F1),
-          ),
-          itemBuilder: (_, index) {
-            if (data.isEmpty) {
-              return _chatTile(
-                size,
-                ChatConversation(
-                  id: '',
-                  name: 'Loading...',
-                  isGroup: false,
-                  participantIds: const [],
-                  lastReadAt: null,
-                  unreadCount: 0,
-                  lastMessage: null,
-                  updatedAt: null,
-                  createdAt: null,
-                  durationHours: 0,
-                  status: '',
-                  consultationId: '',
-                ),
-              );
-            }
+        child: RefreshIndicator(
+          onRefresh: controller.refreshData,
+          color: AppColors.primaryColor,
+          child: ListView.separated(
+            controller: controller.conversationsScrollController,
+            physics: const AlwaysScrollableScrollPhysics(),
+            itemCount: data.isEmpty && isLoading ? 6 : (data.isEmpty ? 1 : data.length + (showLoadingMore ? 1 : 0)),
+            separatorBuilder: (_, __) => const Divider(height: AppDimensions.spacing2XLarge, color: Color(0xFFF1F1F1)),
+            itemBuilder: (_, index) {
+              if (data.isEmpty && !isLoading) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 48.0),
+                  child: Center(
+                    child: Text(
+                      'Chat not found',
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: AppColors.textHeadingColor.withValues(alpha: 0.6),
+                      ),
+                    ),
+                  ),
+                );
+              }
 
-            return _chatTile(size, data[index]);
-          },
+              if (index == data.length && showLoadingMore) {
+                return const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 16.0),
+                  child: Center(
+                    child: SizedBox(
+                      width: 24, height: 24,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  ),
+                );
+              }
+
+              if (data.isEmpty) {
+                return _chatTile(
+                  size,
+                  ChatConversation(
+                    id: '',
+                    name: 'Loading...',
+                    isGroup: false,
+                    participantIds: const [],
+                    lastReadAt: null,
+                    unreadCount: 0,
+                    lastMessage: null,
+                    updatedAt: null,
+                    createdAt: null,
+                    durationHours: 0,
+                    status: '',
+                    consultationId: '',
+                  ),
+                );
+              }
+
+              return _chatTile(size, data[index]);
+            },
+          ),
         ),
       );
     });
@@ -340,21 +310,14 @@ class ChatListView extends GetView<ChatListController> {
       onTap: () => controller.openConversation(conversation),
       borderRadius: BorderRadius.circular(AppDimensions.radiusLarge),
       child: Padding(
-        padding: const EdgeInsets.symmetric(
-          vertical: AppDimensions.spacingSmall,
-        ),
+        padding: const EdgeInsets.symmetric(vertical: AppDimensions.spacingSmall),
         child: Row(
           children: [
             CircleAvatar(
               radius: size.width * 0.065,
               backgroundColor: AppColors.whiteColor,
               child: ClipOval(
-                child: Image.asset(
-                  _dummyAvatar,
-                  width: size.width * 0.13,
-                  height: size.width * 0.13,
-                  fit: BoxFit.cover,
-                ),
+                child: Image.asset(_dummyAvatar, width: size.width * 0.13, height: size.width * 0.13, fit: BoxFit.cover),
               ),
             ),
             AppDimensions.spacingLarge.sw,
@@ -366,21 +329,14 @@ class ChatListView extends GetView<ChatListController> {
                     conversation.displayName,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: AppTypography.bodyMedium.copyWith(
-                      color: AppColors.textHeadingColor,
-                      fontWeight: FontWeight.w700,
-                    ),
+                    style: AppTypography.bodyMedium.copyWith(color: AppColors.textHeadingColor, fontWeight: FontWeight.w700),
                   ),
                   AppDimensions.spacingXSmall.sh,
                   Text(
-                    conversation.lastMessagePreview.isNotEmpty
-                        ? conversation.lastMessagePreview
-                        : 'No messages yet',
+                    conversation.lastMessagePreview.isNotEmpty ? conversation.lastMessagePreview : 'No messages yet',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: AppTypography.bodySmall.copyWith(
-                      color: AppColors.textBodyColor.withValues(alpha: 0.8),
-                    ),
+                    style: AppTypography.bodySmall.copyWith(color: AppColors.textBodyColor.withValues(alpha: 0.8)),
                   ),
                 ],
               ),
@@ -392,9 +348,7 @@ class ChatListView extends GetView<ChatListController> {
                 if (timeText.isNotEmpty)
                   Text(
                     timeText,
-                    style: AppTypography.caption.copyWith(
-                      color: AppColors.textBodyColor.withValues(alpha: 0.7),
-                    ),
+                    style: AppTypography.caption.copyWith(color: AppColors.textBodyColor.withValues(alpha: 0.7)),
                   ),
                 if (conversation.unreadCount > 0) ...[
                   AppDimensions.spacingXSmall.sh,
@@ -405,16 +359,11 @@ class ChatListView extends GetView<ChatListController> {
                     ),
                     decoration: BoxDecoration(
                       color: AppColors.errorColor,
-                      borderRadius: BorderRadius.circular(
-                        AppDimensions.radiusPill,
-                      ),
+                      borderRadius: BorderRadius.circular(AppDimensions.radiusPill),
                     ),
                     child: Text(
                       conversation.unreadCount.toString(),
-                      style: AppTypography.caption.copyWith(
-                        color: AppColors.whiteColor,
-                        fontWeight: FontWeight.w700,
-                      ),
+                      style: AppTypography.caption.copyWith(color: AppColors.whiteColor, fontWeight: FontWeight.w700),
                     ),
                   ),
                 ],
@@ -436,39 +385,58 @@ class ChatListView extends GetView<ChatListController> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              controller.errorReports.value,
-              style: AppTypography.bodySmall.copyWith(
-                color: AppColors.errorColor,
-              ),
-            ),
-            TextButton(
-              onPressed: controller.fetchReports,
-              child: const Text('Coba Lagi'),
-            ),
+            Text(controller.errorReports.value, style: AppTypography.bodySmall.copyWith(color: AppColors.errorColor)),
+            TextButton(onPressed: controller.fetchReports, child: const Text('Coba Lagi')),
           ],
         );
       }
 
-      final data =
-          controller.filteredReports.isNotEmpty
-              ? controller.filteredReports
-              : <ChatReport>[];
+      final data = controller.reports;
+      final showLoadingMore = controller.isLoadingMoreReports.value;
 
       return Skeletonizer(
         enabled: isLoading && controller.reports.isEmpty,
-        child: ListView.separated(
-          itemCount: data.isEmpty && isLoading ? 6 : data.length,
-          separatorBuilder: (_, __) => const Divider(
-            height: AppDimensions.spacing2XLarge,
-            color: Color(0xFFF1F1F1),
+        child: RefreshIndicator(
+          onRefresh: controller.refreshData,
+          color: AppColors.primaryColor,
+          child: ListView.separated(
+            controller: controller.reportsScrollController,
+            physics: const AlwaysScrollableScrollPhysics(),
+            itemCount: data.isEmpty && isLoading ? 6 : (data.isEmpty ? 1 : data.length + (showLoadingMore ? 1 : 0)),
+            separatorBuilder: (_, __) => const Divider(height: AppDimensions.spacing2XLarge, color: Color(0xFFF1F1F1)),
+            itemBuilder: (_, index) {
+              if (data.isEmpty && !isLoading) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 48.0),
+                  child: Center(
+                    child: Text(
+                      'No report found',
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: AppColors.textHeadingColor.withValues(alpha: 0.6),
+                      ),
+                    ),
+                  ),
+                );
+              }
+
+              if (index == data.length && showLoadingMore) {
+                return const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 16.0),
+                  child: Center(
+                    child: SizedBox(
+                      width: 24, height: 24,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  ),
+                );
+              }
+
+              if (data.isEmpty) {
+                return _reportTileSkeleton(size);
+              }
+              return _reportTile(size, data[index]);
+            },
           ),
-          itemBuilder: (_, index) {
-            if (data.isEmpty) {
-              return _reportTileSkeleton(size);
-            }
-            return _reportTile(size, data[index]);
-          },
         ),
       );
     });
@@ -476,21 +444,14 @@ class ChatListView extends GetView<ChatListController> {
 
   Widget _reportTileSkeleton(Size size) {
     return Padding(
-      padding: const EdgeInsets.symmetric(
-        vertical: AppDimensions.spacingSmall,
-      ),
+      padding: const EdgeInsets.symmetric(vertical: AppDimensions.spacingSmall),
       child: Row(
         children: [
           CircleAvatar(
             radius: size.width * 0.065,
             backgroundColor: AppColors.whiteColor,
             child: ClipOval(
-              child: Image.asset(
-                _dummyAvatar,
-                width: size.width * 0.13,
-                height: size.width * 0.13,
-                fit: BoxFit.cover,
-              ),
+              child: Image.asset(_dummyAvatar, width: size.width * 0.13, height: size.width * 0.13, fit: BoxFit.cover),
             ),
           ),
           AppDimensions.spacingLarge.sw,
@@ -500,17 +461,12 @@ class ChatListView extends GetView<ChatListController> {
               children: [
                 Text(
                   'Loading...',
-                  style: AppTypography.bodyMedium.copyWith(
-                    color: AppColors.textHeadingColor,
-                    fontWeight: FontWeight.w700,
-                  ),
+                  style: AppTypography.bodyMedium.copyWith(color: AppColors.textHeadingColor, fontWeight: FontWeight.w700),
                 ),
                 AppDimensions.spacingXSmall.sh,
                 Text(
                   'Loading reason...',
-                  style: AppTypography.bodySmall.copyWith(
-                    color: AppColors.textBodyColor.withValues(alpha: 0.8),
-                  ),
+                  style: AppTypography.bodySmall.copyWith(color: AppColors.textBodyColor.withValues(alpha: 0.8)),
                 ),
               ],
             ),
@@ -526,21 +482,14 @@ class ChatListView extends GetView<ChatListController> {
     final hasActionStatus = status == 'approved' || status == 'declined';
 
     return Padding(
-      padding: const EdgeInsets.symmetric(
-        vertical: AppDimensions.spacingSmall,
-      ),
+      padding: const EdgeInsets.symmetric(vertical: AppDimensions.spacingSmall),
       child: Row(
         children: [
           CircleAvatar(
             radius: size.width * 0.065,
             backgroundColor: AppColors.whiteColor,
             child: ClipOval(
-              child: Image.asset(
-                _dummyAvatar,
-                width: size.width * 0.13,
-                height: size.width * 0.13,
-                fit: BoxFit.cover,
-              ),
+              child: Image.asset(_dummyAvatar, width: size.width * 0.13, height: size.width * 0.13, fit: BoxFit.cover),
             ),
           ),
           AppDimensions.spacingLarge.sw,
@@ -552,19 +501,14 @@ class ChatListView extends GetView<ChatListController> {
                   report.displayName,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: AppTypography.bodyMedium.copyWith(
-                    color: AppColors.textHeadingColor,
-                    fontWeight: FontWeight.w700,
-                  ),
+                  style: AppTypography.bodyMedium.copyWith(color: AppColors.textHeadingColor, fontWeight: FontWeight.w700),
                 ),
                 AppDimensions.spacingXSmall.sh,
                 Text(
                   report.reasonPreview,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: AppTypography.bodySmall.copyWith(
-                    color: AppColors.textBodyColor.withValues(alpha: 0.8),
-                  ),
+                  style: AppTypography.bodySmall.copyWith(color: AppColors.textBodyColor.withValues(alpha: 0.8)),
                 ),
               ],
             ),
@@ -576,12 +520,7 @@ class ChatListView extends GetView<ChatListController> {
               if (hasActionStatus)
                 _statusBadge(status)
               else if (timeText.isNotEmpty)
-                Text(
-                  timeText,
-                  style: AppTypography.caption.copyWith(
-                    color: AppColors.textBodyColor.withValues(alpha: 0.7),
-                  ),
-                ),
+                Text(timeText, style: AppTypography.caption.copyWith(color: AppColors.textBodyColor.withValues(alpha: 0.7))),
             ],
           ),
         ],
@@ -613,23 +552,15 @@ class ChatListView extends GetView<ChatListController> {
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppDimensions.spacingLarge,
-        vertical: AppDimensions.spacingXSmall,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: AppDimensions.spacingLarge, vertical: AppDimensions.spacingXSmall),
       decoration: BoxDecoration(
         color: outlined ? Colors.transparent : color.withValues(alpha: 0.12),
-        border:
-            outlined ? Border.all(color: color.withValues(alpha: 0.4)) : null,
+        border: outlined ? Border.all(color: color.withValues(alpha: 0.4)) : null,
         borderRadius: BorderRadius.circular(AppDimensions.radiusPill),
       ),
       child: Text(
         label,
-        style: AppTypography.captionLarge.copyWith(
-          color: color,
-          fontWeight: FontWeight.w800,
-          letterSpacing: 0.5,
-        ),
+        style: AppTypography.captionLarge.copyWith(color: color, fontWeight: FontWeight.w800, letterSpacing: 0.5),
       ),
     );
   }

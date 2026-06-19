@@ -92,9 +92,18 @@ class ChatService {
     }, 'Send AI Message');
   }
 
-  Future<List<ChatConversation>> getConversations() async {
+  Future<ConversationsPage> getConversations({
+    int page = 1,
+    int perPage = 10,
+    String search = '',
+  }) async {
     final response = await _apiClient.private.get(
       '/chat/conversations',
+      queryParameters: {
+        'page': page,
+        'per_page': perPage,
+        if (search.trim().isNotEmpty) 'search': search,
+      },
       options: Options(
         validateStatus: (status) => status != null && status < 500,
       ),
@@ -102,12 +111,19 @@ class ChatService {
 
     return _apiClient.customResponse(response, () async {
       final rawList = response.data?['data'];
-      if (rawList is! List) return <ChatConversation>[];
+      final conversations = rawList is List
+          ? rawList
+              .whereType<Map>()
+              .map((e) => ChatConversation.fromJson(Map<String, dynamic>.from(e)))
+              .toList()
+          : <ChatConversation>[];
+          
+      final rawMeta = response.data?['meta'];
+      final meta = rawMeta is Map
+          ? ChatMeta.fromJson(Map<String, dynamic>.from(rawMeta))
+          : const ChatMeta(currentPage: 1, lastPage: 1, perPage: 10, total: 0);
 
-      return rawList
-          .whereType<Map>()
-          .map((e) => ChatConversation.fromJson(Map<String, dynamic>.from(e)))
-          .toList();
+      return ConversationsPage(conversations: conversations, meta: meta);
     }, 'Fetch Conversations');
   }
 
@@ -263,24 +279,41 @@ class ChatService {
     );
   }
 
-  Future<List<ChatReport>> getReports(String userId) async {
+  Future<ReportsPage> getReports(
+    String userId, {
+    int page = 1,
+    int perPage = 10,
+    String search = '',
+  }) async {
     final response = await _apiClient.private.get(
       '/consultations/reports/users/$userId',
+      queryParameters: {
+        'page': page,
+        'per_page': perPage,
+        if (search.trim().isNotEmpty) 'search': search,
+      },
       options: Options(
         validateStatus: (status) => status != null && status < 500,
       ),
     );
 
     return _apiClient.customResponse(response, () async {
-      // API may return data directly as a list or nested under 'data'
       final rawList = response.data is List
           ? response.data
           : response.data?['data'];
-      if (rawList is! List) return <ChatReport>[];
-      return rawList
-          .whereType<Map>()
-          .map((e) => ChatReport.fromJson(Map<String, dynamic>.from(e)))
-          .toList();
+      final reports = rawList is List
+          ? rawList
+              .whereType<Map>()
+              .map((e) => ChatReport.fromJson(Map<String, dynamic>.from(e)))
+              .toList()
+          : <ChatReport>[];
+
+      final rawMeta = response.data?['meta'];
+      final meta = rawMeta is Map
+          ? ChatMeta.fromJson(Map<String, dynamic>.from(rawMeta))
+          : const ChatMeta(currentPage: 1, lastPage: 1, perPage: 10, total: 0);
+
+      return ReportsPage(reports: reports, meta: meta);
     }, 'Fetch Reports');
   }
 
@@ -317,4 +350,47 @@ class AiChatMessagesPage {
     required this.nextCursor,
     required this.hasMore,
   });
+}
+
+class ChatMeta {
+  final int currentPage;
+  final int lastPage;
+  final int perPage;
+  final int total;
+
+  const ChatMeta({
+    required this.currentPage,
+    required this.lastPage,
+    required this.perPage,
+    required this.total,
+  });
+
+  factory ChatMeta.fromJson(Map<String, dynamic> json) {
+    return ChatMeta(
+      currentPage: _toInt(json['current_page']),
+      lastPage: _toInt(json['last_page']),
+      perPage: _toInt(json['per_page']),
+      total: _toInt(json['total']),
+    );
+  }
+
+  static int _toInt(dynamic value) {
+    if (value is int) return value;
+    if (value is double) return value.toInt();
+    return int.tryParse(value?.toString() ?? '') ?? 0;
+  }
+}
+
+class ConversationsPage {
+  final List<ChatConversation> conversations;
+  final ChatMeta meta;
+
+  const ConversationsPage({required this.conversations, required this.meta});
+}
+
+class ReportsPage {
+  final List<ChatReport> reports;
+  final ChatMeta meta;
+
+  const ReportsPage({required this.reports, required this.meta});
 }

@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:halositek/app/data/models/chat.dart';
 import 'package:halositek/app/data/network/chat_service.dart';
@@ -23,19 +24,68 @@ class ChatListController extends GetxController {
   final conversations = <ChatConversation>[].obs;
   final isLoading = false.obs;
   final errorMessage = ''.obs;
+  final isLoadingMoreConversations = false.obs;
+  int _conversationsPage = 1;
+  int _conversationsLastPage = 1;
 
   // ── Report data ────────────────────────────────────────────────────
   final reports = <ChatReport>[].obs;
   final isLoadingReports = false.obs;
   final errorReports = ''.obs;
+  final isLoadingMoreReports = false.obs;
+  int _reportsPage = 1;
+  int _reportsLastPage = 1;
 
   // ── Search ─────────────────────────────────────────────────────────
   final searchQuery = ''.obs;
+  final TextEditingController searchController = TextEditingController();
 
-  // ── Deprecated filter kept for compatibility (unused now) ──────────
-  final statusFilter = ''.obs;
+  // Scroll controllers for infinite scroll
+  final ScrollController conversationsScrollController = ScrollController();
+  final ScrollController reportsScrollController = ScrollController();
 
-  void cycleStatusFilter() {}
+  // ── Lifecycle ──────────────────────────────────────────────────────
+  @override
+  void onInit() {
+    super.onInit();
+    
+    // Setup debounce for search
+    debounce(
+      searchQuery,
+      (_) => refreshData(),
+      time: const Duration(milliseconds: 500),
+    );
+
+    // Setup infinite scroll listeners
+    conversationsScrollController.addListener(() {
+      if (conversationsScrollController.position.pixels >=
+          conversationsScrollController.position.maxScrollExtent - 200) {
+        loadMoreConversations();
+      }
+    });
+
+    reportsScrollController.addListener(() {
+      if (reportsScrollController.position.pixels >=
+          reportsScrollController.position.maxScrollExtent - 200) {
+        loadMoreReports();
+      }
+    });
+
+    fetchConversations();
+  }
+
+  @override
+  void onClose() {
+    searchController.dispose();
+    conversationsScrollController.dispose();
+    reportsScrollController.dispose();
+    super.onClose();
+  }
+
+  void goBack() {
+    final nav = Get.find<NavigationController>();
+    nav.onPop();
+  }
 
   // ── Tab switching ──────────────────────────────────────────────────
   void toggleDropdown() {
@@ -50,42 +100,22 @@ class ChatListController extends GetxController {
     selectedTab.value = tab;
     isDropdownOpen.value = false;
 
-    if (tab == tabReport && reports.isEmpty) {
-      fetchReports();
-    } else if (tab == tabConsultation && conversations.isEmpty) {
-      fetchConversations();
+    // Reset search when switching tabs? Let's keep it, but trigger refresh
+    refreshData();
+  }
+
+  void onSearchChanged(String query) {
+    searchQuery.value = query;
+  }
+
+  Future<void> refreshData() async {
+    if (selectedTab.value == tabConsultation) {
+      _conversationsPage = 1;
+      await fetchConversations();
+    } else {
+      _reportsPage = 1;
+      await fetchReports();
     }
-  }
-
-  // ── Filtered lists ─────────────────────────────────────────────────
-  List<ChatConversation> get filteredConversations {
-    final query = searchQuery.value.trim().toLowerCase();
-    return conversations.where((c) {
-      return query.isEmpty ||
-          c.displayName.toLowerCase().contains(query) ||
-          c.lastMessagePreview.toLowerCase().contains(query);
-    }).toList();
-  }
-
-  List<ChatReport> get filteredReports {
-    final query = searchQuery.value.trim().toLowerCase();
-    return reports.where((r) {
-      return query.isEmpty ||
-          r.displayName.toLowerCase().contains(query) ||
-          r.reason.toLowerCase().contains(query);
-    }).toList();
-  }
-
-  // ── Lifecycle ──────────────────────────────────────────────────────
-  @override
-  void onInit() {
-    super.onInit();
-    fetchConversations();
-  }
-
-  void goBack() {
-    final nav = Get.find<NavigationController>();
-    nav.onPop();
   }
 
   // ── Fetch conversations ────────────────────────────────────────────
@@ -93,12 +123,43 @@ class ChatListController extends GetxController {
     try {
       isLoading.value = true;
       errorMessage.value = '';
-      final result = await _chatService.getConversations();
-      conversations.assignAll(result);
+      if (_conversationsPage == 1) {
+        conversations.clear();
+      }
+      final result = await _chatService.getConversations(
+        page: _conversationsPage,
+        perPage: 10,
+        search: searchQuery.value,
+      );
+      conversations.assignAll(result.conversations);
+      _conversationsLastPage = result.meta.lastPage;
     } catch (e) {
       errorMessage.value = e.toString();
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  Future<void> loadMoreConversations() async {
+    if (isLoading.value || isLoadingMoreConversations.value || _conversationsPage >= _conversationsLastPage) {
+      return;
+    }
+
+    try {
+      isLoadingMoreConversations.value = true;
+      _conversationsPage++;
+      final result = await _chatService.getConversations(
+        page: _conversationsPage,
+        perPage: 10,
+        search: searchQuery.value,
+      );
+      conversations.addAll(result.conversations);
+      _conversationsLastPage = result.meta.lastPage;
+    } catch (e) {
+      _conversationsPage--;
+      Get.snackbar('Error', 'Failed to load more conversations: $e');
+    } finally {
+      isLoadingMoreConversations.value = false;
     }
   }
 
@@ -107,17 +168,53 @@ class ChatListController extends GetxController {
     try {
       isLoadingReports.value = true;
       errorReports.value = '';
+      if (_reportsPage == 1) {
+        reports.clear();
+      }
       final userId = await _tokenService.getUserId();
       if (userId == null || userId.trim().isEmpty) {
         errorReports.value = 'User ID not found';
         return;
       }
-      final result = await _chatService.getReports(userId);
-      reports.assignAll(result);
+      final result = await _chatService.getReports(
+        userId,
+        page: _reportsPage,
+        perPage: 10,
+        search: searchQuery.value,
+      );
+      reports.assignAll(result.reports);
+      _reportsLastPage = result.meta.lastPage;
     } catch (e) {
       errorReports.value = e.toString();
     } finally {
       isLoadingReports.value = false;
+    }
+  }
+
+  Future<void> loadMoreReports() async {
+    if (isLoadingReports.value || isLoadingMoreReports.value || _reportsPage >= _reportsLastPage) {
+      return;
+    }
+
+    try {
+      isLoadingMoreReports.value = true;
+      final userId = await _tokenService.getUserId();
+      if (userId == null || userId.trim().isEmpty) return;
+
+      _reportsPage++;
+      final result = await _chatService.getReports(
+        userId,
+        page: _reportsPage,
+        perPage: 10,
+        search: searchQuery.value,
+      );
+      reports.addAll(result.reports);
+      _reportsLastPage = result.meta.lastPage;
+    } catch (e) {
+      _reportsPage--;
+      Get.snackbar('Error', 'Failed to load more reports: $e');
+    } finally {
+      isLoadingMoreReports.value = false;
     }
   }
 
