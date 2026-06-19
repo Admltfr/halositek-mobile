@@ -272,7 +272,10 @@ class ChatService {
     );
 
     return _apiClient.customResponse(response, () async {
-      final rawList = response.data?['data'];
+      // API may return data directly as a list or nested under 'data'
+      final rawList = response.data is List
+          ? response.data
+          : response.data?['data'];
       if (rawList is! List) return <ChatReport>[];
       return rawList
           .whereType<Map>()

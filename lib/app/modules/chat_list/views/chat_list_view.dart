@@ -33,8 +33,9 @@ class ChatListView extends GetView<ChatListController> {
               _searchBar(size),
               AppDimensions.spacingXLarge.sh,
               _sectionHeader(size),
+              _dropdownPanel(size),
               AppDimensions.spacingLarge.sh,
-              Expanded(child: _chatList(size)),
+              Expanded(child: _contentList(size)),
             ],
           ),
         ),
@@ -42,6 +43,7 @@ class ChatListView extends GetView<ChatListController> {
     );
   }
 
+  // ── Top bar (no dropdown – just back + title) ──────────────────────
   Widget _topBar(Size size) {
     return SizedBox(
       height: size.height * 0.04,
@@ -70,70 +72,14 @@ class ChatListView extends GetView<ChatListController> {
               ),
             ),
           ),
-          // Filter dropdown (REPORT style)
-          Obx(
-            () => GestureDetector(
-              onTap: controller.cycleStatusFilter,
-              child: Container(
-                padding: EdgeInsets.symmetric(
-                  horizontal: size.width * 0.03,
-                  vertical: size.height * 0.005,
-                ),
-                decoration: BoxDecoration(
-                  color: _filterBadgeColor(controller.statusFilter.value)
-                      .withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(AppDimensions.radiusPill),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      controller.statusFilter.value.isEmpty
-                          ? 'ALL'
-                          : controller.statusFilter.value.toUpperCase(),
-                      style: AppTypography.bodySmall.copyWith(
-                        color: _filterBadgeColor(controller.statusFilter.value),
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const Icon(
-                      Icons.keyboard_arrow_down_rounded,
-                      color: AppColors.primaryColor,
-                      size: AppDimensions.iconSizeMedium,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
+          // Spacer to balance the back button
+          const SizedBox(width: 28),
         ],
       ),
     );
   }
 
-  Color _filterBadgeColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'approved':
-        return AppColors.successColor;
-      case 'declined':
-        return AppColors.errorColor;
-      case 'reported':
-        return AppColors.warningColor;
-      default:
-        return AppColors.primaryColor;
-    }
-  }
-
-  Widget _sectionHeader(Size size) {
-    return Text(
-      'Your Chat',
-      style: AppTypography.bodyMedium.copyWith(
-        color: AppColors.textHeadingColor,
-        fontWeight: FontWeight.w700,
-      ),
-    );
-  }
-
+  // ── Search bar ─────────────────────────────────────────────────────
   Widget _searchBar(Size size) {
     return Container(
       height: size.height * 0.062,
@@ -174,6 +120,155 @@ class ChatListView extends GetView<ChatListController> {
     );
   }
 
+  // ── Section header with dropdown ───────────────────────────────────
+  Widget _sectionHeader(Size size) {
+    return Obx(
+      () => Row(
+        children: [
+          Expanded(
+            child: Text(
+              'Your Chat',
+              style: AppTypography.bodyMedium.copyWith(
+                color: AppColors.textHeadingColor,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          _tabDropdownButton(size),
+        ],
+      ),
+    );
+  }
+
+  /// Dropdown button styled like _statusFilter from design_view
+  Widget _tabDropdownButton(Size size) {
+    final isConsultation =
+        controller.selectedTab.value == ChatListController.tabConsultation;
+    final label = isConsultation ? 'CONSULTATION' : 'REPORT';
+
+    return GestureDetector(
+      onTap: controller.toggleDropdown,
+      child: Container(
+        height: 32,
+        padding: const EdgeInsets.symmetric(horizontal: 14),
+        decoration: BoxDecoration(
+          color: AppColors.secondaryColor.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: AppColors.primaryColor.withValues(alpha: 0.22),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              style: AppTypography.captionLarge.copyWith(
+                color: AppColors.primaryColor,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(width: 4),
+            Icon(
+              controller.isDropdownOpen.value
+                  ? Icons.keyboard_arrow_up_rounded
+                  : Icons.keyboard_arrow_down_rounded,
+              size: 18,
+              color: AppColors.primaryColor,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Dropdown panel (appears below header when open)
+  Widget _dropdownPanel(Size size) {
+    return Obx(() {
+      if (!controller.isDropdownOpen.value) return const SizedBox.shrink();
+
+      return Padding(
+        padding: EdgeInsets.only(top: size.height * 0.01),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 6),
+          decoration: BoxDecoration(
+            color: AppColors.whiteColor,
+            borderRadius: BorderRadius.circular(AppDimensions.radiusLarge),
+            border: Border.all(
+              color: AppColors.formBorderColor.withValues(alpha: 0.20),
+            ),
+            boxShadow: const [
+              BoxShadow(
+                color: AppColors.shadowSoftColor,
+                blurRadius: 10,
+                offset: Offset(0, 5),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              _dropdownItem(
+                label: 'Consultation',
+                value: ChatListController.tabConsultation,
+              ),
+              _dropdownItem(
+                label: 'Report',
+                value: ChatListController.tabReport,
+              ),
+            ],
+          ),
+        ),
+      );
+    });
+  }
+
+  Widget _dropdownItem({required String label, required String value}) {
+    final selected = controller.selectedTab.value == value;
+    return InkWell(
+      onTap: () => controller.changeTab(value),
+      child: Container(
+        height: 44,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        color: selected
+            ? AppColors.secondaryColor.withValues(alpha: 0.16)
+            : Colors.transparent,
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                label,
+                style: AppTypography.bodySmall.copyWith(
+                  color: selected
+                      ? AppColors.primaryColor
+                      : AppColors.textHeadingColor,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+            if (selected)
+              const Icon(
+                Icons.check_circle_rounded,
+                color: AppColors.primaryColor,
+                size: 16,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── Content (switches between consultation list and report list) ───
+  Widget _contentList(Size size) {
+    return Obx(() {
+      if (controller.selectedTab.value == ChatListController.tabReport) {
+        return _reportList(size);
+      }
+      return _chatList(size);
+    });
+  }
+
+  // ── Consultation chat list ─────────────────────────────────────────
   Widget _chatList(Size size) {
     return Obx(() {
       final isLoading = controller.isLoading.value;
@@ -240,9 +335,6 @@ class ChatListView extends GetView<ChatListController> {
 
   Widget _chatTile(Size size, ChatConversation conversation) {
     final timeText = _formatTime(conversation.lastActivityAt);
-    final status = conversation.status.toLowerCase();
-    final hasStatus =
-        status == 'approved' || status == 'declined' || status == 'reported';
 
     return InkWell(
       onTap: () => controller.openConversation(conversation),
@@ -297,16 +389,14 @@ class ChatListView extends GetView<ChatListController> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                if (hasStatus)
-                  _statusBadge(status)
-                else if (timeText.isNotEmpty)
+                if (timeText.isNotEmpty)
                   Text(
                     timeText,
                     style: AppTypography.caption.copyWith(
                       color: AppColors.textBodyColor.withValues(alpha: 0.7),
                     ),
                   ),
-                if (!hasStatus && conversation.unreadCount > 0) ...[
+                if (conversation.unreadCount > 0) ...[
                   AppDimensions.spacingXSmall.sh,
                   Container(
                     padding: const EdgeInsets.symmetric(
@@ -336,6 +426,170 @@ class ChatListView extends GetView<ChatListController> {
     );
   }
 
+  // ── Report list ────────────────────────────────────────────────────
+  Widget _reportList(Size size) {
+    return Obx(() {
+      final isLoading = controller.isLoadingReports.value;
+      final hasError = controller.errorReports.value.isNotEmpty;
+
+      if (hasError && controller.reports.isEmpty) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              controller.errorReports.value,
+              style: AppTypography.bodySmall.copyWith(
+                color: AppColors.errorColor,
+              ),
+            ),
+            TextButton(
+              onPressed: controller.fetchReports,
+              child: const Text('Coba Lagi'),
+            ),
+          ],
+        );
+      }
+
+      final data =
+          controller.filteredReports.isNotEmpty
+              ? controller.filteredReports
+              : <ChatReport>[];
+
+      return Skeletonizer(
+        enabled: isLoading && controller.reports.isEmpty,
+        child: ListView.separated(
+          itemCount: data.isEmpty && isLoading ? 6 : data.length,
+          separatorBuilder: (_, __) => const Divider(
+            height: AppDimensions.spacing2XLarge,
+            color: Color(0xFFF1F1F1),
+          ),
+          itemBuilder: (_, index) {
+            if (data.isEmpty) {
+              return _reportTileSkeleton(size);
+            }
+            return _reportTile(size, data[index]);
+          },
+        ),
+      );
+    });
+  }
+
+  Widget _reportTileSkeleton(Size size) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        vertical: AppDimensions.spacingSmall,
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: size.width * 0.065,
+            backgroundColor: AppColors.whiteColor,
+            child: ClipOval(
+              child: Image.asset(
+                _dummyAvatar,
+                width: size.width * 0.13,
+                height: size.width * 0.13,
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+          AppDimensions.spacingLarge.sw,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Loading...',
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: AppColors.textHeadingColor,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                AppDimensions.spacingXSmall.sh,
+                Text(
+                  'Loading reason...',
+                  style: AppTypography.bodySmall.copyWith(
+                    color: AppColors.textBodyColor.withValues(alpha: 0.8),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _reportTile(Size size, ChatReport report) {
+    final timeText = _formatTime(report.consultationDate);
+    final status = report.actionReport.toLowerCase();
+    final hasActionStatus = status == 'approved' || status == 'declined';
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        vertical: AppDimensions.spacingSmall,
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: size.width * 0.065,
+            backgroundColor: AppColors.whiteColor,
+            child: ClipOval(
+              child: Image.asset(
+                _dummyAvatar,
+                width: size.width * 0.13,
+                height: size.width * 0.13,
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+          AppDimensions.spacingLarge.sw,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  report.displayName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: AppColors.textHeadingColor,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                AppDimensions.spacingXSmall.sh,
+                Text(
+                  report.reasonPreview,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.bodySmall.copyWith(
+                    color: AppColors.textBodyColor.withValues(alpha: 0.8),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          AppDimensions.spacingMedium.sw,
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              if (hasActionStatus)
+                _statusBadge(status)
+              else if (timeText.isNotEmpty)
+                Text(
+                  timeText,
+                  style: AppTypography.caption.copyWith(
+                    color: AppColors.textBodyColor.withValues(alpha: 0.7),
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Status badge for report cards ──────────────────────────────────
   Widget _statusBadge(String status) {
     Color color;
     String label;
@@ -352,11 +606,6 @@ class ChatListView extends GetView<ChatListController> {
         label = 'DECLINED';
         outlined = true;
         break;
-      case 'reported':
-        color = AppColors.warningColor;
-        label = 'REPORT';
-        outlined = true;
-        break;
       default:
         color = AppColors.textBodyColor;
         label = status.toUpperCase();
@@ -370,7 +619,8 @@ class ChatListView extends GetView<ChatListController> {
       ),
       decoration: BoxDecoration(
         color: outlined ? Colors.transparent : color.withValues(alpha: 0.12),
-        border: outlined ? Border.all(color: color.withValues(alpha: 0.4)) : null,
+        border:
+            outlined ? Border.all(color: color.withValues(alpha: 0.4)) : null,
         borderRadius: BorderRadius.circular(AppDimensions.radiusPill),
       ),
       child: Text(
@@ -384,6 +634,7 @@ class ChatListView extends GetView<ChatListController> {
     );
   }
 
+  // ── Time formatter ─────────────────────────────────────────────────
   String _formatTime(DateTime? value) {
     if (value == null) return '';
     final local = value.toLocal();

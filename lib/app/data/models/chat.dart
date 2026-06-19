@@ -233,26 +233,85 @@ class ChatSender {
 
 class ChatReport {
   final String id;
-  final String conversationId;
+  final ReportUser requester;
   final String reason;
-  final String status; // 'pending', 'resolved', etc.
-  final DateTime? createdAt;
+  final DateTime? consultationDate;
+  final ReportUser opposingParty;
+  final double nominal;
+  final String transcript;
+  final String actionReport; // 'new', 'approved', 'declined'
 
   const ChatReport({
     required this.id,
-    required this.conversationId,
+    required this.requester,
     required this.reason,
-    required this.status,
-    required this.createdAt,
+    required this.consultationDate,
+    required this.opposingParty,
+    required this.nominal,
+    required this.transcript,
+    required this.actionReport,
   });
 
   factory ChatReport.fromJson(Map<String, dynamic> json) {
     return ChatReport(
       id: (json['id'] ?? '').toString(),
-      conversationId: (json['conversation_id'] ?? '').toString(),
+      requester: ReportUser.fromJson(
+        json['requester'] is Map
+            ? Map<String, dynamic>.from(json['requester'] as Map)
+            : <String, dynamic>{},
+      ),
       reason: (json['reason'] ?? '').toString(),
-      status: (json['status'] ?? 'pending').toString(),
-      createdAt: DateTime.tryParse((json['created_at'] ?? '').toString()),
+      consultationDate: DateTime.tryParse(
+        (json['consultation_date'] ?? '').toString(),
+      ),
+      opposingParty: ReportUser.fromJson(
+        json['opposing_party'] is Map
+            ? Map<String, dynamic>.from(json['opposing_party'] as Map)
+            : <String, dynamic>{},
+      ),
+      nominal: _toDouble(json['nominal']),
+      transcript: (json['transcript'] ?? '').toString(),
+      actionReport: (json['action_report'] ?? 'new').toString().toLowerCase(),
+    );
+  }
+
+  /// Display name: show the opposing party's name
+  String get displayName => opposingParty.name.isNotEmpty
+      ? opposingParty.name
+      : 'Unknown User';
+
+  /// Preview text from the reason
+  String get reasonPreview => reason;
+
+  static double _toDouble(dynamic value) {
+    if (value is double) return value;
+    if (value is int) return value.toDouble();
+    return double.tryParse(value?.toString() ?? '') ?? 0;
+  }
+}
+
+class ReportUser {
+  final String id;
+  final String name;
+  final String role;
+  final String? photoProfile;
+  final String? photoProfileUrl;
+
+  const ReportUser({
+    required this.id,
+    required this.name,
+    this.role = '',
+    this.photoProfile,
+    this.photoProfileUrl,
+  });
+
+  factory ReportUser.fromJson(Map<String, dynamic> json) {
+    return ReportUser(
+      id: (json['id'] ?? '').toString(),
+      name: (json['name'] ?? '').toString(),
+      role: (json['role'] ?? '').toString(),
+      photoProfile: json['photo_profile']?.toString(),
+      photoProfileUrl: json['photo_profile_url']?.toString(),
     );
   }
 }
