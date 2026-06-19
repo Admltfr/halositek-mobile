@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 import 'package:halositek/app/data/network/api_client.dart';
+import 'package:halositek/app/data/network/architect_service.dart';
 import 'package:halositek/app/data/network/catalog_service.dart';
 import 'package:halositek/app/data/network/chat_service.dart';
 import 'package:halositek/app/data/network/payment_service.dart';
@@ -26,6 +27,12 @@ class DetailBinding extends Bindings {
       Get.lazyPut<ChatService>(() => ChatService(Get.find<ApiClient>()));
     }
 
+    if (!Get.isRegistered<ArchitectService>()) {
+      Get.lazyPut<ArchitectService>(
+        () => ArchitectService(Get.find<ApiClient>()),
+      );
+    }
+
     if (!Get.isRegistered<TokenService>()) {
       Get.lazyPut<TokenService>(() => TokenService());
     }
@@ -36,6 +43,7 @@ class DetailBinding extends Bindings {
         Get.find<PaymentService>(),
         Get.find<ChatService>(),
         Get.find<TokenService>(),
+        Get.find<ArchitectService>(),
         catalogId: catalogId,
       ),
     );

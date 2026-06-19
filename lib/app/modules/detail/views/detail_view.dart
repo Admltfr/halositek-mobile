@@ -4,6 +4,7 @@ import 'package:halositek/app/core/constants/app_colors.dart';
 import 'package:halositek/app/core/constants/app_dimensions.dart';
 import 'package:halositek/app/core/constants/app_extensions.dart';
 import 'package:halositek/app/core/constants/app_typography.dart';
+import 'package:halositek/app/data/models/architect.dart';
 import 'package:halositek/app/data/models/catalog.dart';
 import 'package:halositek/app/modules/profile/widgets/profile_formatters.dart';
 import 'package:skeletonizer/skeletonizer.dart';
@@ -376,23 +377,39 @@ class DetailView extends GetView<DetailController> {
   }
 
   Widget _architectChatRow(Size size) {
+    final architect = controller.architect.value ?? Architect.dummy();
+
     return Row(
       children: [
         CircleAvatar(
           radius: 18,
           backgroundColor: AppColors.formBorderColor.withValues(alpha: 0.2),
-          backgroundImage:
-              controller.architectPhoto.isNotEmpty
-                  ? NetworkImage(controller.architectPhoto)
-                  : null,
-          child:
-              controller.architectPhoto.isEmpty
-                  ? Icon(
-                    Icons.person,
-                    size: size.width * 0.045,
-                    color: AppColors.accentColor,
-                  )
-                  : null,
+          child: ClipOval(
+            child:
+                architect.profilePicture.isNotEmpty
+                    ? Image.network(
+                      architect.profilePicture,
+                      width: 36,
+                      height: 36,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, error, __) {
+                        debugPrint(
+                          'Failed architect image: ${architect.profilePicture}',
+                        );
+
+                        return Icon(
+                          Icons.person,
+                          size: size.width * 0.045,
+                          color: AppColors.accentColor,
+                        );
+                      },
+                    )
+                    : Icon(
+                      Icons.person,
+                      size: size.width * 0.045,
+                      color: AppColors.accentColor,
+                    ),
+          ),
         ),
         12.0.sw,
         Expanded(
@@ -400,7 +417,7 @@ class DetailView extends GetView<DetailController> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                controller.architectName,
+                architect.name,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: AppTypography.bodySmall.copyWith(
@@ -410,7 +427,7 @@ class DetailView extends GetView<DetailController> {
               ),
               2.0.sh,
               Text(
-                '${formatCurrency(controller.consultationFee)} / ${controller.consultationDuration} hours',
+                '${formatCurrency(architect.consultationFee)} / ${architect.consultationDuration} hours',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: AppTypography.bodySmall.copyWith(
