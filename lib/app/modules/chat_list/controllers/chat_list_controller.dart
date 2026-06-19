@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:halositek/app/data/models/chat.dart';
@@ -50,6 +51,9 @@ class ChatListController extends GetxController {
 
   // ── WebSocket channel tracking ─────────────────────────────────────
   final Set<String> _subscribedConversationIds = {};
+  final typingConversations = <String, bool>{}.obs;
+  final Map<String, Timer> _typingTimers = {};
+  String _currentUserId = '';
 
   // ── Lifecycle ──────────────────────────────────────────────────────
   @override
@@ -93,6 +97,7 @@ class ChatListController extends GetxController {
     final tokenService = Get.find<TokenService>();
     final role = (await tokenService.getRole() ?? '').trim().toLowerCase();
     isArchitect.value = role == 'architect';
+    _currentUserId = (await tokenService.getUserId()) ?? '';
     await fetchConversations();
   }
 
@@ -110,6 +115,7 @@ class ChatListController extends GetxController {
         final channel = 'private-chat.conversation.${c.id}';
         ws.subscribe(channel);
         ws.on(channel, 'chat.message.sent', (data) => _onWsNewMessage(c.id, data));
+        ws.on(channel, 'chat.typing', (data) => _onWsTyping(c.id, data));
         _subscribedConversationIds.add(c.id);
       }
 
@@ -150,7 +156,9 @@ class ChatListController extends GetxController {
 
       // Create updated conversation with new last message and incremented
       // unread count (only if the message is NOT from the current user)
-      final newUnread = message.isMine ? existing.unreadCount : existing.unreadCount + 1;
+      final isMine = message.userId == _currentUserId;
+      final newUnread = isMine ? existing.unreadCount : existing.unreadCount + 1;
+      final updatedMessage = message.copyWith(isMine: isMine);
 
       final updated = ChatConversation(
         id: existing.id,
@@ -159,7 +167,7 @@ class ChatListController extends GetxController {
         participantIds: existing.participantIds,
         lastReadAt: existing.lastReadAt,
         unreadCount: newUnread,
-        lastMessage: message,
+        lastMessage: updatedMessage,
         updatedAt: DateTime.now(),
         createdAt: existing.createdAt,
         durationHours: existing.durationHours,
@@ -177,6 +185,28 @@ class ChatListController extends GetxController {
       debugPrint('[ChatList] 📨 Updated conversation $conversationId with new message');
     } catch (e) {
       debugPrint('[ChatList] ❌ Error handling WS message: $e');
+    }
+  }
+
+  void _onWsTyping(String conversationId, Map<String, dynamic> data) {
+    try {
+      final userId = data['user_id']?.toString() ?? '';
+      final isTyping = data['is_typing'] == true;
+
+      // Ignore own typing events
+      if (userId == _currentUserId) return;
+
+      typingConversations[conversationId] = isTyping;
+
+      // Auto-reset typing after 4 seconds if no update received
+      _typingTimers[conversationId]?.cancel();
+      if (isTyping) {
+        _typingTimers[conversationId] = Timer(const Duration(seconds: 4), () {
+          typingConversations[conversationId] = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('[ChatList] ❌ Error handling WS typing: $e');
     }
   }
 

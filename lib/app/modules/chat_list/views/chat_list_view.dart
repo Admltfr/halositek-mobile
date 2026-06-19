@@ -357,12 +357,26 @@ class ChatListView extends GetView<ChatListController> {
                     style: AppTypography.bodyMedium.copyWith(color: AppColors.textHeadingColor, fontWeight: FontWeight.w700),
                   ),
                   AppDimensions.spacingXSmall.sh,
-                  Text(
-                    conversation.lastMessagePreview.isNotEmpty ? conversation.lastMessagePreview : 'No messages yet',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTypography.bodySmall.copyWith(color: AppColors.textBodyColor.withValues(alpha: 0.8)),
-                  ),
+                  Obx(() {
+                    final isTyping = controller.typingConversations[conversation.id] ?? false;
+                    if (isTyping) {
+                      return Text(
+                        'typing...',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTypography.bodySmall.copyWith(
+                          color: AppColors.primaryColor,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      );
+                    }
+                    return Text(
+                      conversation.lastMessagePreview.isNotEmpty ? conversation.lastMessagePreview : 'No messages yet',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.bodySmall.copyWith(color: AppColors.textBodyColor.withValues(alpha: 0.8)),
+                    );
+                  }),
                 ],
               ),
             ),
