@@ -350,11 +350,25 @@ class ChatListView extends GetView<ChatListController> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    displayName,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTypography.bodyMedium.copyWith(color: AppColors.textHeadingColor, fontWeight: FontWeight.w700),
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          displayName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTypography.bodyMedium.copyWith(color: AppColors.textHeadingColor, fontWeight: FontWeight.w700),
+                        ),
+                      ),
+                      if (conversation.canSendMessage) ...[
+                        4.0.sw,
+                        Icon(
+                          Icons.access_time_filled_rounded,
+                          size: 14,
+                          color: AppColors.primaryColor.withValues(alpha: 0.8),
+                        ),
+                      ],
+                    ],
                   ),
                   AppDimensions.spacingXSmall.sh,
                   Obx(() {

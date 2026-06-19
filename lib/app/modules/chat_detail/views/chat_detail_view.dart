@@ -264,23 +264,24 @@ class ChatDetailView extends GetView<ChatDetailController> {
             return Padding(
               padding: const EdgeInsets.symmetric(vertical: AppDimensions.spacingLarge),
               child: Center(
-                child: controller.isLoadingMore.value
-                    ? const SizedBox(
-                        width: 22,
-                        height: 22,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryColor),
-                        ),
-                      )
-                    : (!controller.hasMoreMessages.value
-                        ? Text(
-                            'Tidak ada pesan lebih lama.',
-                            style: AppTypography.captionSmall.copyWith(
-                              color: AppColors.textBodyColor.withValues(alpha: 0.5),
-                            ),
-                          )
-                        : const SizedBox.shrink()),
+                child:
+                    controller.isLoadingMore.value
+                        ? const SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryColor),
+                          ),
+                        )
+                        : (!controller.hasMoreMessages.value
+                            ? Text(
+                              'You have reached the end of the conversation.',
+                              style: AppTypography.captionSmall.copyWith(
+                                color: AppColors.textBodyColor.withValues(alpha: 0.5),
+                              ),
+                            )
+                            : const SizedBox.shrink()),
               ),
             );
           }

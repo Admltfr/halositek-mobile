@@ -272,20 +272,20 @@ class ChatDetailController extends GetxController {
 
   Future<void> loadMoreMessages() async {
     if (isLoadingMore.value || !hasMoreMessages.value || isLoading.value) return;
-    
+
     isLoadingMore.value = true;
     _currentPage++;
 
     try {
       final messagesPage = await _chatService.getMessages(conversationId, page: _currentPage, perPage: 10);
       final newMsgs = messagesPage.messages.reversed.toList();
-      
+
       if (newMsgs.isNotEmpty) {
         final double currentScrollOffset = scrollController.offset;
         final double currentMaxScrollExtent = scrollController.position.maxScrollExtent;
-        
+
         messages.insertAll(0, newMsgs);
-        
+
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (scrollController.hasClients) {
             final double newMaxScrollExtent = scrollController.position.maxScrollExtent;
@@ -293,7 +293,7 @@ class ChatDetailController extends GetxController {
           }
         });
       }
-      
+
       _lastPage = messagesPage.meta.lastPage;
       hasMoreMessages.value = _currentPage < _lastPage;
     } catch (e) {
@@ -326,7 +326,7 @@ class ChatDetailController extends GetxController {
 
       messages.assignAll(messagesPage.messages.reversed.toList());
       conversationDetail.value = detail;
-      
+
       _lastPage = messagesPage.meta.lastPage;
       hasMoreMessages.value = _currentPage < _lastPage;
 
@@ -335,11 +335,12 @@ class ChatDetailController extends GetxController {
       if (detail.architect?.id == _currentUserId) {
         otherUserName.value = detail.user?.name ?? '';
         otherUserRole.value = 'USER';
-        otherUserAvatar.value = detail.user?.photoProfileUrl ?? detail.user?.photoProfile ?? '';
+        otherUserAvatar.value = detail.user?.photoProfile != null ? '/storage/${detail.user?.photoProfile}' : '';
       } else {
         otherUserName.value = detail.architect?.name ?? '';
         otherUserRole.value = 'ARCHITECT';
-        otherUserAvatar.value = '/storage/${detail.architect?.profilePicture}';
+        otherUserAvatar.value =
+            detail.architect?.profilePicture != null ? '/storage/${detail.architect?.profilePicture}' : '';
       }
 
       // Set typing display name to the other user's name

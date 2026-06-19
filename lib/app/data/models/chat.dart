@@ -17,6 +17,7 @@ class ChatConversation {
   final ChatParticipant? user;
   final ChatParticipant? architect;
   final ChatSession? session;
+  final bool canSendMessage;
 
   const ChatConversation({
     required this.id,
@@ -34,6 +35,7 @@ class ChatConversation {
     this.user,
     this.architect,
     this.session,
+    this.canSendMessage = false,
   });
 
   factory ChatConversation.fromJson(Map<String, dynamic> json) {
@@ -60,6 +62,7 @@ class ChatConversation {
       user: userRaw is Map ? ChatParticipant.fromJson(Map<String, dynamic>.from(userRaw)) : null,
       architect: architectRaw is Map ? ChatParticipant.fromJson(Map<String, dynamic>.from(architectRaw)) : null,
       session: sessionRaw is Map ? ChatSession.fromJson(Map<String, dynamic>.from(sessionRaw)) : null,
+      canSendMessage: json['can_send_message'] == true,
     );
   }
 
