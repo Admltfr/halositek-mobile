@@ -75,7 +75,9 @@ class DetailController extends GetxController {
       errorMessage.value = '';
 
       final result = await _catalogService.getCatalogById(catalogId);
-      architect.value = await _architectService.getArchitectById(result.architectId);
+      architect.value = await _architectService.getArchitectById(
+        result.architectId,
+      );
       catalog.value = result;
       activeImageIndex.value = 0;
       activeLayoutIndex.value = 0;
@@ -312,7 +314,7 @@ class DetailController extends GetxController {
   List<String> get projectLayoutImages {
     final p = catalog.value;
     if (p == null) return const <String>[];
-    return p.layoutImageUrls.isNotEmpty ? p.layoutImageUrls : p.layoutImages;
+    return p.layoutImages;
   }
 
   String get areaDisplay {

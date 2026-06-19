@@ -5,6 +5,7 @@ import 'package:halositek/app/core/constants/app_dimensions.dart';
 import 'package:halositek/app/core/constants/app_extensions.dart';
 import 'package:halositek/app/core/constants/app_typography.dart';
 import 'package:halositek/app/data/models/architect.dart';
+import 'package:halositek/app/data/models/catalog.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import '../controllers/architect_controller.dart';
 
@@ -191,8 +192,8 @@ class ArchitectView extends GetView<ArchitectController> {
 
   Widget _architectCard({required Size size, required Architect architect}) {
     final projectsCount = controller.projectCompletedCount(architect);
-    final hiddenCount = controller.hiddenProjectsCount(architect);
     final isPlaceholder = architect.id.isEmpty;
+    final catalogs = controller.catalogsByArchitect(architect.id);
 
     return GestureDetector(
       onTap: isPlaceholder ? null : () => controller.openPortofolio(architect),
@@ -284,27 +285,39 @@ class ArchitectView extends GetView<ArchitectController> {
               ],
             ),
             14.0.sh,
-            Row(
-              children: [
-                Expanded(
-                  child: _projectThumb(size, _projectImage(architect, 0)),
-                ),
-                6.0.sw,
-                Expanded(
-                  child: _projectThumb(size, _projectImage(architect, 1)),
-                ),
-                6.0.sw,
-                Expanded(
-                  child: _moreThumb(
-                    size: size,
-                    label: hiddenCount > 0 ? '+$hiddenCount' : '+0',
-                  ),
-                ),
-              ],
-            ),
+            _projectPreview(size, catalogs),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _projectPreview(Size size, List<Catalog> catalogs) {
+    final count = catalogs.length;
+
+    if (count == 0) {
+      return const SizedBox.shrink();
+    }
+
+    final visibleCount = count > 3 ? 2 : count;
+    final hiddenCount = count > 3 ? count - 2 : 0;
+
+    return Row(
+      children: [
+        ...List.generate(visibleCount, (index) {
+          return Expanded(
+            child: Padding(
+              padding: EdgeInsets.only(
+                right: index < visibleCount - 1 || hiddenCount > 0 ? 6 : 0,
+              ),
+              child: _projectThumb(size, _projectImage(catalogs[index])),
+            ),
+          );
+        }),
+
+        if (hiddenCount > 0)
+          Expanded(child: _moreThumb(size: size, label: '+$hiddenCount')),
+      ],
     );
   }
 
@@ -355,12 +368,11 @@ class ArchitectView extends GetView<ArchitectController> {
     );
   }
 
-  String _projectImage(Architect architect, int index) {
-    if (architect.projects.length <= index) return _dummyProject;
+  String _projectImage(Catalog catalog) {
+    if (catalog.images.isNotEmpty) {
+      return catalog.images.first;
+    }
 
-    final project = architect.projects[index];
-    if (project.images.isNotEmpty) return project.images.first;
-    if (project.imageUrls.isNotEmpty) return project.imageUrls.first;
     return _dummyProject;
   }
 

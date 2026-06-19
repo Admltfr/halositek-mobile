@@ -1,3 +1,4 @@
+import 'package:halositek/app/core/constants/app_extensions.dart';
 import 'package:halositek/app/data/models/architect.dart';
 
 class Award {
@@ -42,7 +43,8 @@ class Award {
       role: (json['role'] ?? '').toString(),
       awardDate: DateTime.tryParse((json['award_date'] ?? '').toString()),
       description: (json['description'] ?? '').toString(),
-      verificationFile: (json['verification_file'] ?? '').toString(),
+      verificationFile:
+          (json['verification_file'] ?? '').toString().toImageUrl(),
       verificationFileUrl: (json['verification_file_url'] ?? '').toString(),
       status: (json['status'] ?? '').toString(),
       architect:

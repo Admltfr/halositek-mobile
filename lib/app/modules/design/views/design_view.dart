@@ -496,8 +496,7 @@ class DesignView extends GetView<DesignController> {
         '${catalog.area.toStringAsFixed(catalog.area % 1 == 0 ? 0 : 1)}m² • ${catalog.estimatedCost}';
     final String title = catalog.name;
     final String likesCount = catalog.likesCount.toString();
-    final images =
-        catalog.imageUrls.isNotEmpty ? catalog.imageUrls : catalog.images;
+    final images = catalog.images;
     final activeIndex = controller.getImageIndex(catalog.id);
 
     return GestureDetector(
@@ -620,76 +619,104 @@ class DesignView extends GetView<DesignController> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
-                    children: [
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: size.width * 0.018,
-                          vertical: size.height * 0.0035,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.secondaryColor.withValues(
-                            alpha: 0.18,
-                          ),
-                          borderRadius: BorderRadius.circular(
-                            AppDimensions.radiusSmall,
-                          ),
-                        ),
-                        child: Text(
-                          label,
-                          style: AppTypography.bodySmall.copyWith(
-                            color: AppColors.primaryColor,
-                            fontWeight: FontWeight.w700,
-                            fontSize: AppTypography.caption.fontSize,
-                          ),
-                        ),
-                      ),
-                      8.0.sw,
-                      Text(
-                        specs,
-                        style: AppTypography.bodySmall.copyWith(
-                          color: AppColors.textBodyColor,
-                          fontSize: AppTypography.captionLarge.fontSize,
-                        ),
-                      ),
-                      const Spacer(),
-                      GestureDetector(
-                        onTap:
-                            () =>
-                                controller.isArchitect.value
-                                    ? null
-                                    : controller.toggleCatalogLike(catalog.id),
-                        child: Icon(
-                          catalog.liked
-                              ? Icons.favorite_rounded
-                              : Icons.favorite_border_rounded,
-                          color:
-                              catalog.liked
-                                  ? AppColors.errorColor
-                                  : AppColors.formBorderColor,
-                          size: AppDimensions.iconSizeLarge,
-                        ),
-                      ),
-                    ],
-                  ),
-                  8.0.sh,
-                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
-                        child: Text(
-                          title,
-                          style: AppTypography.bodyLarge.copyWith(
-                            color: AppColors.textHeadingColor,
-                            fontWeight: FontWeight.w700,
-                          ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: size.width * 0.018,
+                                    vertical: size.height * 0.0035,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.secondaryColor.withValues(
+                                      alpha: 0.18,
+                                    ),
+                                    borderRadius: BorderRadius.circular(
+                                      AppDimensions.radiusSmall,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    label,
+                                    style: AppTypography.bodySmall.copyWith(
+                                      color: AppColors.primaryColor,
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: AppTypography.caption.fontSize,
+                                    ),
+                                  ),
+                                ),
+                                8.0.sw,
+                                Expanded(
+                                  child: Text(
+                                    specs,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: AppTypography.bodySmall.copyWith(
+                                      color: AppColors.textBodyColor,
+                                      fontSize:
+                                          AppTypography.captionLarge.fontSize,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+
+                            8.0.sh,
+
+                            Text(
+                              title,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppTypography.bodyLarge.copyWith(
+                                color: AppColors.textHeadingColor,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      Text(
-                        likesCount,
-                        style: AppTypography.bodySmall.copyWith(
-                          color: AppColors.textBodyColor.withValues(
-                            alpha: 0.75,
+
+                      8.0.sw,
+
+                      Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          GestureDetector(
+                            onTap:
+                                controller.isArchitect.value
+                                    ? null
+                                    : () => controller.toggleCatalogLike(
+                                      catalog.id,
+                                    ),
+                            child: Icon(
+                              catalog.liked
+                                  ? Icons.favorite_rounded
+                                  : Icons.favorite_border_rounded,
+                              color:
+                                  catalog.liked
+                                      ? AppColors.errorColor
+                                      : AppColors.formBorderColor,
+                              size: AppDimensions.iconSizeLarge,
+                            ),
                           ),
-                        ),
+
+                          2.0.sh,
+
+                          Text(
+                            likesCount,
+                            textAlign: TextAlign.center,
+                            style: AppTypography.bodySmall.copyWith(
+                              color: AppColors.textBodyColor.withValues(
+                                alpha: 0.75,
+                              ),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
