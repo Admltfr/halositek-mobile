@@ -34,14 +34,16 @@ extension CustomGetPage on GetPage {
 
 extension ImageUrlExtension on String {
   String toImageUrl({String? baseUrl}) {
+    if (isEmpty) return '';
+
+    if (startsWith('http://') || startsWith('https://')) {
+      return this;
+    }
+
     final domain = (baseUrl ?? dotenv.env['BASEURL'] ?? '').trim().replaceAll(
       RegExp(r'\/+$'),
       '',
     );
-
-    if (isEmpty) return '';
-
-    if (startsWith('http')) return this;
 
     if (startsWith('/storage')) {
       return '$domain$this';

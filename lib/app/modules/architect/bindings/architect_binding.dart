@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import 'package:halositek/app/data/network/api_client.dart';
 import 'package:halositek/app/data/network/architect_service.dart';
+import 'package:halositek/app/data/network/catalog_service.dart';
 
 import '../controllers/architect_controller.dart';
 
@@ -10,8 +11,10 @@ class ArchitectBinding extends Bindings {
     Get.lazyPut<ArchitectService>(
       () => ArchitectService(Get.find<ApiClient>()),
     );
+
+    Get.lazyPut<CatalogService>(() => CatalogService(Get.find<ApiClient>()));
     Get.lazyPut<ArchitectController>(
-      () => ArchitectController(Get.find<ArchitectService>()),
+      () => ArchitectController(Get.find<ArchitectService>(), Get.find<CatalogService>()),
     );
   }
 }

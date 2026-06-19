@@ -4,15 +4,18 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:halositek/app/data/models/architect.dart';
+import 'package:halositek/app/data/models/catalog.dart';
 import 'package:halositek/app/data/network/architect_service.dart';
+import 'package:halositek/app/data/network/catalog_service.dart';
 import 'package:halositek/app/modules/navigation/controllers/navigation_controller.dart';
 
 class ArchitectController extends GetxController {
   static const int _perPage = 12;
 
   final ArchitectService _architectService;
+  final CatalogService _catalogService;
 
-  ArchitectController(this._architectService);
+  ArchitectController(this._architectService, this._catalogService);
 
   final architects = <Architect>[].obs;
   final isLoading = false.obs;
@@ -20,6 +23,10 @@ class ArchitectController extends GetxController {
   final hasMore = true.obs;
   final errorMessage = ''.obs;
   final searchQuery = ''.obs;
+
+  final architectCatalogs = <String, List<Catalog>>{}.obs;
+  final isLoadingCatalog = false.obs;
+  final catalogError = ''.obs;
 
   final TextEditingController searchController = TextEditingController();
   final ScrollController scrollController = ScrollController();
@@ -73,6 +80,10 @@ class ArchitectController extends GetxController {
     await fetchArchitects(reset: true);
   }
 
+  List<Catalog> catalogsByArchitect(String architectId) {
+    return architectCatalogs[architectId] ?? [];
+  }
+
   Future<void> fetchArchitects({bool reset = false}) async {
     if (reset) {
       _page = 1;
@@ -103,6 +114,18 @@ class ArchitectController extends GetxController {
       } else {
         architects.addAll(result);
       }
+
+      await Future.wait(
+        result.map((architect) async {
+          final projects = await _catalogService.getCatalogs(
+            architectId: architect.id,
+            perPage: 30,
+            status: 'approved',
+          );
+
+          architectCatalogs[architect.id] = projects;
+        }),
+      );
 
       hasMore.value = result.length == _perPage;
       if (hasMore.value) {
