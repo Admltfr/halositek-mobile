@@ -226,50 +226,93 @@ class PortofolioView extends GetView<PortofolioController> {
 
   Widget _priceAndChat() {
     return Obx(() {
-      final isConsultationAvailable = controller.consultationFee.value > 0 && controller.consultationDuration.value > 0;
+      final status = controller.consultationStatus.value;
+      final isLoading = controller.isLoadingConsultationStatus.value;
+      final isProcessing = controller.isStartingChat.value;
+
+      // Determine button properties based on status
+      String buttonText;
+      String? leftText;
+      IconData buttonIcon;
+      Color bgColor;
+      VoidCallback? onTap;
+
+      if (isLoading || status == null) {
+        // Loading / fallback state
+        final isConsultationAvailable = controller.consultationFee.value > 0 && controller.consultationDuration.value > 0;
+        bgColor = isConsultationAvailable ? AppColors.primaryColor : AppColors.formBorderColor;
+        leftText =
+            isConsultationAvailable
+                ? '${formatCurrency(controller.consultationFee.value)} / ${controller.consultationDuration.value} Jam'
+                : 'Consultation is not available';
+        buttonText = 'Chat Now';
+        buttonIcon = Icons.chat_bubble_outline_rounded;
+        onTap = isConsultationAvailable && !isProcessing ? controller.handleChatButtonAction : null;
+      } else if (status.isSessionActive) {
+        // Session active → Open Chat
+        final remaining = status.remainingTime;
+        final remainingLabel = remaining != null ? '${remaining.hours}h ${remaining.minutes}m' : '';
+        bgColor = AppColors.primaryColor; // green
+        leftText = remainingLabel.isNotEmpty ? 'Remaining Time: $remainingLabel' : null;
+        buttonText = 'Open Chat';
+        buttonIcon = Icons.chat_rounded;
+        onTap = !isProcessing ? controller.handleChatButtonAction : null;
+      } else if (status.isPendingPayment) {
+        // Pending payment → Finish Payment
+        bgColor = AppColors.primaryColor; // orange
+        leftText = null;
+        buttonText = 'Finish Payment';
+        buttonIcon = Icons.payment_rounded;
+        onTap = !isProcessing ? controller.handleChatButtonAction : null;
+      } else {
+        // no_session → show fee and Chat Now
+        final isConsultationAvailable = controller.consultationFee.value > 0 && controller.consultationDuration.value > 0;
+        bgColor = isConsultationAvailable ? AppColors.primaryColor : AppColors.formBorderColor;
+        leftText =
+            isConsultationAvailable
+                ? '${formatCurrency(controller.consultationFee.value)} / ${controller.consultationDuration.value} Jam'
+                : 'Consultation is not available';
+        buttonText = 'Chat Now';
+        buttonIcon = Icons.chat_bubble_outline_rounded;
+        onTap = isConsultationAvailable && !isProcessing ? controller.handleChatButtonAction : null;
+      }
 
       return Container(
         margin: const EdgeInsets.symmetric(horizontal: 22),
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: AppDimensions.spacingLarge),
-        decoration: BoxDecoration(
-          color: isConsultationAvailable ? AppColors.primaryColor : AppColors.formBorderColor,
-          borderRadius: BorderRadius.circular(AppDimensions.radiusPill),
-        ),
+        decoration: BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(AppDimensions.radiusPill)),
         child: InkWell(
           borderRadius: BorderRadius.circular(AppDimensions.radiusPill),
-          onTap: !isConsultationAvailable || controller.isStartingChat.value ? null : controller.startConsultationChat,
+          onTap: onTap,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Flexible(
-                child: Text(
-                  isConsultationAvailable
-                      ? '${formatCurrency(controller.consultationFee.value)} / ${controller.consultationDuration.value} Jam'
-                      : 'Konsultasi belum tersedia',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTypography.bodySmall.copyWith(color: AppColors.whiteColor, fontWeight: FontWeight.w900),
+              if (leftText != null) ...[
+                Flexible(
+                  child: Text(
+                    leftText,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTypography.bodySmall.copyWith(color: AppColors.whiteColor, fontWeight: FontWeight.w900),
+                  ),
                 ),
-              ),
-
-              if (isConsultationAvailable) ...[
                 10.0.sw,
-
-                controller.isStartingChat.value
-                    ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.whiteColor),
-                    )
-                    : const Icon(Icons.chat_bubble_outline_rounded, color: AppColors.whiteColor, size: 16),
-
-                8.0.sw,
-
-                Text(
-                  controller.isStartingChat.value ? 'Loading...' : 'Chat Now',
-                  style: AppTypography.bodySmall.copyWith(color: AppColors.whiteColor, fontWeight: FontWeight.w800),
-                ),
               ],
+
+              isProcessing
+                  ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.whiteColor),
+                  )
+                  : Icon(buttonIcon, color: AppColors.whiteColor, size: 16),
+
+              8.0.sw,
+
+              Text(
+                isProcessing ? 'Loading...' : buttonText,
+                style: AppTypography.bodySmall.copyWith(color: AppColors.whiteColor, fontWeight: FontWeight.w800),
+              ),
             ],
           ),
         ),
