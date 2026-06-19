@@ -440,39 +440,53 @@ class DetailView extends GetView<DetailController> {
           ),
         ),
         12.0.sw,
-        Obx(
-          () => InkWell(
+        Obx(() {
+          final canConsult =
+              architect.consultationFee > 0 &&
+              architect.consultationDuration > 0;
+
+          return InkWell(
             borderRadius: BorderRadius.circular(AppDimensions.radiusPill),
             onTap:
-                controller.isStartingChat.value
+                !canConsult || controller.isStartingChat.value
                     ? null
                     : controller.startConsultationChat,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
               decoration: BoxDecoration(
-                color: AppColors.primaryColor,
+                color:
+                    canConsult
+                        ? AppColors.primaryColor
+                        : AppColors.formBorderColor,
                 borderRadius: BorderRadius.circular(AppDimensions.radiusPill),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  controller.isStartingChat.value
-                      ? const SizedBox(
-                        width: 17,
-                        height: 17,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
+                  if (canConsult) ...[
+                    controller.isStartingChat.value
+                        ? const SizedBox(
+                          width: 17,
+                          height: 17,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppColors.whiteColor,
+                          ),
+                        )
+                        : const Icon(
+                          Icons.chat_bubble_outline_rounded,
                           color: AppColors.whiteColor,
+                          size: 18,
                         ),
-                      )
-                      : const Icon(
-                        Icons.chat_bubble_outline_rounded,
-                        color: AppColors.whiteColor,
-                        size: 18,
-                      ),
-                  8.0.sw,
+                    8.0.sw,
+                  ],
+
                   Text(
-                    controller.isStartingChat.value ? 'Loading...' : 'Chat Now',
+                    !canConsult
+                        ? 'Konsultasi Tidak Tersedia'
+                        : controller.isStartingChat.value
+                        ? 'Loading...'
+                        : 'Chat Now',
                     style: AppTypography.bodySmall.copyWith(
                       color: AppColors.whiteColor,
                       fontWeight: FontWeight.w800,
@@ -481,8 +495,8 @@ class DetailView extends GetView<DetailController> {
                 ],
               ),
             ),
-          ),
-        ),
+          );
+        }),
       ],
     );
   }

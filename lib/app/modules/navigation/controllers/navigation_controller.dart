@@ -53,11 +53,14 @@ class NavigationController extends GetxController {
   }
 
   Future<bool> onPop([Object? result]) async {
-    final nav = keyForTab(currentIndex.value)?.currentState;
+    final navigator = keyForTab(currentIndex.value)?.currentState;
 
-    if (nav != null && nav.canPop()) {
-      nav.pop(result);
-      return false;
+    if (navigator != null) {
+      final didPop = await navigator.maybePop(result);
+
+      if (didPop) {
+        return false;
+      }
     }
 
     if (currentIndex.value != 0) {

@@ -66,6 +66,8 @@ class HomeController extends GetxController {
     return imageIndexByCatalog[catalogId] ?? 0;
   }
 
+  final architectCatalogs = <String, List<Catalog>>{}.obs;
+
   bool get isSearchMode => searchQuery.value.trim().isNotEmpty;
 
   void setImageIndex(String catalogId, int index) {
@@ -236,6 +238,10 @@ class HomeController extends GetxController {
     }
   }
 
+  List<Catalog> catalogsByArchitect(String architectId) {
+    return architectCatalogs[architectId] ?? [];
+  }
+
   Future<void> fetchCatalogs({String? architectId}) async {
     try {
       isLoadingCatalog.value = true;
@@ -294,7 +300,20 @@ class HomeController extends GetxController {
       architectError.value = '';
 
       final result = await _architectService.getArchitects(perPage: 6);
+
       architects.assignAll(result);
+
+      await Future.wait(
+        result.map((architect) async {
+          final catalogs = await _catalogService.getCatalogs(
+            perPage: 30,
+            architectId: architect.id,
+            status: 'approved',
+          );
+
+          architectCatalogs[architect.id] = catalogs;
+        }),
+      );
     } catch (e) {
       architectError.value = e.toString();
     } finally {

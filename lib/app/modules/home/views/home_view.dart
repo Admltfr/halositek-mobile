@@ -648,8 +648,7 @@ class HomeView extends GetView<HomeController> {
         '${catalog.area.toStringAsFixed(catalog.area % 1 == 0 ? 0 : 1)}m² • ${catalog.estimatedCost}';
     final String title = catalog.name;
     final String likesCount = catalog.likesCount.toString();
-    final images =
-        catalog.imageUrls.isNotEmpty ? catalog.imageUrls : catalog.images;
+    final images = catalog.images;
     final activeIndex = controller.getImageIndex(catalog.id);
 
     return GestureDetector(
@@ -791,72 +790,104 @@ class HomeView extends GetView<HomeController> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
-                    children: [
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: size.width * 0.018,
-                          vertical: size.height * 0.0035,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.secondaryColor.withValues(
-                            alpha: 0.18,
-                          ),
-                          borderRadius: BorderRadius.circular(
-                            AppDimensions.radiusSmall,
-                          ),
-                        ),
-                        child: Text(
-                          label,
-                          style: AppTypography.bodySmall.copyWith(
-                            color: AppColors.primaryColor,
-                            fontWeight: FontWeight.w700,
-                            fontSize: AppTypography.caption.fontSize,
-                          ),
-                        ),
-                      ),
-                      8.0.sw,
-                      Text(
-                        specs,
-                        style: AppTypography.bodySmall.copyWith(
-                          color: AppColors.textBodyColor,
-                          fontSize: AppTypography.captionLarge.fontSize,
-                        ),
-                      ),
-                      const Spacer(),
-                      GestureDetector(
-                        onTap: () => controller.toggleCatalogLike(catalog.id),
-                        child: Icon(
-                          catalog.liked
-                              ? Icons.favorite_rounded
-                              : Icons.favorite_border_rounded,
-                          color:
-                              catalog.liked
-                                  ? AppColors.errorColor
-                                  : AppColors.formBorderColor,
-                          size: 19,
-                        ),
-                      ),
-                    ],
-                  ),
-                  AppDimensions.spacingMedium.sh,
-                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
-                        child: Text(
-                          title,
-                          style: AppTypography.bodyLarge.copyWith(
-                            color: AppColors.textHeadingColor,
-                            fontWeight: FontWeight.w700,
-                          ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: size.width * 0.018,
+                                    vertical: size.height * 0.0035,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.secondaryColor.withValues(
+                                      alpha: 0.18,
+                                    ),
+                                    borderRadius: BorderRadius.circular(
+                                      AppDimensions.radiusSmall,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    label,
+                                    style: AppTypography.bodySmall.copyWith(
+                                      color: AppColors.primaryColor,
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: AppTypography.caption.fontSize,
+                                    ),
+                                  ),
+                                ),
+                                8.0.sw,
+                                Expanded(
+                                  child: Text(
+                                    specs,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: AppTypography.bodySmall.copyWith(
+                                      color: AppColors.textBodyColor,
+                                      fontSize:
+                                          AppTypography.captionLarge.fontSize,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+
+                            8.0.sh,
+
+                            Text(
+                              title,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppTypography.bodyLarge.copyWith(
+                                color: AppColors.textHeadingColor,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      Text(
-                        likesCount,
-                        style: AppTypography.bodySmall.copyWith(
-                          color: AppColors.textBodyColor.withValues(
-                            alpha: 0.75,
+
+                      8.0.sw,
+
+                      Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          GestureDetector(
+                            onTap:
+                                controller.isArchitect.value
+                                    ? null
+                                    : () => controller.toggleCatalogLike(
+                                      catalog.id,
+                                    ),
+                            child: Icon(
+                              catalog.liked
+                                  ? Icons.favorite_rounded
+                                  : Icons.favorite_border_rounded,
+                              color:
+                                  catalog.liked
+                                      ? AppColors.errorColor
+                                      : AppColors.formBorderColor,
+                              size: AppDimensions.iconSizeLarge,
+                            ),
                           ),
-                        ),
+
+                          2.0.sh,
+
+                          Text(
+                            likesCount,
+                            textAlign: TextAlign.center,
+                            style: AppTypography.bodySmall.copyWith(
+                              color: AppColors.textBodyColor.withValues(
+                                alpha: 0.75,
+                              ),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -986,37 +1017,30 @@ class HomeView extends GetView<HomeController> {
         );
       }
 
-      final sourceArchitects =
-          hasData ? controller.architects.take(3).toList() : <Architect>[];
-
-      final architects = List<Architect>.generate(
-        3,
-        (index) =>
-            index < sourceArchitects.length
-                ? sourceArchitects[index]
-                : Architect.dummy(),
-      );
+      final architects = controller.architects.take(3).toList();
+      final showMore = controller.architects.length > 3;
 
       return Skeletonizer(
         enabled: isLoading && !hasData,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            ...List.generate(3, (index) {
-              final a = architects[index];
-              return _architectItem(
+            ...architects.map(
+              (a) => _architectItem(
                 size: size,
                 name: a.name,
                 avatarUrl: a.profilePicture,
                 onTap: () => controller.openArchitectPortofolio(a),
-              );
-            }),
-            _architectItem(
-              size: size,
-              name: 'More',
-              isMore: true,
-              onTap: () => controller.openPortofolioFromHome(),
+              ),
             ),
+
+            if (showMore)
+              _architectItem(
+                size: size,
+                name: 'More',
+                isMore: true,
+                onTap: () => controller.openPortofolioFromHome(),
+              ),
           ],
         ),
       );
@@ -1025,8 +1049,8 @@ class HomeView extends GetView<HomeController> {
 
   Widget _architectCard({required Size size, required Architect architect}) {
     final projectsCount = controller.projectCompletedCount(architect);
-    final hiddenCount = controller.hiddenProjectsCount(architect);
     final isPlaceholder = architect.id.isEmpty;
+    final catalogs = controller.catalogsByArchitect(architect.id);
 
     return GestureDetector(
       onTap:
@@ -1121,27 +1145,39 @@ class HomeView extends GetView<HomeController> {
               ],
             ),
             14.0.sh,
-            Row(
-              children: [
-                Expanded(
-                  child: _projectThumb(size, _projectImage(architect, 0)),
-                ),
-                6.0.sw,
-                Expanded(
-                  child: _projectThumb(size, _projectImage(architect, 1)),
-                ),
-                6.0.sw,
-                Expanded(
-                  child: _moreThumb(
-                    size: size,
-                    label: hiddenCount > 0 ? '+$hiddenCount' : '+0',
-                  ),
-                ),
-              ],
-            ),
+            _projectPreview(size, catalogs),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _projectPreview(Size size, List<Catalog> catalogs) {
+    final count = catalogs.length;
+
+    if (count == 0) {
+      return const SizedBox.shrink();
+    }
+
+    final visibleCount = count > 3 ? 2 : count;
+    final hiddenCount = count > 3 ? count - 2 : 0;
+
+    return Row(
+      children: [
+        ...List.generate(visibleCount, (index) {
+          return Expanded(
+            child: Padding(
+              padding: EdgeInsets.only(
+                right: index < visibleCount - 1 || hiddenCount > 0 ? 6 : 0,
+              ),
+              child: _projectThumb(size, _projectImage(catalogs[index])),
+            ),
+          );
+        }),
+
+        if (hiddenCount > 0)
+          Expanded(child: _moreThumb(size: size, label: '+$hiddenCount')),
+      ],
     );
   }
 
@@ -1213,17 +1249,9 @@ class HomeView extends GetView<HomeController> {
     );
   }
 
-  String _projectImage(Architect architect, int index) {
-    if (architect.projects.length <= index) return _dummyImage;
-
-    final project = architect.projects[index];
-
-    if (project.images.isNotEmpty) {
-      return project.images.first;
-    }
-
-    if (project.imageUrls.isNotEmpty) {
-      return project.imageUrls.first;
+  String _projectImage(Catalog catalog) {
+    if (catalog.images.isNotEmpty) {
+      return catalog.images.first;
     }
 
     return _dummyImage;
