@@ -1,6 +1,8 @@
 import 'package:dio/dio.dart';
+import 'package:get/get.dart';
 import 'package:halositek/app/data/network/auth_service.dart';
 import 'package:halositek/app/data/network/token_service.dart';
+import 'package:halositek/app/data/network/websocket_service.dart';
 
 class AuthInterceptor extends QueuedInterceptor {
   final Dio _dio;
@@ -29,22 +31,43 @@ class AuthInterceptor extends QueuedInterceptor {
       final refreshToken = await _tokenService.getRefreshToken();
 
       if (refreshToken == null) {
+        await _performForceLogout();
         return handler.next(err);
       }
 
-      final newAccessToken = await _authService.refreshToken(refreshToken);
+      try {
+        final newAccessToken = await _authService.refreshToken(refreshToken);
 
-      if (newAccessToken != null) {
-        final requestOptions = err.requestOptions;
+        if (newAccessToken != null) {
+          final requestOptions = err.requestOptions;
 
-        requestOptions.headers['Authorization'] = 'Bearer $newAccessToken';
+          requestOptions.headers['Authorization'] = 'Bearer $newAccessToken';
 
-        final response = await _dio.fetch(requestOptions);
+          final response = await _dio.fetch(requestOptions);
 
-        return handler.resolve(response);
+          return handler.resolve(response);
+        } else {
+          await _performForceLogout();
+        }
+      } catch (e) {
+        await _performForceLogout();
       }
     }
 
     return handler.next(err);
+  }
+
+  Future<void> _performForceLogout() async {
+    await _tokenService.clearAccessToken();
+    await _tokenService.clearRefreshToken();
+    await _tokenService.clearRole();
+    await _tokenService.clearUserId();
+
+    // Disconnect WebSocket if connected
+    try {
+      Get.find<WebSocketService>().disconnect();
+    } catch (_) {}
+
+    Get.offAllNamed('/login');
   }
 }

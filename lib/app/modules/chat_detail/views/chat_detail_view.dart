@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:halositek/app/core/constants/app_colors.dart';
@@ -23,6 +24,12 @@ class ChatDetailView extends GetView<ChatDetailController> {
             _topBar(size),
             Expanded(child: _messageList(size)),
             _typingIndicator(size),
+            Obx(() {
+              if (controller.selectedImagePath.value != null) {
+                return _imagePreview(size);
+              }
+              return const SizedBox.shrink();
+            }),
             Obx(() => controller.isSessionExpired.value ? _expiredBanner(size) : _inputBar(size)),
           ],
         ),
@@ -494,6 +501,48 @@ class ChatDetailView extends GetView<ChatDetailController> {
     });
   }
 
+  Widget _imagePreview(Size size) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.symmetric(horizontal: size.width * 0.05, vertical: AppDimensions.spacingSmall),
+      decoration: BoxDecoration(
+        color: AppColors.whiteColor,
+        border: Border(top: BorderSide(color: AppColors.formBorderColor.withValues(alpha: 0.15))),
+      ),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Stack(
+          alignment: Alignment.topRight,
+          children: [
+          Container(
+            height: size.width * 0.3,
+            width: size.width * 0.3,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(AppDimensions.radiusLarge),
+              image: DecorationImage(
+                image: FileImage(File(controller.selectedImagePath.value!)),
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+          InkWell(
+            onTap: controller.removeSelectedImage,
+            child: Container(
+              margin: const EdgeInsets.all(4),
+              padding: const EdgeInsets.all(4),
+              decoration: const BoxDecoration(
+                color: Colors.black54,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.close_rounded, color: Colors.white, size: 16),
+            ),
+          ),
+        ],
+      ),
+      ),
+    );
+  }
+
   Widget _expiredBanner(Size size) {
     return Container(
       width: double.infinity,
@@ -535,7 +584,7 @@ class ChatDetailView extends GetView<ChatDetailController> {
             // Attachment / image button
             Obx(
               () => InkWell(
-                onTap: controller.isSending.value ? null : controller.pickAndSendImage,
+                onTap: controller.isSending.value ? null : controller.pickImage,
                 borderRadius: BorderRadius.circular(AppDimensions.radiusCircle),
                 child: Container(
                   width: size.width * 0.1,

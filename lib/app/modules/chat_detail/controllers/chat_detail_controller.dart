@@ -45,6 +45,8 @@ class ChatDetailController extends GetxController {
   final otherUserRole = ''.obs;
   final otherUserAvatar = ''.obs;
 
+  final selectedImagePath = Rxn<String>();
+
   // ── Typing indicator (WebSocket) ───────────────────────────────────
   final isOtherTyping = false.obs;
   final otherTypingName = ''.obs;
@@ -321,7 +323,9 @@ class ChatDetailController extends GetxController {
     if (isSessionExpired.value) return;
 
     final text = messageController.text.trim();
-    if (text.isEmpty) return;
+    final imagePath = selectedImagePath.value;
+    
+    if (text.isEmpty && imagePath == null) return;
 
     isSending.value = true;
     messageController.clear();
@@ -329,11 +333,24 @@ class ChatDetailController extends GetxController {
     _setTypingStatus(false);
 
     try {
-      final message = await _chatService.sendMessage(conversationId: conversationId, body: text);
-      messages.add(message);
+      if (imagePath != null) {
+        final message = await _chatService.sendImage(
+          conversationId: conversationId,
+          imageFile: File(imagePath),
+          body: text,
+        );
+        messages.add(message);
+        selectedImagePath.value = null;
+      } else {
+        final message = await _chatService.sendMessage(
+          conversationId: conversationId, 
+          body: text,
+        );
+        messages.add(message);
+      }
       _scrollToBottom();
     } catch (e) {
-      messageController.text = text;
+      messageController.text = text; // restore text if failed
       Get.snackbar(
         'Gagal mengirim',
         e.toString(),
@@ -347,10 +364,10 @@ class ChatDetailController extends GetxController {
   }
 
   // ────────────────────────────────────────────────────────────────────
-  //  SEND IMAGE
+  //  PICK IMAGE
   // ────────────────────────────────────────────────────────────────────
 
-  Future<void> pickAndSendImage() async {
+  Future<void> pickImage() async {
     if (isSending.value) return;
     if (isSessionExpired.value) return;
 
@@ -361,26 +378,14 @@ class ChatDetailController extends GetxController {
       final path = result.files.single.path;
       if (path == null) return;
 
-      await sendImage(File(path));
+      selectedImagePath.value = path;
     } catch (e) {
       Get.snackbar('Gagal memilih gambar', e.toString(), snackPosition: SnackPosition.BOTTOM);
     }
   }
 
-  Future<void> sendImage(File imageFile) async {
-    if (isSending.value) return;
-
-    isSending.value = true;
-
-    try {
-      final message = await _chatService.sendImage(conversationId: conversationId, imageFile: imageFile);
-      messages.add(message);
-      _scrollToBottom();
-    } catch (e) {
-      Get.snackbar('Gagal mengirim gambar', e.toString(), snackPosition: SnackPosition.BOTTOM);
-    } finally {
-      isSending.value = false;
-    }
+  void removeSelectedImage() {
+    selectedImagePath.value = null;
   }
 
   // ────────────────────────────────────────────────────────────────────

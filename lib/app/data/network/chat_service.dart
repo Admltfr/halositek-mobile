@@ -216,11 +216,13 @@ class ChatService {
   Future<ChatMessage> sendImage({
     required String conversationId,
     required File imageFile,
+    String? body,
   }) async {
     final fileName = imageFile.path.split('/').last.split('\\').last;
     final formData = FormData.fromMap({
       'conversation_id': conversationId,
       'type': 'image',
+      if (body != null && body.trim().isNotEmpty) 'body': body.trim(),
       'attachment': await MultipartFile.fromFile(
         imageFile.path,
         filename: fileName,
