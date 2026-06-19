@@ -3,6 +3,7 @@ import 'package:halositek/app/data/models/architect.dart';
 import 'package:halositek/app/data/models/architect_earnings.dart';
 import 'package:halositek/app/data/network/api_client.dart';
 import 'package:halositek/app/data/network/token_service.dart';
+import 'package:flutter/material.dart';
 
 class ArchitectService {
   final ApiClient _apiClient;
@@ -29,6 +30,8 @@ class ArchitectService {
       ),
     );
 
+    debugPrint('\x1B[31m ${response.data['data']}\x1B[0m');
+
     return _apiClient.customResponse(response, () async {
       final rawList = response.data?['data'];
       if (rawList is! List) return <Architect>[];
@@ -51,6 +54,8 @@ class ArchitectService {
         validateStatus: (status) => status != null && status < 500,
       ),
     );
+
+    debugPrint('\x1B[31m ${response.data['data']}\x1B[0m');
 
     return _apiClient.customResponse(response, () async {
       final raw = response.data?['data'];

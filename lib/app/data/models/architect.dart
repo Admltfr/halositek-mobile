@@ -55,9 +55,7 @@ class Architect {
       id: (json['id'] ?? '').toString(),
       name: (json['name'] ?? '').toString(),
       email: (json['email'] ?? '').toString(),
-      profilePicture:
-          (json['profile_picture'] ?? json['photo_profile_url'] ?? '')
-              .toString(),
+      profilePicture: (json['profile_picture'] ?? '').toString().toImageUrl(),
       emailVerifiedAt: DateTime.tryParse(
         (json['email_verified_at'] ?? '').toString(),
       ),

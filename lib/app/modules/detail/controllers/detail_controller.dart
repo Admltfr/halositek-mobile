@@ -5,7 +5,9 @@ import 'package:halositek/app/core/constants/app_colors.dart';
 import 'package:halositek/app/core/constants/app_dimensions.dart';
 import 'package:halositek/app/core/constants/app_extensions.dart';
 import 'package:halositek/app/core/constants/app_typography.dart';
+import 'package:halositek/app/data/models/architect.dart';
 import 'package:halositek/app/data/models/catalog.dart';
+import 'package:halositek/app/data/network/architect_service.dart';
 import 'package:halositek/app/data/network/catalog_service.dart';
 import 'package:halositek/app/data/network/chat_service.dart';
 import 'package:halositek/app/data/network/payment_service.dart';
@@ -20,13 +22,15 @@ class DetailController extends GetxController {
   final PaymentService _paymentService;
   final ChatService _chatService;
   final TokenService _tokenService;
+  final ArchitectService _architectService;
   final String catalogId;
 
   DetailController(
     this._catalogService,
     this._paymentService,
     this._chatService,
-    this._tokenService, {
+    this._tokenService,
+    this._architectService, {
     required this.catalogId,
   });
 
@@ -45,6 +49,7 @@ class DetailController extends GetxController {
   final isArchitectRole = false.obs;
   final paymentError = ''.obs;
   bool _hasCatalogChange = false;
+  final architect = Rxn<Architect>();
 
   @override
   void onInit() {
@@ -70,6 +75,7 @@ class DetailController extends GetxController {
       errorMessage.value = '';
 
       final result = await _catalogService.getCatalogById(catalogId);
+      architect.value = await _architectService.getArchitectById(result.architectId);
       catalog.value = result;
       activeImageIndex.value = 0;
       activeLayoutIndex.value = 0;
@@ -309,33 +315,6 @@ class DetailController extends GetxController {
     return p.layoutImageUrls.isNotEmpty ? p.layoutImageUrls : p.layoutImages;
   }
 
-  String get architectName {
-    final p = catalog.value;
-    return p?.architect?.name.isNotEmpty == true ? p!.architect!.name : '-';
-  }
-
-  String get architectEmail {
-    final p = catalog.value;
-    return p?.architect?.email.isNotEmpty == true ? p!.architect!.email : '-';
-  }
-
-  String get architectPhoto {
-    final p = catalog.value;
-    return p?.architect?.profilePicture.isNotEmpty == true
-        ? p!.architect!.profilePicture
-        : '';
-  }
-
-  int get consultationFee {
-    final value = catalog.value?.architect?.consultationFee ?? 0;
-    return value > 0 ? value : 25000;
-  }
-
-  int get consultationDuration {
-    final value = catalog.value?.architect?.consultationDuration ?? 0;
-    return value > 0 ? value : 2;
-  }
-
   String get areaDisplay {
     final p = catalog.value;
     if (p == null || p.areaRaw.trim().isEmpty) return '-';
@@ -406,7 +385,7 @@ class DetailController extends GetxController {
       () => const ChatDetailView(),
       binding: ChatDetailBinding(
         conversationId: conversationId,
-        title: architectName,
+        title: architect.value?.name ?? 'Chat',
       ),
     );
   }
