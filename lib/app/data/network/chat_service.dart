@@ -197,6 +197,22 @@ class ChatService {
     );
   }
 
+  Future<void> sendTypingStatus(String conversationId, bool isTyping) async {
+    final response = await _apiClient.private.post(
+      '/chat/conversations/$conversationId/typing',
+      data: {'is_typing': isTyping},
+      options: Options(
+        validateStatus: (status) => status != null && status < 500,
+      ),
+    );
+
+    return _apiClient.customResponse(
+      response,
+      () async {},
+      'Send Typing Status',
+    );
+  }
+
   Future<ChatMessage> sendImage({
     required String conversationId,
     required File imageFile,

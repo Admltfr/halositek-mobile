@@ -49,6 +49,8 @@ class ChatDetailController extends GetxController {
   final ScrollController scrollController = ScrollController();
 
   Timer? _expiryTimer;
+  Timer? _typingTimer;
+  bool _lastTypingStatus = false;
 
   String get displayTitle =>
       otherUserName.value.trim().isNotEmpty ? otherUserName.value : (title.trim().isNotEmpty ? title : 'Chat');
@@ -64,12 +66,15 @@ class ChatDetailController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    messageController.addListener(_onMessageTextChanged);
     fetchMessages();
   }
 
   @override
   void onClose() {
     _expiryTimer?.cancel();
+    _typingTimer?.cancel();
+    messageController.removeListener(_onMessageTextChanged);
     messageController.dispose();
     reportController.dispose();
     scrollController.dispose();
@@ -103,6 +108,34 @@ class ChatDetailController extends GetxController {
     } else {
       isSessionExpired.value = true;
       _expiryTimer?.cancel();
+    }
+  }
+
+  void _onMessageTextChanged() {
+    final text = messageController.text.trim();
+    if (text.isNotEmpty) {
+      if (!_lastTypingStatus) {
+        _setTypingStatus(true);
+      }
+      _typingTimer?.cancel();
+      _typingTimer = Timer(const Duration(seconds: 3), () {
+        _setTypingStatus(false);
+      });
+    } else {
+      if (_lastTypingStatus) {
+        _typingTimer?.cancel();
+        _setTypingStatus(false);
+      }
+    }
+  }
+
+  Future<void> _setTypingStatus(bool isTyping) async {
+    if (_lastTypingStatus == isTyping) return;
+    _lastTypingStatus = isTyping;
+    try {
+      await _chatService.sendTypingStatus(conversationId, isTyping);
+    } catch (e) {
+      debugPrint('Failed to send typing status: $e');
     }
   }
 
@@ -175,6 +208,8 @@ class ChatDetailController extends GetxController {
 
     isSending.value = true;
     messageController.clear();
+    _typingTimer?.cancel();
+    _setTypingStatus(false);
 
     try {
       final message = await _chatService.sendMessage(conversationId: conversationId, body: text);
