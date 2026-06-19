@@ -147,7 +147,8 @@ class ChatDetailController extends GetxController {
       // optimistically when sent via the API)
       if (message.userId == _currentUserId) return;
 
-      messages.add(message);
+      final editedMessage = message.copyWith(isMine: message.userId == _currentUserId);
+      messages.add(editedMessage);
       _scrollToBottom();
 
       // Mark as read since the user is viewing this conversation
@@ -324,7 +325,7 @@ class ChatDetailController extends GetxController {
 
     final text = messageController.text.trim();
     final imagePath = selectedImagePath.value;
-    
+
     if (text.isEmpty && imagePath == null) return;
 
     isSending.value = true;
@@ -334,18 +335,11 @@ class ChatDetailController extends GetxController {
 
     try {
       if (imagePath != null) {
-        final message = await _chatService.sendImage(
-          conversationId: conversationId,
-          imageFile: File(imagePath),
-          body: text,
-        );
+        final message = await _chatService.sendImage(conversationId: conversationId, imageFile: File(imagePath), body: text);
         messages.add(message);
         selectedImagePath.value = null;
       } else {
-        final message = await _chatService.sendMessage(
-          conversationId: conversationId, 
-          body: text,
-        );
+        final message = await _chatService.sendMessage(conversationId: conversationId, body: text);
         messages.add(message);
       }
       _scrollToBottom();

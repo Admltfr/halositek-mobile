@@ -188,6 +188,39 @@ class ChatMessage {
   static DateTime? _parseDate(dynamic value) {
     return DateTime.tryParse((value ?? '').toString());
   }
+
+  // Add this method to ChatMessage model
+  ChatMessage copyWith({
+    String? id,
+    String? conversationId,
+    String? userId,
+    String? body,
+    String? content,
+    String? role,
+    String? type,
+    String? attachment,
+    DateTime? readAt,
+    bool? isMine,
+    ChatSender? sender,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) {
+    return ChatMessage(
+      id: id ?? this.id,
+      conversationId: conversationId ?? this.conversationId,
+      userId: userId ?? this.userId,
+      body: body ?? this.body,
+      content: content ?? this.content,
+      role: role ?? this.role,
+      type: type ?? this.type,
+      attachment: attachment ?? this.attachment,
+      readAt: readAt ?? this.readAt,
+      isMine: isMine ?? this.isMine,
+      sender: sender ?? this.sender,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
 }
 
 class ChatSender {
