@@ -5,6 +5,7 @@ import 'package:halositek/app/core/constants/app_dimensions.dart';
 import 'package:halositek/app/core/constants/app_extensions.dart';
 import 'package:halositek/app/core/constants/app_typography.dart';
 import 'package:halositek/app/data/models/chat.dart';
+import 'package:halositek/app/data/network/api_client.dart';
 import '../controllers/chat_detail_controller.dart';
 
 class ChatDetailView extends GetView<ChatDetailController> {
@@ -51,12 +52,7 @@ class ChatDetailView extends GetView<ChatDetailController> {
           ),
           SizedBox(width: size.width * 0.02),
           // Avatar circle
-          Container(
-            width: size.width * 0.1,
-            height: size.width * 0.1,
-            decoration: BoxDecoration(color: AppColors.primaryColor.withValues(alpha: 0.12), shape: BoxShape.circle),
-            child: const Icon(Icons.person_rounded, color: AppColors.primaryColor),
-          ),
+          _buildAvatar(size, controller.avatarUrl),
           SizedBox(width: size.width * 0.025),
           Expanded(
             child: Column(
@@ -87,6 +83,41 @@ class ChatDetailView extends GetView<ChatDetailController> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildAvatar(Size size, String? imageUrl) {
+    if (imageUrl == null || imageUrl.isEmpty) {
+      return CircleAvatar(
+        radius: size.width * 0.05,
+        backgroundColor: AppColors.primaryColor.withValues(alpha: 0.12),
+        child: const Icon(Icons.person_rounded, color: AppColors.primaryColor),
+      );
+    }
+
+    // Determine the base URL
+    String baseUrl = ApiClient.baseUrl ?? '';
+    if (baseUrl.endsWith('/')) {
+      baseUrl = baseUrl.substring(0, baseUrl.length - 1);
+    }
+
+    // Ensure URL starts with http(s)
+    if (!imageUrl.startsWith('http') && !imageUrl.startsWith('https')) {
+      if (!imageUrl.startsWith('/')) {
+        imageUrl = '/$imageUrl';
+      }
+    }
+
+    final finalUrl = imageUrl.startsWith('http') ? imageUrl : '$baseUrl$imageUrl';
+
+    return CircleAvatar(
+      radius: size.width * 0.05,
+      backgroundColor: AppColors.whiteColor,
+      backgroundImage: NetworkImage(
+        finalUrl,
+        headers: {'Accept': 'image/*', 'Cache-Control': 'no-cache, no-store, must-revalidate'},
+      ),
+      child: const SizedBox.shrink(),
     );
   }
 
@@ -421,7 +452,7 @@ class ChatDetailView extends GetView<ChatDetailController> {
                   decoration: InputDecoration(
                     isCollapsed: true,
                     border: InputBorder.none,
-                    hintText: 'Ketik pesan...',
+                    hintText: 'Type your message...',
                     hintStyle: AppTypography.bodySmall.copyWith(color: AppColors.textBodyColor.withValues(alpha: 0.5)),
                   ),
                   style: AppTypography.bodyMedium.copyWith(color: AppColors.textHeadingColor),

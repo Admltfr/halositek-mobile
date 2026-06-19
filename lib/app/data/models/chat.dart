@@ -14,9 +14,9 @@ class ChatConversation {
   final int durationHours;
   final String status; // e.g. '', 'approved', 'declined', 'reported'
   final String consultationId;
-  final String? architectName;
-  final String? architectHeadline;
-  final String? userName;
+  final ChatParticipant? user;
+  final ChatParticipant? architect;
+  final ChatSession? session;
 
   const ChatConversation({
     required this.id,
@@ -31,29 +31,18 @@ class ChatConversation {
     required this.durationHours,
     required this.status,
     required this.consultationId,
-    this.architectName,
-    this.architectHeadline,
-    this.userName,
+    this.user,
+    this.architect,
+    this.session,
   });
 
   factory ChatConversation.fromJson(Map<String, dynamic> json) {
     final lastMessageRaw = json['last_message'];
-    final lastMessage =
-        lastMessageRaw is Map
-            ? ChatMessage.fromJson(lastMessageRaw.cast<String, dynamic>())
-            : null;
+    final lastMessage = lastMessageRaw is Map ? ChatMessage.fromJson(lastMessageRaw.cast<String, dynamic>()) : null;
 
     final architectRaw = json['architect'];
     final userRaw = json['user'];
-
-    final parsedArchitectName =
-        architectRaw is Map ? (architectRaw['name'] ?? '').toString() : null;
-    final parsedArchitectHeadline =
-        architectRaw is Map
-            ? (architectRaw['headline'] ?? '').toString()
-            : null;
-    final parsedUserName =
-        userRaw is Map ? (userRaw['name'] ?? '').toString() : null;
+    final sessionRaw = json['consultation_session'];
 
     return ChatConversation(
       id: (json['id'] ?? '').toString(),
@@ -68,18 +57,23 @@ class ChatConversation {
       durationHours: _toInt(json['duration_hours']),
       status: (json['status'] ?? '').toString().toLowerCase(),
       consultationId: (json['consultation_id'] ?? '').toString(),
-      architectName: parsedArchitectName,
-      architectHeadline: parsedArchitectHeadline,
-      userName: parsedUserName,
+      user: userRaw is Map ? ChatParticipant.fromJson(Map<String, dynamic>.from(userRaw)) : null,
+      architect: architectRaw is Map ? ChatParticipant.fromJson(Map<String, dynamic>.from(architectRaw)) : null,
+      session: sessionRaw is Map ? ChatSession.fromJson(Map<String, dynamic>.from(sessionRaw)) : null,
     );
   }
 
   String get displayName {
-    if (architectName != null && architectName!.trim().isNotEmpty) {
-      return architectName!;
+    if (architect?.name != null && architect!.name.trim().isNotEmpty) {
+      return architect!.name;
     }
     if (name.trim().isNotEmpty) return name;
     return isGroup ? 'Group Chat' : 'Conversation';
+  }
+
+  String? get displayImageUrl {
+    if (architect?.displayImageUrl != null) return architect!.displayImageUrl;
+    return user?.displayImageUrl;
   }
 
   String get lastMessagePreview => lastMessage?.displayBody ?? '';
@@ -158,19 +152,10 @@ class ChatMessage {
       content: content,
       role: (json['role'] ?? '').toString(),
       type: (json['type'] ?? 'text').toString(),
-      attachment:
-          (json['images'] as List?)
-              ?.whereType<String>()
-              .map((e) => e.toImageUrl())
-              .firstOrNull,
+      attachment: (json['images'] as List?)?.whereType<String>().map((e) => e.toImageUrl()).firstOrNull,
       readAt: _parseDate(json['read_at']),
       isMine: json['is_mine'] == true,
-      sender:
-          json['sender'] is Map
-              ? ChatSender.fromJson(
-                (json['sender'] as Map).cast<String, dynamic>(),
-              )
-              : null,
+      sender: json['sender'] is Map ? ChatSender.fromJson((json['sender'] as Map).cast<String, dynamic>()) : null,
       createdAt: _parseDate(json['created_at']),
       updatedAt: _parseDate(json['updated_at']),
     );
@@ -180,24 +165,17 @@ class ChatMessage {
 
   String? get attachmentUrl {
     if (attachment == null || attachment!.isEmpty) return null;
-    if (attachment!.startsWith('http://') ||
-        attachment!.startsWith('https://')) {
+    if (attachment!.startsWith('http://') || attachment!.startsWith('https://')) {
       return attachment;
     }
     final base = ApiClient.baseUrl ?? '';
-    final cleanBase =
-        base.endsWith('/') ? base.substring(0, base.length - 1) : base;
-    final cleanAttachment =
-        attachment!.startsWith('/') ? attachment! : '/$attachment';
+    final cleanBase = base.endsWith('/') ? base.substring(0, base.length - 1) : base;
+    final cleanAttachment = attachment!.startsWith('/') ? attachment! : '/$attachment';
     return '$cleanBase$cleanAttachment';
   }
 
   /// True if this message contains an image (attachment or type == 'image')
-  bool get hasImage =>
-      (type == 'image') ||
-      (attachment != null &&
-          attachment!.isNotEmpty &&
-          _isImageUrl(attachment!));
+  bool get hasImage => (type == 'image') || (attachment != null && attachment!.isNotEmpty && _isImageUrl(attachment!));
 
   static bool _isImageUrl(String url) {
     final lower = url.toLowerCase();
@@ -233,10 +211,10 @@ class ChatSender {
 
 class ChatReport {
   final String id;
-  final ReportUser requester;
+  final ChatParticipant requester;
   final String reason;
   final DateTime? consultationDate;
-  final ReportUser opposingParty;
+  final ChatParticipant opposingParty;
   final double nominal;
   final String transcript;
   final String actionReport; // 'new', 'approved', 'declined'
@@ -255,19 +233,13 @@ class ChatReport {
   factory ChatReport.fromJson(Map<String, dynamic> json) {
     return ChatReport(
       id: (json['id'] ?? '').toString(),
-      requester: ReportUser.fromJson(
-        json['requester'] is Map
-            ? Map<String, dynamic>.from(json['requester'] as Map)
-            : <String, dynamic>{},
+      requester: ChatParticipant.fromJson(
+        json['requester'] is Map ? Map<String, dynamic>.from(json['requester'] as Map) : <String, dynamic>{},
       ),
       reason: (json['reason'] ?? '').toString(),
-      consultationDate: DateTime.tryParse(
-        (json['consultation_date'] ?? '').toString(),
-      ),
-      opposingParty: ReportUser.fromJson(
-        json['opposing_party'] is Map
-            ? Map<String, dynamic>.from(json['opposing_party'] as Map)
-            : <String, dynamic>{},
+      consultationDate: DateTime.tryParse((json['consultation_date'] ?? '').toString()),
+      opposingParty: ChatParticipant.fromJson(
+        json['opposing_party'] is Map ? Map<String, dynamic>.from(json['opposing_party'] as Map) : <String, dynamic>{},
       ),
       nominal: _toDouble(json['nominal']),
       transcript: (json['transcript'] ?? '').toString(),
@@ -276,9 +248,7 @@ class ChatReport {
   }
 
   /// Display name: show the opposing party's name
-  String get displayName => opposingParty.name.isNotEmpty
-      ? opposingParty.name
-      : 'Unknown User';
+  String get displayName => opposingParty.name.isNotEmpty ? opposingParty.name : 'Unknown User';
 
   /// Preview text from the reason
   String get reasonPreview => reason;
@@ -290,28 +260,90 @@ class ChatReport {
   }
 }
 
-class ReportUser {
+class ChatParticipant {
   final String id;
   final String name;
   final String role;
+  final String email;
   final String? photoProfile;
   final String? photoProfileUrl;
+  final String? profilePicture;
+  final Map<String, dynamic> rawData;
 
-  const ReportUser({
+  const ChatParticipant({
     required this.id,
     required this.name,
     this.role = '',
+    this.email = '',
     this.photoProfile,
     this.photoProfileUrl,
+    this.profilePicture,
+    this.rawData = const {},
   });
 
-  factory ReportUser.fromJson(Map<String, dynamic> json) {
-    return ReportUser(
+  factory ChatParticipant.fromJson(Map<String, dynamic> json) {
+    return ChatParticipant(
       id: (json['id'] ?? '').toString(),
       name: (json['name'] ?? '').toString(),
       role: (json['role'] ?? '').toString(),
-      photoProfile: json['photo_profile']?.toString(),
-      photoProfileUrl: json['photo_profile_url']?.toString(),
+      email: (json['email'] ?? '').toString(),
+      photoProfile: (json['photo_profile'] ?? json['profile_picture'])?.toString(),
+      photoProfileUrl: (json['photo_profile_url'] ?? json['profile_picture_url'])?.toString(),
+      profilePicture: (json['profile_picture'] ?? json['profile_picture_url'])?.toString(),
+      rawData: json,
+    );
+  }
+
+  String? get displayImageUrl {
+    if (photoProfileUrl != null && photoProfileUrl!.isNotEmpty) {
+      if (photoProfileUrl!.startsWith('http')) {
+        return photoProfileUrl;
+      }
+      final base = ApiClient.baseUrl?.replaceAll(RegExp(r'/$'), '') ?? '';
+      return '$base/$photoProfileUrl';
+    }
+    if (photoProfile != null && photoProfile!.isNotEmpty) {
+      if (photoProfile!.startsWith('http')) return photoProfile;
+      final base = ApiClient.baseUrl?.replaceAll(RegExp(r'/$'), '') ?? '';
+      return '$base/storage/$photoProfile';
+    }
+    if (profilePicture != null && profilePicture!.isNotEmpty) {
+      if (profilePicture!.startsWith('http')) return profilePicture;
+      final base = ApiClient.baseUrl?.replaceAll(RegExp(r'/$'), '') ?? '';
+      return '$base/storage/$profilePicture';
+    }
+    return null;
+  }
+}
+
+class ChatSession {
+  final String id;
+  final String status;
+  final DateTime? startedAt;
+  final DateTime? expiresAt;
+  final int remainingSeconds;
+  final bool isActive;
+
+  const ChatSession({
+    required this.id,
+    required this.status,
+    required this.startedAt,
+    required this.expiresAt,
+    required this.remainingSeconds,
+    required this.isActive,
+  });
+
+  factory ChatSession.fromJson(Map<String, dynamic> json) {
+    return ChatSession(
+      id: (json['id'] ?? '').toString(),
+      status: (json['status'] ?? '').toString(),
+      startedAt: json['started_at'] != null ? DateTime.tryParse(json['started_at'].toString()) : null,
+      expiresAt: json['expires_at'] != null ? DateTime.tryParse(json['expires_at'].toString()) : null,
+      remainingSeconds:
+          json['remaining_seconds'] is int
+              ? json['remaining_seconds']
+              : int.tryParse(json['remaining_seconds']?.toString() ?? '') ?? 0,
+      isActive: json['is_active'] == true,
     );
   }
 }

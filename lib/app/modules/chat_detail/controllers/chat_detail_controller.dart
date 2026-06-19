@@ -12,6 +12,7 @@ class ChatDetailController extends GetxController {
   final String consultationId;
   final String title;
   final int durationHours;
+  final String? avatarUrl;
   final String conversationStatus;
 
   ChatDetailController(
@@ -19,6 +20,7 @@ class ChatDetailController extends GetxController {
     required this.conversationId,
     required this.consultationId,
     required this.title,
+    this.avatarUrl,
     this.durationHours = 0,
     this.conversationStatus = '',
   });
@@ -136,10 +138,7 @@ class ChatDetailController extends GetxController {
     messageController.clear();
 
     try {
-      final message = await _chatService.sendMessage(
-        conversationId: conversationId,
-        body: text,
-      );
+      final message = await _chatService.sendMessage(conversationId: conversationId, body: text);
       messages.add(message);
       _scrollToBottom();
     } catch (e) {
@@ -161,10 +160,7 @@ class ChatDetailController extends GetxController {
     if (isSessionExpired.value) return;
 
     try {
-      final result = await FilePicker.platform.pickFiles(
-        type: FileType.image,
-        allowMultiple: false,
-      );
+      final result = await FilePicker.platform.pickFiles(type: FileType.image, allowMultiple: false);
 
       if (result == null || result.files.isEmpty) return;
       final path = result.files.single.path;
@@ -172,11 +168,7 @@ class ChatDetailController extends GetxController {
 
       await sendImage(File(path));
     } catch (e) {
-      Get.snackbar(
-        'Gagal memilih gambar',
-        e.toString(),
-        snackPosition: SnackPosition.BOTTOM,
-      );
+      Get.snackbar('Gagal memilih gambar', e.toString(), snackPosition: SnackPosition.BOTTOM);
     }
   }
 
@@ -186,18 +178,11 @@ class ChatDetailController extends GetxController {
     isSending.value = true;
 
     try {
-      final message = await _chatService.sendImage(
-        conversationId: conversationId,
-        imageFile: imageFile,
-      );
+      final message = await _chatService.sendImage(conversationId: conversationId, imageFile: imageFile);
       messages.add(message);
       _scrollToBottom();
     } catch (e) {
-      Get.snackbar(
-        'Gagal mengirim gambar',
-        e.toString(),
-        snackPosition: SnackPosition.BOTTOM,
-      );
+      Get.snackbar('Gagal mengirim gambar', e.toString(), snackPosition: SnackPosition.BOTTOM);
     } finally {
       isSending.value = false;
     }
@@ -211,10 +196,7 @@ class ChatDetailController extends GetxController {
     isSubmittingReport.value = true;
 
     try {
-      await _chatService.submitReport(
-        consultationId: consultationId,
-        reason: reason,
-      );
+      await _chatService.submitReport(consultationId: consultationId, reason: reason);
       reportController.clear();
       Get.back(); // Close modal
       Get.snackbar(
@@ -225,11 +207,7 @@ class ChatDetailController extends GetxController {
         colorText: Colors.white,
       );
     } catch (e) {
-      Get.snackbar(
-        'Gagal Mengirim Laporan',
-        e.toString(),
-        snackPosition: SnackPosition.BOTTOM,
-      );
+      Get.snackbar('Gagal Mengirim Laporan', e.toString(), snackPosition: SnackPosition.BOTTOM);
     } finally {
       isSubmittingReport.value = false;
     }

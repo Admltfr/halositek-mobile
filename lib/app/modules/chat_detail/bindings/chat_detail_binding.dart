@@ -10,6 +10,7 @@ class ChatDetailBinding extends Bindings {
   final String title;
   final int durationHours;
   final String conversationStatus;
+  final String? avatarUrl;
 
   ChatDetailBinding({
     this.conversationId = '',
@@ -17,6 +18,7 @@ class ChatDetailBinding extends Bindings {
     this.title = '',
     this.durationHours = 0,
     this.conversationStatus = '',
+    this.avatarUrl,
   });
 
   @override
@@ -30,6 +32,7 @@ class ChatDetailBinding extends Bindings {
         consultationId: consultationId,
         title: title,
         durationHours: durationHours,
+        avatarUrl: avatarUrl,
         conversationStatus: conversationStatus,
       ),
     );

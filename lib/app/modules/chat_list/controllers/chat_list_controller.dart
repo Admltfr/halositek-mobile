@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:halositek/app/data/models/chat.dart';
+import 'package:halositek/app/data/network/api_client.dart';
 import 'package:halositek/app/data/network/chat_service.dart';
 import 'package:halositek/app/data/network/token_service.dart';
 import 'package:halositek/app/modules/chat_detail/bindings/chat_detail_binding.dart';
@@ -12,6 +13,8 @@ class ChatListController extends GetxController {
   final TokenService _tokenService;
 
   ChatListController(this._chatService, this._tokenService);
+
+  final isArchitect = false.obs;
 
   // ── Tab / dropdown state ───────────────────────────────────────────
   static const String tabConsultation = 'consultation';
@@ -48,30 +51,24 @@ class ChatListController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    
+
     // Setup debounce for search
-    debounce(
-      searchQuery,
-      (_) => refreshData(),
-      time: const Duration(milliseconds: 500),
-    );
+    debounce(searchQuery, (_) => refreshData(), time: const Duration(milliseconds: 500));
 
     // Setup infinite scroll listeners
     conversationsScrollController.addListener(() {
-      if (conversationsScrollController.position.pixels >=
-          conversationsScrollController.position.maxScrollExtent - 200) {
+      if (conversationsScrollController.position.pixels >= conversationsScrollController.position.maxScrollExtent - 200) {
         loadMoreConversations();
       }
     });
 
     reportsScrollController.addListener(() {
-      if (reportsScrollController.position.pixels >=
-          reportsScrollController.position.maxScrollExtent - 200) {
+      if (reportsScrollController.position.pixels >= reportsScrollController.position.maxScrollExtent - 200) {
         loadMoreReports();
       }
     });
 
-    fetchConversations();
+    _bootstrap();
   }
 
   @override
@@ -85,6 +82,13 @@ class ChatListController extends GetxController {
   void goBack() {
     final nav = Get.find<NavigationController>();
     nav.onPop();
+  }
+
+  Future<void> _bootstrap() async {
+    final tokenService = Get.find<TokenService>();
+    final role = (await tokenService.getRole() ?? '').trim().toLowerCase();
+    isArchitect.value = role == 'architect';
+    await fetchConversations();
   }
 
   // ── Tab switching ──────────────────────────────────────────────────
@@ -126,11 +130,7 @@ class ChatListController extends GetxController {
       if (_conversationsPage == 1) {
         conversations.clear();
       }
-      final result = await _chatService.getConversations(
-        page: _conversationsPage,
-        perPage: 10,
-        search: searchQuery.value,
-      );
+      final result = await _chatService.getConversations(page: _conversationsPage, perPage: 10, search: searchQuery.value);
       conversations.assignAll(result.conversations);
       _conversationsLastPage = result.meta.lastPage;
     } catch (e) {
@@ -148,11 +148,7 @@ class ChatListController extends GetxController {
     try {
       isLoadingMoreConversations.value = true;
       _conversationsPage++;
-      final result = await _chatService.getConversations(
-        page: _conversationsPage,
-        perPage: 10,
-        search: searchQuery.value,
-      );
+      final result = await _chatService.getConversations(page: _conversationsPage, perPage: 10, search: searchQuery.value);
       conversations.addAll(result.conversations);
       _conversationsLastPage = result.meta.lastPage;
     } catch (e) {
@@ -176,12 +172,7 @@ class ChatListController extends GetxController {
         errorReports.value = 'User ID not found';
         return;
       }
-      final result = await _chatService.getReports(
-        userId,
-        page: _reportsPage,
-        perPage: 10,
-        search: searchQuery.value,
-      );
+      final result = await _chatService.getReports(userId, page: _reportsPage, perPage: 10, search: searchQuery.value);
       reports.assignAll(result.reports);
       _reportsLastPage = result.meta.lastPage;
     } catch (e) {
@@ -202,12 +193,7 @@ class ChatListController extends GetxController {
       if (userId == null || userId.trim().isEmpty) return;
 
       _reportsPage++;
-      final result = await _chatService.getReports(
-        userId,
-        page: _reportsPage,
-        perPage: 10,
-        search: searchQuery.value,
-      );
+      final result = await _chatService.getReports(userId, page: _reportsPage, perPage: 10, search: searchQuery.value);
       reports.addAll(result.reports);
       _reportsLastPage = result.meta.lastPage;
     } catch (e) {
@@ -220,6 +206,28 @@ class ChatListController extends GetxController {
 
   // ── Navigation ─────────────────────────────────────────────────────
   void openConversation(ChatConversation conversation) {
+    String? avatarUrl;
+
+    if (isArchitect.value) {
+      if (conversation.user?.profilePicture != null && conversation.user!.profilePicture!.isNotEmpty) {
+        if (conversation.user!.profilePicture!.startsWith('http')) {
+          avatarUrl = conversation.user!.profilePicture;
+        } else {
+          final base = ApiClient.baseUrl?.replaceAll(RegExp(r'/$'), '') ?? '';
+          avatarUrl = '$base/storage/${conversation.user!.profilePicture}';
+        }
+      }
+    } else {
+      if (conversation.architect?.profilePicture != null && conversation.architect!.profilePicture!.isNotEmpty) {
+        if (conversation.architect!.profilePicture!.startsWith('http')) {
+          avatarUrl = conversation.architect!.profilePicture;
+        } else {
+          final base = ApiClient.baseUrl?.replaceAll(RegExp(r'/$'), '') ?? '';
+          avatarUrl = '$base/storage/${conversation.architect!.profilePicture}';
+        }
+      }
+    }
+
     Get.to(
       () => const ChatDetailView(),
       binding: ChatDetailBinding(
@@ -228,6 +236,7 @@ class ChatListController extends GetxController {
         title: conversation.displayName,
         durationHours: conversation.durationHours,
         conversationStatus: conversation.status,
+        avatarUrl: avatarUrl,
       ),
     );
   }

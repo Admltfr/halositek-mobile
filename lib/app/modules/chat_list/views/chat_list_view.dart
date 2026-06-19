@@ -5,6 +5,7 @@ import 'package:halositek/app/core/constants/app_dimensions.dart';
 import 'package:halositek/app/core/constants/app_extensions.dart';
 import 'package:halositek/app/core/constants/app_typography.dart';
 import 'package:halositek/app/data/models/chat.dart';
+import 'package:halositek/app/data/network/api_client.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import '../controllers/chat_list_controller.dart';
 
@@ -255,9 +256,7 @@ class ChatListView extends GetView<ChatListController> {
                   child: Center(
                     child: Text(
                       'Chat not found',
-                      style: AppTypography.bodyMedium.copyWith(
-                        color: AppColors.textHeadingColor.withValues(alpha: 0.6),
-                      ),
+                      style: AppTypography.bodyMedium.copyWith(color: AppColors.textHeadingColor.withValues(alpha: 0.6)),
                     ),
                   ),
                 );
@@ -266,12 +265,7 @@ class ChatListView extends GetView<ChatListController> {
               if (index == data.length && showLoadingMore) {
                 return const Padding(
                   padding: EdgeInsets.symmetric(vertical: 16.0),
-                  child: Center(
-                    child: SizedBox(
-                      width: 24, height: 24,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                  ),
+                  child: Center(child: SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2))),
                 );
               }
 
@@ -306,6 +300,28 @@ class ChatListView extends GetView<ChatListController> {
   Widget _chatTile(Size size, ChatConversation conversation) {
     final timeText = _formatTime(conversation.lastActivityAt);
 
+    String? displayImageUrl;
+
+    if (controller.isArchitect.value) {
+      if (conversation.user?.profilePicture != null && conversation.user!.profilePicture!.isNotEmpty) {
+        if (conversation.user!.profilePicture!.startsWith('http')) {
+          displayImageUrl = conversation.user!.profilePicture;
+        } else {
+          final base = ApiClient.baseUrl?.replaceAll(RegExp(r'/$'), '') ?? '';
+          displayImageUrl = '$base/storage/${conversation.user!.profilePicture}';
+        }
+      }
+    } else {
+      if (conversation.architect?.profilePicture != null && conversation.architect!.profilePicture!.isNotEmpty) {
+        if (conversation.architect!.profilePicture!.startsWith('http')) {
+          displayImageUrl = conversation.architect!.profilePicture;
+        } else {
+          final base = ApiClient.baseUrl?.replaceAll(RegExp(r'/$'), '') ?? '';
+          displayImageUrl = '$base/storage/${conversation.architect!.profilePicture}';
+        }
+      }
+    }
+
     return InkWell(
       onTap: () => controller.openConversation(conversation),
       borderRadius: BorderRadius.circular(AppDimensions.radiusLarge),
@@ -313,13 +329,7 @@ class ChatListView extends GetView<ChatListController> {
         padding: const EdgeInsets.symmetric(vertical: AppDimensions.spacingSmall),
         child: Row(
           children: [
-            CircleAvatar(
-              radius: size.width * 0.065,
-              backgroundColor: AppColors.whiteColor,
-              child: ClipOval(
-                child: Image.asset(_dummyAvatar, width: size.width * 0.13, height: size.width * 0.13, fit: BoxFit.cover),
-              ),
-            ),
+            _buildAvatar(size, displayImageUrl),
             AppDimensions.spacingLarge.sw,
             Expanded(
               child: Column(
@@ -411,9 +421,7 @@ class ChatListView extends GetView<ChatListController> {
                   child: Center(
                     child: Text(
                       'No report found',
-                      style: AppTypography.bodyMedium.copyWith(
-                        color: AppColors.textHeadingColor.withValues(alpha: 0.6),
-                      ),
+                      style: AppTypography.bodyMedium.copyWith(color: AppColors.textHeadingColor.withValues(alpha: 0.6)),
                     ),
                   ),
                 );
@@ -422,12 +430,7 @@ class ChatListView extends GetView<ChatListController> {
               if (index == data.length && showLoadingMore) {
                 return const Padding(
                   padding: EdgeInsets.symmetric(vertical: 16.0),
-                  child: Center(
-                    child: SizedBox(
-                      width: 24, height: 24,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                  ),
+                  child: Center(child: SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2))),
                 );
               }
 
@@ -481,17 +484,22 @@ class ChatListView extends GetView<ChatListController> {
     final status = report.actionReport.toLowerCase();
     final hasActionStatus = status == 'approved' || status == 'declined';
 
+    String? displayImageUrl;
+
+    if (report.opposingParty.photoProfileUrl != null && report.opposingParty.photoProfileUrl!.isNotEmpty) {
+      if (report.opposingParty.photoProfileUrl!.startsWith('http')) {
+        displayImageUrl = report.opposingParty.photoProfileUrl;
+      } else {
+        final base = ApiClient.baseUrl?.replaceAll(RegExp(r'/$'), '') ?? '';
+        displayImageUrl = '$base${report.opposingParty.photoProfileUrl}';
+      }
+    }
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppDimensions.spacingSmall),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: size.width * 0.065,
-            backgroundColor: AppColors.whiteColor,
-            child: ClipOval(
-              child: Image.asset(_dummyAvatar, width: size.width * 0.13, height: size.width * 0.13, fit: BoxFit.cover),
-            ),
-          ),
+          _buildAvatar(size, displayImageUrl),
           AppDimensions.spacingLarge.sw,
           Expanded(
             child: Column(
@@ -561,6 +569,27 @@ class ChatListView extends GetView<ChatListController> {
       child: Text(
         label,
         style: AppTypography.captionLarge.copyWith(color: color, fontWeight: FontWeight.w800, letterSpacing: 0.5),
+      ),
+    );
+  }
+
+  Widget _buildAvatar(Size size, String? imageUrl) {
+    return CircleAvatar(
+      radius: size.width * 0.065,
+      backgroundColor: AppColors.whiteColor,
+      child: ClipOval(
+        child:
+            imageUrl != null && imageUrl.isNotEmpty
+                ? Image.network(
+                  imageUrl,
+                  width: size.width * 0.13,
+                  height: size.width * 0.13,
+                  fit: BoxFit.cover,
+                  errorBuilder:
+                      (_, __, ___) =>
+                          Image.asset(_dummyAvatar, width: size.width * 0.13, height: size.width * 0.13, fit: BoxFit.cover),
+                )
+                : Image.asset(_dummyAvatar, width: size.width * 0.13, height: size.width * 0.13, fit: BoxFit.cover),
       ),
     );
   }
