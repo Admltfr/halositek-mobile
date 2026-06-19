@@ -21,9 +21,7 @@ class ChatDetailView extends GetView<ChatDetailController> {
           children: [
             _topBar(size),
             Expanded(child: _messageList(size)),
-            Obx(() => controller.isSessionExpired.value
-                ? _expiredBanner(size)
-                : _inputBar(size)),
+            Obx(() => controller.isSessionExpired.value ? _expiredBanner(size) : _inputBar(size)),
           ],
         ),
       ),
@@ -32,19 +30,10 @@ class ChatDetailView extends GetView<ChatDetailController> {
 
   Widget _topBar(Size size) {
     return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: size.width * 0.04,
-        vertical: size.height * 0.012,
-      ),
+      padding: EdgeInsets.symmetric(horizontal: size.width * 0.04, vertical: size.height * 0.012),
       decoration: BoxDecoration(
         color: AppColors.whiteColor,
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.shadowColor,
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        boxShadow: [BoxShadow(color: AppColors.shadowColor, blurRadius: 8, offset: const Offset(0, 2))],
       ),
       child: Row(
         children: [
@@ -65,14 +54,8 @@ class ChatDetailView extends GetView<ChatDetailController> {
           Container(
             width: size.width * 0.1,
             height: size.width * 0.1,
-            decoration: BoxDecoration(
-              color: AppColors.primaryColor.withValues(alpha: 0.12),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.person_rounded,
-              color: AppColors.primaryColor,
-            ),
+            decoration: BoxDecoration(color: AppColors.primaryColor.withValues(alpha: 0.12), shape: BoxShape.circle),
+            child: const Icon(Icons.person_rounded, color: AppColors.primaryColor),
           ),
           SizedBox(width: size.width * 0.025),
           Expanded(
@@ -82,18 +65,13 @@ class ChatDetailView extends GetView<ChatDetailController> {
               children: [
                 Text(
                   controller.displayTitle,
-                  style: AppTypography.bodyMedium.copyWith(
-                    color: AppColors.textHeadingColor,
-                    fontWeight: FontWeight.w700,
-                  ),
+                  style: AppTypography.bodyMedium.copyWith(color: AppColors.textHeadingColor, fontWeight: FontWeight.w700),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(
                   'Konsultasi',
-                  style: AppTypography.caption.copyWith(
-                    color: AppColors.textBodyColor.withValues(alpha: 0.65),
-                  ),
+                  style: AppTypography.caption.copyWith(color: AppColors.textBodyColor.withValues(alpha: 0.65)),
                 ),
               ],
             ),
@@ -104,11 +82,7 @@ class ChatDetailView extends GetView<ChatDetailController> {
             borderRadius: BorderRadius.circular(AppDimensions.radius4XLarge),
             child: const Padding(
               padding: EdgeInsets.all(AppDimensions.spacingSmall),
-              child: Icon(
-                Icons.flag_rounded,
-                color: AppColors.errorColor,
-                size: AppDimensions.iconSizeMedium,
-              ),
+              child: Icon(Icons.flag_rounded, color: AppColors.errorColor, size: AppDimensions.iconSizeMedium),
             ),
           ),
         ],
@@ -126,17 +100,11 @@ class ChatDetailView extends GetView<ChatDetailController> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                Icons.wifi_off_rounded,
-                color: AppColors.errorColor.withValues(alpha: 0.5),
-                size: 40,
-              ),
+              Icon(Icons.wifi_off_rounded, color: AppColors.errorColor.withValues(alpha: 0.5), size: 40),
               AppDimensions.spacingLarge.sh,
               Text(
                 controller.errorMessage.value,
-                style: AppTypography.bodySmall.copyWith(
-                  color: AppColors.errorColor,
-                ),
+                style: AppTypography.bodySmall.copyWith(color: AppColors.errorColor),
                 textAlign: TextAlign.center,
               ),
               AppDimensions.spacingMedium.sh,
@@ -144,10 +112,7 @@ class ChatDetailView extends GetView<ChatDetailController> {
                 onPressed: controller.fetchMessages,
                 child: Text(
                   'Coba Lagi',
-                  style: AppTypography.bodySmall.copyWith(
-                    color: AppColors.primaryColor,
-                    fontWeight: FontWeight.w700,
-                  ),
+                  style: AppTypography.bodySmall.copyWith(color: AppColors.primaryColor, fontWeight: FontWeight.w700),
                 ),
               ),
             ],
@@ -159,26 +124,19 @@ class ChatDetailView extends GetView<ChatDetailController> {
 
       return ListView.builder(
         controller: controller.scrollController,
-        padding: EdgeInsets.symmetric(
-          horizontal: size.width * 0.05,
-          vertical: size.height * 0.015,
-        ),
+        padding: EdgeInsets.symmetric(horizontal: size.width * 0.05, vertical: size.height * 0.015),
         itemCount: msgs.length + (isLoading ? 1 : 0),
         itemBuilder: (_, index) {
           if (isLoading && index == msgs.length) {
             return Padding(
-              padding: const EdgeInsets.symmetric(
-                vertical: AppDimensions.spacingLarge,
-              ),
+              padding: const EdgeInsets.symmetric(vertical: AppDimensions.spacingLarge),
               child: Center(
                 child: SizedBox(
                   width: 22,
                   height: 22,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    valueColor: const AlwaysStoppedAnimation<Color>(
-                      AppColors.primaryColor,
-                    ),
+                    valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primaryColor),
                   ),
                 ),
               ),
@@ -213,21 +171,12 @@ class ChatDetailView extends GetView<ChatDetailController> {
   Widget _dateSeparator(DateTime? date) {
     final label = _formatDate(date);
     return Padding(
-      padding: const EdgeInsets.symmetric(
-        vertical: AppDimensions.spacingXLarge,
-      ),
+      padding: const EdgeInsets.symmetric(vertical: AppDimensions.spacingXLarge),
       child: Row(
         children: [
-          Expanded(
-            child: Divider(
-              color: AppColors.formBorderColor.withValues(alpha: 0.25),
-              thickness: 1,
-            ),
-          ),
+          Expanded(child: Divider(color: AppColors.formBorderColor.withValues(alpha: 0.25), thickness: 1)),
           Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppDimensions.spacingXLarge,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: AppDimensions.spacingXLarge),
             child: Container(
               padding: const EdgeInsets.symmetric(
                 horizontal: AppDimensions.spacingLarge,
@@ -246,12 +195,7 @@ class ChatDetailView extends GetView<ChatDetailController> {
               ),
             ),
           ),
-          Expanded(
-            child: Divider(
-              color: AppColors.formBorderColor.withValues(alpha: 0.25),
-              thickness: 1,
-            ),
-          ),
+          Expanded(child: Divider(color: AppColors.formBorderColor.withValues(alpha: 0.25), thickness: 1)),
         ],
       ),
     );
@@ -271,70 +215,43 @@ class ChatDetailView extends GetView<ChatDetailController> {
             Container(
               width: size.width * 0.08,
               height: size.width * 0.08,
-              margin: const EdgeInsets.only(
-                bottom: AppDimensions.spacingSmall,
-              ),
-              decoration: BoxDecoration(
-                color: AppColors.primaryColor.withValues(alpha: 0.12),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.person_rounded,
-                color: AppColors.primaryColor,
-                size: AppDimensions.iconSizeSmall,
-              ),
+              margin: const EdgeInsets.only(bottom: AppDimensions.spacingSmall),
+              decoration: BoxDecoration(color: AppColors.primaryColor.withValues(alpha: 0.12), shape: BoxShape.circle),
+              child: const Icon(Icons.person_rounded, color: AppColors.primaryColor, size: AppDimensions.iconSizeSmall),
             ),
             AppDimensions.spacingMedium.sw,
           ],
           Flexible(
             child: Column(
-              crossAxisAlignment:
-                  isMine ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+              crossAxisAlignment: isMine ? CrossAxisAlignment.end : CrossAxisAlignment.start,
               children: [
                 // Sender name (for non-mine)
                 if (!isMine && message.sender != null)
                   Padding(
-                    padding: const EdgeInsets.only(
-                      bottom: AppDimensions.spacingXSmall,
-                      left: AppDimensions.spacingXSmall,
-                    ),
+                    padding: const EdgeInsets.only(bottom: AppDimensions.spacingXSmall, left: AppDimensions.spacingXSmall),
                     child: Text(
                       message.sender!.name,
-                      style: AppTypography.captionLarge.copyWith(
-                        color: AppColors.primaryColor,
-                        fontWeight: FontWeight.w700,
-                      ),
+                      style: AppTypography.captionLarge.copyWith(color: AppColors.primaryColor, fontWeight: FontWeight.w700),
                     ),
                   ),
-                if (message.hasImage)
-                  _imageBubble(size, message)
-                else
-                  _textBubble(size, message),
+                if (message.hasImage) _imageBubble(size, message) else _textBubble(size, message),
                 // Timestamp
                 if (timeText.isNotEmpty)
                   Padding(
-                    padding: const EdgeInsets.only(
-                      top: AppDimensions.spacingXSmall,
-                    ),
+                    padding: const EdgeInsets.only(top: AppDimensions.spacingXSmall),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
                           timeText,
-                          style: AppTypography.caption.copyWith(
-                            color: AppColors.textBodyColor.withValues(alpha: 0.7),
-                          ),
+                          style: AppTypography.caption.copyWith(color: AppColors.textBodyColor.withValues(alpha: 0.7)),
                         ),
                         if (isMine) ...[
                           const SizedBox(width: 4),
                           Icon(
-                            message.readAt != null
-                                ? Icons.done_all_rounded
-                                : Icons.done_rounded,
+                            message.readAt != null ? Icons.done_all_rounded : Icons.done_rounded,
                             size: 14,
-                            color: message.readAt != null
-                                ? AppColors.infoColor
-                                : AppColors.formBorderColor,
+                            color: message.readAt != null ? AppColors.infoColor : AppColors.formBorderColor,
                           ),
                         ],
                       ],
@@ -351,57 +268,37 @@ class ChatDetailView extends GetView<ChatDetailController> {
 
   Widget _textBubble(Size size, ChatMessage message) {
     final isMine = message.isMine;
-    final bubbleColor =
-        isMine ? AppColors.primaryColor : AppColors.subtleSurfaceColor;
-    final textColor =
-        isMine ? AppColors.whiteColor : AppColors.textHeadingColor;
+    final bubbleColor = isMine ? AppColors.primaryColor : AppColors.subtleSurfaceColor;
+    final textColor = isMine ? AppColors.whiteColor : AppColors.textHeadingColor;
 
     return Container(
       constraints: BoxConstraints(maxWidth: size.width * 0.68),
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppDimensions.spacingXLarge,
-        vertical: AppDimensions.spacingLarge,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: AppDimensions.spacingXLarge, vertical: AppDimensions.spacingLarge),
       decoration: BoxDecoration(
         color: bubbleColor,
         borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(
-            isMine ? AppDimensions.radiusLarge : AppDimensions.radiusXSmall,
-          ),
-          topRight: Radius.circular(
-            isMine ? AppDimensions.radiusXSmall : AppDimensions.radiusLarge,
-          ),
+          topLeft: Radius.circular(isMine ? AppDimensions.radiusLarge : AppDimensions.radiusXSmall),
+          topRight: Radius.circular(isMine ? AppDimensions.radiusXSmall : AppDimensions.radiusLarge),
           bottomLeft: const Radius.circular(AppDimensions.radiusLarge),
           bottomRight: const Radius.circular(AppDimensions.radiusLarge),
         ),
       ),
-      child: Text(
-        message.displayBody,
-        style: AppTypography.bodySmall.copyWith(
-          color: textColor,
-          height: 1.4,
-        ),
-      ),
+      child: Text(message.displayBody, style: AppTypography.bodySmall.copyWith(color: textColor, height: 1.4)),
     );
   }
 
   Widget _imageBubble(Size size, ChatMessage message) {
     final isMine = message.isMine;
     final imageUrl = message.attachmentUrl ?? '';
-    final hasCaption = message.displayBody.isNotEmpty &&
-        message.displayBody != imageUrl;
+    final hasCaption = message.displayBody.isNotEmpty && message.displayBody != imageUrl;
 
     return Container(
       constraints: BoxConstraints(maxWidth: size.width * 0.68),
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(
-            isMine ? AppDimensions.radiusLarge : AppDimensions.radiusXSmall,
-          ),
-          topRight: Radius.circular(
-            isMine ? AppDimensions.radiusXSmall : AppDimensions.radiusLarge,
-          ),
+          topLeft: Radius.circular(isMine ? AppDimensions.radiusLarge : AppDimensions.radiusXSmall),
+          topRight: Radius.circular(isMine ? AppDimensions.radiusXSmall : AppDimensions.radiusLarge),
           bottomLeft: const Radius.circular(AppDimensions.radiusLarge),
           bottomRight: const Radius.circular(AppDimensions.radiusLarge),
         ),
@@ -421,27 +318,22 @@ class ChatDetailView extends GetView<ChatDetailController> {
                   color: AppColors.subtleSurfaceColor,
                   child: Center(
                     child: CircularProgressIndicator(
-                      value: progress.expectedTotalBytes != null
-                          ? progress.cumulativeBytesLoaded /
-                              progress.expectedTotalBytes!
-                          : null,
+                      value:
+                          progress.expectedTotalBytes != null
+                              ? progress.cumulativeBytesLoaded / progress.expectedTotalBytes!
+                              : null,
                       strokeWidth: 2,
-                      valueColor: const AlwaysStoppedAnimation<Color>(
-                        AppColors.primaryColor,
-                      ),
+                      valueColor: const AlwaysStoppedAnimation<Color>(AppColors.primaryColor),
                     ),
                   ),
                 );
               },
-              errorBuilder: (_, __, ___) => Container(
-                height: size.width * 0.3,
-                color: AppColors.subtleSurfaceColor,
-                child: const Icon(
-                  Icons.broken_image_outlined,
-                  color: AppColors.formBorderColor,
-                  size: 32,
-                ),
-              ),
+              errorBuilder:
+                  (_, __, ___) => Container(
+                    height: size.width * 0.3,
+                    color: AppColors.subtleSurfaceColor,
+                    child: const Icon(Icons.broken_image_outlined, color: AppColors.formBorderColor, size: 32),
+                  ),
             ),
           if (hasCaption)
             Container(
@@ -451,10 +343,7 @@ class ChatDetailView extends GetView<ChatDetailController> {
               ),
               child: Text(
                 message.displayBody,
-                style: AppTypography.bodySmall.copyWith(
-                  color: AppColors.textBodyColor,
-                  height: 1.35,
-                ),
+                style: AppTypography.bodySmall.copyWith(color: AppColors.textBodyColor, height: 1.35),
               ),
             ),
         ],
@@ -465,25 +354,14 @@ class ChatDetailView extends GetView<ChatDetailController> {
   Widget _expiredBanner(Size size) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.symmetric(
-        horizontal: size.width * 0.05,
-        vertical: AppDimensions.spacingXLarge,
-      ),
+      padding: EdgeInsets.symmetric(horizontal: size.width * 0.05, vertical: AppDimensions.spacingXLarge),
       decoration: BoxDecoration(
         color: AppColors.primaryColor.withValues(alpha: 0.08),
-        border: Border(
-          top: BorderSide(
-            color: AppColors.primaryColor.withValues(alpha: 0.2),
-          ),
-        ),
+        border: Border(top: BorderSide(color: AppColors.primaryColor.withValues(alpha: 0.2))),
       ),
       child: Row(
         children: [
-          const Icon(
-            Icons.timer_off_rounded,
-            color: AppColors.primaryColor,
-            size: AppDimensions.iconSizeMedium,
-          ),
+          const Icon(Icons.timer_off_rounded, color: AppColors.primaryColor, size: AppDimensions.iconSizeMedium),
           AppDimensions.spacingMedium.sw,
           Expanded(
             child: Text(
@@ -504,43 +382,23 @@ class ChatDetailView extends GetView<ChatDetailController> {
     return SafeArea(
       top: false,
       child: Container(
-        padding: EdgeInsets.fromLTRB(
-          size.width * 0.04,
-          size.height * 0.01,
-          size.width * 0.04,
-          size.height * 0.018,
-        ),
+        padding: EdgeInsets.fromLTRB(size.width * 0.04, size.height * 0.02, size.width * 0.04, size.height * 0.02),
         decoration: BoxDecoration(
           color: AppColors.whiteColor,
-          border: Border(
-            top: BorderSide(
-              color: AppColors.formBorderColor.withValues(alpha: 0.2),
-            ),
-          ),
+          border: Border(top: BorderSide(color: AppColors.formBorderColor.withValues(alpha: 0.15))),
         ),
         child: Row(
           children: [
             // Attachment / image button
             Obx(
               () => InkWell(
-                onTap: controller.isSending.value
-                    ? null
-                    : controller.pickAndSendImage,
-                borderRadius: BorderRadius.circular(
-                  AppDimensions.radiusCircle,
-                ),
+                onTap: controller.isSending.value ? null : controller.pickAndSendImage,
+                borderRadius: BorderRadius.circular(AppDimensions.radiusCircle),
                 child: Container(
                   width: size.width * 0.1,
                   height: size.width * 0.1,
-                  decoration: BoxDecoration(
-                    color: AppColors.subtleSurfaceColor,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.add_rounded,
-                    color: AppColors.textBodyColor,
-                    size: AppDimensions.iconSizeLarge,
-                  ),
+                  decoration: BoxDecoration(color: AppColors.subtleSurfaceColor, shape: BoxShape.circle),
+                  child: const Icon(Icons.add_rounded, color: AppColors.textBodyColor, size: AppDimensions.iconSizeLarge),
                 ),
               ),
             ),
@@ -548,16 +406,11 @@ class ChatDetailView extends GetView<ChatDetailController> {
             // Text field
             Expanded(
               child: Container(
-                padding: EdgeInsets.symmetric(
-                  horizontal: size.width * 0.035,
-                  vertical: AppDimensions.spacingSmall,
-                ),
+                padding: EdgeInsets.symmetric(horizontal: size.width * 0.04, vertical: AppDimensions.spacingLarge),
                 decoration: BoxDecoration(
                   color: AppColors.whiteColor,
                   borderRadius: BorderRadius.circular(AppDimensions.radiusPill),
-                  border: Border.all(
-                    color: AppColors.formBorderColor.withValues(alpha: 0.35),
-                  ),
+                  border: Border.all(color: AppColors.formBorderColor.withValues(alpha: 0.3)),
                 ),
                 child: TextField(
                   controller: controller.messageController,
@@ -569,13 +422,9 @@ class ChatDetailView extends GetView<ChatDetailController> {
                     isCollapsed: true,
                     border: InputBorder.none,
                     hintText: 'Ketik pesan...',
-                    hintStyle: AppTypography.bodySmall.copyWith(
-                      color: AppColors.textBodyColor.withValues(alpha: 0.55),
-                    ),
+                    hintStyle: AppTypography.bodySmall.copyWith(color: AppColors.textBodyColor.withValues(alpha: 0.5)),
                   ),
-                  style: AppTypography.bodySmall.copyWith(
-                    color: AppColors.textHeadingColor,
-                  ),
+                  style: AppTypography.bodyMedium.copyWith(color: AppColors.textHeadingColor),
                 ),
               ),
             ),
@@ -589,28 +438,20 @@ class ChatDetailView extends GetView<ChatDetailController> {
                   width: size.width * 0.1,
                   height: size.width * 0.1,
                   decoration: BoxDecoration(
-                    color: controller.isSending.value
-                        ? AppColors.primaryColor.withValues(alpha: 0.5)
-                        : AppColors.primaryColor,
+                    color:
+                        controller.isSending.value ? AppColors.primaryColor.withValues(alpha: 0.5) : AppColors.primaryColor,
                     shape: BoxShape.circle,
                   ),
-                  child: controller.isSending.value
-                      ? const Padding(
-                          padding: EdgeInsets.all(
-                            AppDimensions.spacingXLarge,
-                          ),
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              AppColors.whiteColor,
+                  child:
+                      controller.isSending.value
+                          ? const Padding(
+                            padding: EdgeInsets.all(AppDimensions.spacingXLarge),
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(AppColors.whiteColor),
                             ),
-                          ),
-                        )
-                      : Icon(
-                          Icons.send_rounded,
-                          color: AppColors.whiteColor,
-                          size: size.width * 0.045,
-                        ),
+                          )
+                          : Icon(Icons.send_rounded, color: AppColors.whiteColor, size: size.width * 0.045),
                 ),
               ),
             ),
@@ -634,9 +475,7 @@ class ChatDetailView extends GetView<ChatDetailController> {
               padding: const EdgeInsets.all(AppDimensions.spacing2XLarge),
               decoration: BoxDecoration(
                 color: AppColors.whiteColor,
-                borderRadius: BorderRadius.circular(
-                  AppDimensions.radius2XLarge,
-                ),
+                borderRadius: BorderRadius.circular(AppDimensions.radius2XLarge),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -652,10 +491,7 @@ class ChatDetailView extends GetView<ChatDetailController> {
                   AppDimensions.spacingMedium.sh,
                   Text(
                     'Please provide details about the problem you encountered during your session.',
-                    style: AppTypography.bodySmall.copyWith(
-                      color: AppColors.textBodyColor,
-                      height: 1.45,
-                    ),
+                    style: AppTypography.bodySmall.copyWith(color: AppColors.textBodyColor, height: 1.45),
                   ),
                   AppDimensions.spacing4XLarge.sh,
                   Text(
@@ -669,29 +505,18 @@ class ChatDetailView extends GetView<ChatDetailController> {
                   AppDimensions.spacingMedium.sh,
                   Container(
                     decoration: BoxDecoration(
-                      border: Border.all(
-                        color: AppColors.formBorderColor.withValues(alpha: 0.4),
-                      ),
-                      borderRadius: BorderRadius.circular(
-                        AppDimensions.radiusLarge,
-                      ),
+                      border: Border.all(color: AppColors.formBorderColor.withValues(alpha: 0.4)),
+                      borderRadius: BorderRadius.circular(AppDimensions.radiusLarge),
                     ),
                     child: TextField(
                       controller: controller.reportController,
                       maxLines: 5,
                       minLines: 4,
-                      style: AppTypography.bodySmall.copyWith(
-                        color: AppColors.textHeadingColor,
-                        height: 1.5,
-                      ),
+                      style: AppTypography.bodySmall.copyWith(color: AppColors.textHeadingColor, height: 1.5),
                       decoration: InputDecoration(
                         hintText: 'Describe the issue in detail...',
-                        hintStyle: AppTypography.bodySmall.copyWith(
-                          color: AppColors.textBodyColor.withValues(alpha: 0.5),
-                        ),
-                        contentPadding: const EdgeInsets.all(
-                          AppDimensions.spacingXLarge,
-                        ),
+                        hintStyle: AppTypography.bodySmall.copyWith(color: AppColors.textBodyColor.withValues(alpha: 0.5)),
+                        contentPadding: const EdgeInsets.all(AppDimensions.spacingXLarge),
                         border: InputBorder.none,
                       ),
                     ),
@@ -702,39 +527,31 @@ class ChatDetailView extends GetView<ChatDetailController> {
                       width: double.infinity,
                       height: size.height * 0.058,
                       child: ElevatedButton(
-                        onPressed: controller.isSubmittingReport.value
-                            ? null
-                            : controller.submitReport,
+                        onPressed: controller.isSubmittingReport.value ? null : controller.submitReport,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primaryColor,
                           foregroundColor: AppColors.whiteColor,
-                          disabledBackgroundColor: AppColors.primaryColor
-                              .withValues(alpha: 0.5),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(
-                              AppDimensions.radiusPill,
-                            ),
-                          ),
+                          disabledBackgroundColor: AppColors.primaryColor.withValues(alpha: 0.5),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimensions.radiusPill)),
                           elevation: 0,
                         ),
-                        child: controller.isSubmittingReport.value
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                    AppColors.whiteColor,
+                        child:
+                            controller.isSubmittingReport.value
+                                ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.whiteColor),
+                                  ),
+                                )
+                                : Text(
+                                  'Submit Report',
+                                  style: AppTypography.bodyMedium.copyWith(
+                                    color: AppColors.whiteColor,
+                                    fontWeight: FontWeight.w700,
                                   ),
                                 ),
-                              )
-                            : Text(
-                                'Submit Report',
-                                style: AppTypography.bodyMedium.copyWith(
-                                  color: AppColors.whiteColor,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
                       ),
                     ),
                   ),
@@ -745,10 +562,7 @@ class ChatDetailView extends GetView<ChatDetailController> {
                       onPressed: () => Get.back(),
                       child: Text(
                         'Cancel',
-                        style: AppTypography.bodySmall.copyWith(
-                          color: AppColors.textBodyColor,
-                          fontWeight: FontWeight.w600,
-                        ),
+                        style: AppTypography.bodySmall.copyWith(color: AppColors.textBodyColor, fontWeight: FontWeight.w600),
                       ),
                     ),
                   ),
@@ -784,8 +598,18 @@ class ChatDetailView extends GetView<ChatDetailController> {
     if (dateOnly == today.subtract(const Duration(days: 1))) return 'Yesterday';
 
     const months = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December',
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
     ];
     return '${months[local.month - 1]} ${local.day}, ${local.year}';
   }

@@ -32,6 +32,7 @@ class PortofolioController extends GetxController {
   });
 
   MidtransSDK? _midtrans;
+  String? _pendingPaymentId;
 
   final String? clientKey = dotenv.env['CLIENT_KEY'];
 
@@ -50,6 +51,7 @@ class PortofolioController extends GetxController {
 
   final isStartingChat = false.obs;
   final paymentError = ''.obs;
+  final hasPendingPayment = false.obs;
 
   final architectName = 'David Larsson'.obs;
   final architectTitle = 'Principal Architect'.obs;
@@ -214,6 +216,8 @@ class PortofolioController extends GetxController {
       final initiation = await _paymentService.initiate(
         architectId: architectIdValue,
       );
+      _pendingPaymentId = initiation.paymentId;
+      hasPendingPayment.value = initiation.paymentId.isNotEmpty;
 
       await _midtrans?.startPaymentUiFlow(token: initiation.snapToken);
     } catch (e) {
@@ -225,19 +229,58 @@ class PortofolioController extends GetxController {
   }
 
   Future<void> _onPaymentFinished(TransactionResult result) async {
-    if (result.status == 'cancel') {
-      Get.snackbar('Dibatalkan', 'Pembayaran dibatalkan.');
+    isStartingChat.value = true;
+    paymentError.value = '';
+
+    try {
+      if (result.status == 'cancel') {
+        Get.snackbar('Dibatalkan', 'Pembayaran dibatalkan.');
+        return;
+      }
+
+      await _checkPaymentStatus();
+    } catch (e) {
+      paymentError.value = e.toString();
+      Get.snackbar('Gagal', e.toString());
+    } finally {
+      isStartingChat.value = false;
+    }
+  }
+
+  Future<void> checkPaymentStatus() async {
+    if (isStartingChat.value) return;
+
+    final paymentId = _pendingPaymentId?.trim() ?? '';
+    if (paymentId.isEmpty) {
+      Get.snackbar('Gagal', 'Payment ID tidak ditemukan.');
       return;
     }
 
-    final transactionId = result.transactionId ?? '';
-    if (transactionId.isEmpty) {
+    isStartingChat.value = true;
+    paymentError.value = '';
+
+    try {
+      await _checkPaymentStatus();
+    } catch (e) {
+      paymentError.value = e.toString();
+      Get.snackbar('Gagal', e.toString());
+    } finally {
+      isStartingChat.value = false;
+    }
+  }
+
+  Future<void> _checkPaymentStatus() async {
+    final paymentId = _pendingPaymentId?.trim() ?? '';
+    if (paymentId.isEmpty) {
+      Get.snackbar('Gagal', 'Payment ID tidak ditemukan.');
       return;
     }
 
-    final status = await _paymentService.getStatus(transactionId);
+    final status = await _paymentService.getStatus(paymentId);
 
     if (status.canEnterConsultation) {
+      hasPendingPayment.value = false;
+      _pendingPaymentId = null;
       final conversationId =
           status.conversationId.isNotEmpty
               ? status.conversationId
@@ -247,6 +290,7 @@ class PortofolioController extends GetxController {
 
       _openChat(conversationId);
     } else {
+      hasPendingPayment.value = true;
       Get.snackbar('Pending', 'Pembayaran belum selesai.');
     }
   }
