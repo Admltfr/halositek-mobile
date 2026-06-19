@@ -93,6 +93,21 @@ class ChatService {
     }, 'Send AI Message');
   }
 
+  Future<void> clearAiMessages() async {
+    final response = await _apiClient.private.delete(
+      '/chat/ai/messages',
+      options: Options(
+        validateStatus: (status) => status != null && status < 500,
+      ),
+    );
+
+    return _apiClient.customResponse(
+      response,
+      () async {},
+      'Clear AI Messages',
+    );
+  }
+
   Future<ConversationsPage> getConversations({
     int page = 1,
     int perPage = 10,
