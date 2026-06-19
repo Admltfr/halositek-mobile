@@ -303,12 +303,12 @@ class ChatListView extends GetView<ChatListController> {
     String? displayImageUrl;
 
     if (controller.isArchitect.value) {
-      if (conversation.user?.profilePicture != null && conversation.user!.profilePicture!.isNotEmpty) {
-        if (conversation.user!.profilePicture!.startsWith('http')) {
-          displayImageUrl = conversation.user!.profilePicture;
+      if (conversation.user?.photoProfile != null && conversation.user!.photoProfile!.isNotEmpty) {
+        if (conversation.user!.photoProfile!.startsWith('http')) {
+          displayImageUrl = conversation.user!.photoProfile;
         } else {
           final base = ApiClient.baseUrl?.replaceAll(RegExp(r'/$'), '') ?? '';
-          displayImageUrl = '$base/storage/${conversation.user!.profilePicture}';
+          displayImageUrl = '$base/storage/${conversation.user!.photoProfile}';
         }
       }
     } else {

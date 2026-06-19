@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/widgets.dart';
 import 'package:halositek/app/data/models/chat.dart';
+import 'package:halositek/app/data/models/conversation_detail.dart';
 import 'package:halositek/app/data/network/api_client.dart';
 
 class ChatService {
@@ -125,6 +126,23 @@ class ChatService {
 
       return ConversationsPage(conversations: conversations, meta: meta);
     }, 'Fetch Conversations');
+  }
+
+  Future<ConversationDetailModel> getConversationDetail(String conversationId) async {
+    final response = await _apiClient.private.get(
+      '/chat/conversations/$conversationId',
+      options: Options(
+        validateStatus: (status) => status != null && status < 500,
+      ),
+    );
+
+    return _apiClient.customResponse(response, () async {
+      final data = response.data?['data'];
+      if (data == null || data is! Map) {
+        throw Exception('Invalid conversation detail response format');
+      }
+      return ConversationDetailModel.fromJson(Map<String, dynamic>.from(data));
+    }, 'Fetch Conversation Detail');
   }
 
   Future<List<ChatMessage>> getMessages(String conversationId) async {

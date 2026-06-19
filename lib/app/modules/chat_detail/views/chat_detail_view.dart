@@ -51,27 +51,129 @@ class ChatDetailView extends GetView<ChatDetailController> {
             ),
           ),
           SizedBox(width: size.width * 0.02),
-          // Avatar circle
-          _buildAvatar(size, controller.avatarUrl),
-          SizedBox(width: size.width * 0.025),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  controller.displayTitle,
-                  style: AppTypography.bodyMedium.copyWith(color: AppColors.textHeadingColor, fontWeight: FontWeight.w700),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                Text(
-                  'Konsultasi',
-                  style: AppTypography.caption.copyWith(color: AppColors.textBodyColor.withValues(alpha: 0.65)),
-                ),
-              ],
-            ),
+            child: Obx(() {
+              if (controller.isLoading.value && controller.conversationDetail.value == null) {
+                return Row(
+                  children: [
+                    Container(
+                      width: size.width * 0.1,
+                      height: size.width * 0.1,
+                      decoration: BoxDecoration(
+                        color: AppColors.formBorderColor.withValues(alpha: 0.2),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    SizedBox(width: size.width * 0.025),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            height: 14,
+                            width: 100,
+                            color: AppColors.formBorderColor.withValues(alpha: 0.2),
+                          ),
+                          const SizedBox(height: 6),
+                          Container(
+                            height: 10,
+                            width: 60,
+                            color: AppColors.formBorderColor.withValues(alpha: 0.2),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                );
+              }
+
+              return Row(
+                children: [
+                  _buildAvatar(size, controller.displayAvatar),
+                  SizedBox(width: size.width * 0.025),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          controller.displayTitle,
+                          style: AppTypography.bodyMedium.copyWith(color: AppColors.textHeadingColor, fontWeight: FontWeight.w700),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        Text(
+                          controller.displayRole.toUpperCase(),
+                          style: AppTypography.captionSmall.copyWith(
+                            color: AppColors.warningColor,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        controller.isSessionExpired.value ? 'SESSION ENDED' : 'SESSION STARTED',
+                        style: AppTypography.captionSmall.copyWith(
+                          color: AppColors.textBodyColor.withValues(alpha: 0.6),
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      if (controller.isSessionExpired.value)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: AppColors.errorColor.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(AppDimensions.radiusPill),
+                          ),
+                          child: Text(
+                            'ENDED',
+                            style: AppTypography.captionSmall.copyWith(
+                              color: AppColors.errorColor,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        )
+                      else
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFFF7ED),
+                            borderRadius: BorderRadius.circular(AppDimensions.radiusPill),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.access_time_rounded,
+                                size: 12,
+                                color: AppColors.warningColor,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                _formatTimer(controller.remainingSeconds.value),
+                                style: AppTypography.captionSmall.copyWith(
+                                  color: AppColors.warningColor,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
+              );
+            }),
           ),
+          SizedBox(width: size.width * 0.02),
           // Report flag button (red)
           InkWell(
             onTap: () => _showReportModal(),
@@ -643,5 +745,19 @@ class ChatDetailView extends GetView<ChatDetailController> {
       'December',
     ];
     return '${months[local.month - 1]} ${local.day}, ${local.year}';
+  }
+
+  String _formatTimer(int seconds) {
+    final d = seconds ~/ 86400;
+    final h = (seconds % 86400) ~/ 3600;
+    final m = (seconds % 3600) ~/ 60;
+    final s = seconds % 60;
+
+    final ds = d.toString().padLeft(2, '0');
+    final hs = h.toString().padLeft(2, '0');
+    final ms = m.toString().padLeft(2, '0');
+    final ss = s.toString().padLeft(2, '0');
+
+    return '${ds}d : ${hs}h : ${ms}m : ${ss}s';
   }
 }

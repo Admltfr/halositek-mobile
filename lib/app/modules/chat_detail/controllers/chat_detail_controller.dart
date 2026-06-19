@@ -4,10 +4,13 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:halositek/app/data/models/chat.dart';
+import 'package:halositek/app/data/models/conversation_detail.dart';
 import 'package:halositek/app/data/network/chat_service.dart';
+import 'package:halositek/app/data/network/token_service.dart';
 
 class ChatDetailController extends GetxController {
   final ChatService _chatService;
+  final TokenService _tokenService;
   final String conversationId;
   final String consultationId;
   final String title;
@@ -16,7 +19,8 @@ class ChatDetailController extends GetxController {
   final String conversationStatus;
 
   ChatDetailController(
-    this._chatService, {
+    this._chatService,
+    this._tokenService, {
     required this.conversationId,
     required this.consultationId,
     required this.title,
@@ -31,8 +35,14 @@ class ChatDetailController extends GetxController {
   final errorMessage = ''.obs;
   final isSessionExpired = false.obs;
   final sessionExpiredAt = Rxn<DateTime>();
+  final remainingSeconds = 0.obs;
   final reports = <ChatReport>[].obs;
   final isSubmittingReport = false.obs;
+
+  final conversationDetail = Rxn<ConversationDetailModel>();
+  final otherUserName = ''.obs;
+  final otherUserRole = ''.obs;
+  final otherUserAvatar = ''.obs;
 
   final TextEditingController messageController = TextEditingController();
   final TextEditingController reportController = TextEditingController();
@@ -40,7 +50,10 @@ class ChatDetailController extends GetxController {
 
   Timer? _expiryTimer;
 
-  String get displayTitle => title.trim().isNotEmpty ? title : 'Chat';
+  String get displayTitle =>
+      otherUserName.value.trim().isNotEmpty ? otherUserName.value : (title.trim().isNotEmpty ? title : 'Chat');
+  String get displayRole => otherUserRole.value;
+  String? get displayAvatar => otherUserAvatar.value.trim().isNotEmpty ? otherUserAvatar.value : avatarUrl;
 
   String get currentStatus => conversationStatus.toLowerCase();
 
@@ -51,7 +64,6 @@ class ChatDetailController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    _initSessionExpiry();
     fetchMessages();
   }
 
@@ -65,8 +77,8 @@ class ChatDetailController extends GetxController {
   }
 
   void _initSessionExpiry() {
-    if (durationHours <= 0) {
-      isSessionExpired.value = false;
+    if (remainingSeconds.value <= 0) {
+      isSessionExpired.value = true;
       return;
     }
 
@@ -75,19 +87,23 @@ class ChatDetailController extends GetxController {
 
   void _scheduleExpiryCheck() {
     _expiryTimer?.cancel();
-    if (durationHours <= 0) return;
+    if (remainingSeconds.value <= 0) {
+      isSessionExpired.value = true;
+      return;
+    }
 
-    _expiryTimer = Timer.periodic(const Duration(seconds: 10), (_) {
+    _expiryTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       _checkExpiry();
     });
-
-    _checkExpiry();
   }
 
   void _checkExpiry() {
-    final expiry = sessionExpiredAt.value;
-    if (expiry == null) return;
-    isSessionExpired.value = DateTime.now().isAfter(expiry);
+    if (remainingSeconds.value > 0) {
+      remainingSeconds.value--;
+    } else {
+      isSessionExpired.value = true;
+      _expiryTimer?.cancel();
+    }
   }
 
   void goBack() {
@@ -103,14 +119,37 @@ class ChatDetailController extends GetxController {
     try {
       isLoading.value = true;
       errorMessage.value = '';
-      final result = await _chatService.getMessages(conversationId);
-      messages.assignAll(result);
 
-      if (result.isNotEmpty && result.first.createdAt != null) {
-        final sessionStart = result.first.createdAt!;
-        final expiry = sessionStart.add(Duration(hours: durationHours));
-        sessionExpiredAt.value = expiry;
-        _scheduleExpiryCheck();
+      final results = await Future.wait([
+        _chatService.getMessages(conversationId),
+        _chatService.getConversationDetail(conversationId),
+      ]);
+
+      final msgs = results[0] as List<ChatMessage>;
+      final detail = results[1] as ConversationDetailModel;
+
+      messages.assignAll(msgs.reversed.toList());
+      conversationDetail.value = detail;
+
+      final currentUserId = await _tokenService.getUserId() ?? '';
+
+      if (detail.architect?.id == currentUserId) {
+        otherUserName.value = detail.user?.name ?? '';
+        otherUserRole.value = 'USER';
+        otherUserAvatar.value = detail.user?.photoProfileUrl ?? detail.user?.photoProfile ?? '';
+      } else {
+        otherUserName.value = detail.architect?.name ?? '';
+        otherUserRole.value = 'ARCHITECT';
+        otherUserAvatar.value = '/storage/${detail.architect?.profilePicture}';
+      }
+
+      final session = detail.consultationSession;
+      if (session != null) {
+        remainingSeconds.value = session.remainingSeconds ?? 0;
+        isSessionExpired.value = remainingSeconds.value <= 0;
+        if (!isSessionExpired.value) {
+          _initSessionExpiry();
+        }
       }
 
       _scrollToBottom();
