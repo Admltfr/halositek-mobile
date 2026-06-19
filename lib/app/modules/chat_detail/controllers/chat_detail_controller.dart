@@ -7,6 +7,7 @@ import 'package:halositek/app/data/models/chat.dart';
 import 'package:halositek/app/data/models/conversation_detail.dart';
 import 'package:halositek/app/data/network/chat_service.dart';
 import 'package:halositek/app/data/network/token_service.dart';
+import 'package:halositek/app/data/network/websocket_service.dart';
 
 class ChatDetailController extends GetxController {
   final ChatService _chatService;
@@ -44,6 +45,11 @@ class ChatDetailController extends GetxController {
   final otherUserRole = ''.obs;
   final otherUserAvatar = ''.obs;
 
+  // ── Typing indicator (WebSocket) ───────────────────────────────────
+  final isOtherTyping = false.obs;
+  final otherTypingName = ''.obs;
+  Timer? _otherTypingResetTimer;
+
   final TextEditingController messageController = TextEditingController();
   final TextEditingController reportController = TextEditingController();
   final ScrollController scrollController = ScrollController();
@@ -51,6 +57,8 @@ class ChatDetailController extends GetxController {
   Timer? _expiryTimer;
   Timer? _typingTimer;
   bool _lastTypingStatus = false;
+
+  String? _currentUserId;
 
   String get displayTitle =>
       otherUserName.value.trim().isNotEmpty ? otherUserName.value : (title.trim().isNotEmpty ? title : 'Chat');
@@ -63,23 +71,117 @@ class ChatDetailController extends GetxController {
   bool get hasDeclined => currentStatus == 'declined';
   bool get hasReported => currentStatus == 'new';
 
+  // ── WebSocket channel name ─────────────────────────────────────────
+  String get _wsChannel => 'private-chat.conversation.$conversationId';
+
   @override
   void onInit() {
     super.onInit();
     messageController.addListener(_onMessageTextChanged);
     fetchMessages();
+    _subscribeWebSocket();
   }
 
   @override
   void onClose() {
     _expiryTimer?.cancel();
     _typingTimer?.cancel();
+    _otherTypingResetTimer?.cancel();
     messageController.removeListener(_onMessageTextChanged);
     messageController.dispose();
     reportController.dispose();
     scrollController.dispose();
+    _unsubscribeWebSocket();
     super.onClose();
   }
+
+  // ────────────────────────────────────────────────────────────────────
+  //  WEBSOCKET INTEGRATION
+  // ────────────────────────────────────────────────────────────────────
+
+  void _subscribeWebSocket() {
+    try {
+      final ws = Get.find<WebSocketService>();
+
+      // Subscribe to the conversation channel
+      ws.subscribe(_wsChannel);
+
+      // Listen for new messages
+      ws.on(_wsChannel, 'chat.message.sent', _onWsMessageReceived);
+
+      // Listen for typing events
+      ws.on(_wsChannel, 'chat.typing', _onWsTypingReceived);
+
+      debugPrint('[ChatDetail] 📡 Subscribed to $_wsChannel');
+    } catch (e) {
+      debugPrint('[ChatDetail] ❌ WebSocket subscribe error: $e');
+    }
+  }
+
+  void _unsubscribeWebSocket() {
+    try {
+      final ws = Get.find<WebSocketService>();
+      // Only remove listeners for this controller; don't unsubscribe the
+      // channel itself because ChatListController may still be listening.
+      ws.off(_wsChannel, 'chat.message.sent');
+      ws.off(_wsChannel, 'chat.typing');
+      debugPrint('[ChatDetail] 🔕 Removed listeners from $_wsChannel');
+    } catch (e) {
+      debugPrint('[ChatDetail] ❌ WebSocket unsubscribe error: $e');
+    }
+  }
+
+  void _onWsMessageReceived(Map<String, dynamic> data) {
+    try {
+      final messageData = data['message'];
+      if (messageData == null || messageData is! Map) return;
+
+      final message = ChatMessage.fromJson(Map<String, dynamic>.from(messageData));
+
+      // Prevent duplicates – skip if we already have this message
+      if (messages.any((m) => m.id == message.id)) return;
+
+      // Skip messages from the current user (we already added them
+      // optimistically when sent via the API)
+      if (message.userId == _currentUserId) return;
+
+      messages.add(message);
+      _scrollToBottom();
+
+      // Mark as read since the user is viewing this conversation
+      _chatService.markAsRead(conversationId).catchError((_) {});
+
+      debugPrint('[ChatDetail] 📨 New message received via WS: ${message.id}');
+    } catch (e) {
+      debugPrint('[ChatDetail] ❌ Error handling WS message: $e');
+    }
+  }
+
+  void _onWsTypingReceived(Map<String, dynamic> data) {
+    try {
+      final userId = data['user_id']?.toString() ?? '';
+      final isTyping = data['is_typing'] == true;
+
+      // Ignore own typing events
+      if (userId == _currentUserId) return;
+
+      isOtherTyping.value = isTyping;
+
+      // Auto-reset typing after 4 seconds if no update received
+      _otherTypingResetTimer?.cancel();
+      if (isTyping) {
+        _otherTypingResetTimer = Timer(const Duration(seconds: 4), () {
+          isOtherTyping.value = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('[ChatDetail] ❌ Error handling WS typing: $e');
+    }
+  }
+
+  // ────────────────────────────────────────────────────────────────────
+  //  SESSION EXPIRY
+  // ────────────────────────────────────────────────────────────────────
 
   void _initSessionExpiry() {
     if (remainingSeconds.value <= 0) {
@@ -110,6 +212,10 @@ class ChatDetailController extends GetxController {
       _expiryTimer?.cancel();
     }
   }
+
+  // ────────────────────────────────────────────────────────────────────
+  //  TYPING STATUS (outgoing)
+  // ────────────────────────────────────────────────────────────────────
 
   void _onMessageTextChanged() {
     final text = messageController.text.trim();
@@ -143,6 +249,10 @@ class ChatDetailController extends GetxController {
     Get.back();
   }
 
+  // ────────────────────────────────────────────────────────────────────
+  //  FETCH MESSAGES
+  // ────────────────────────────────────────────────────────────────────
+
   Future<void> fetchMessages() async {
     if (conversationId.trim().isEmpty) {
       errorMessage.value = 'Conversation ID tidak ditemukan';
@@ -164,9 +274,9 @@ class ChatDetailController extends GetxController {
       messages.assignAll(msgs.reversed.toList());
       conversationDetail.value = detail;
 
-      final currentUserId = await _tokenService.getUserId() ?? '';
+      _currentUserId = await _tokenService.getUserId() ?? '';
 
-      if (detail.architect?.id == currentUserId) {
+      if (detail.architect?.id == _currentUserId) {
         otherUserName.value = detail.user?.name ?? '';
         otherUserRole.value = 'USER';
         otherUserAvatar.value = detail.user?.photoProfileUrl ?? detail.user?.photoProfile ?? '';
@@ -175,6 +285,9 @@ class ChatDetailController extends GetxController {
         otherUserRole.value = 'ARCHITECT';
         otherUserAvatar.value = '/storage/${detail.architect?.profilePicture}';
       }
+
+      // Set typing display name to the other user's name
+      otherTypingName.value = otherUserName.value;
 
       final session = detail.consultationSession;
       if (session != null) {
@@ -198,6 +311,10 @@ class ChatDetailController extends GetxController {
       isLoading.value = false;
     }
   }
+
+  // ────────────────────────────────────────────────────────────────────
+  //  SEND MESSAGE
+  // ────────────────────────────────────────────────────────────────────
 
   Future<void> sendMessage() async {
     if (isSending.value) return;
@@ -228,6 +345,10 @@ class ChatDetailController extends GetxController {
       isSending.value = false;
     }
   }
+
+  // ────────────────────────────────────────────────────────────────────
+  //  SEND IMAGE
+  // ────────────────────────────────────────────────────────────────────
 
   Future<void> pickAndSendImage() async {
     if (isSending.value) return;
@@ -262,6 +383,10 @@ class ChatDetailController extends GetxController {
     }
   }
 
+  // ────────────────────────────────────────────────────────────────────
+  //  REPORT
+  // ────────────────────────────────────────────────────────────────────
+
   Future<void> submitReport() async {
     final reason = reportController.text.trim();
     if (reason.isEmpty) return;
@@ -286,6 +411,10 @@ class ChatDetailController extends GetxController {
       isSubmittingReport.value = false;
     }
   }
+
+  // ────────────────────────────────────────────────────────────────────
+  //  SCROLL
+  // ────────────────────────────────────────────────────────────────────
 
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {

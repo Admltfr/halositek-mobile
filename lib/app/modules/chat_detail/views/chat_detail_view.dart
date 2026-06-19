@@ -22,6 +22,7 @@ class ChatDetailView extends GetView<ChatDetailController> {
           children: [
             _topBar(size),
             Expanded(child: _messageList(size)),
+            _typingIndicator(size),
             Obx(() => controller.isSessionExpired.value ? _expiredBanner(size) : _inputBar(size)),
           ],
         ),
@@ -69,17 +70,9 @@ class ChatDetailView extends GetView<ChatDetailController> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Container(
-                            height: 14,
-                            width: 100,
-                            color: AppColors.formBorderColor.withValues(alpha: 0.2),
-                          ),
+                          Container(height: 14, width: 100, color: AppColors.formBorderColor.withValues(alpha: 0.2)),
                           const SizedBox(height: 6),
-                          Container(
-                            height: 10,
-                            width: 60,
-                            color: AppColors.formBorderColor.withValues(alpha: 0.2),
-                          ),
+                          Container(height: 10, width: 60, color: AppColors.formBorderColor.withValues(alpha: 0.2)),
                         ],
                       ),
                     ),
@@ -98,7 +91,10 @@ class ChatDetailView extends GetView<ChatDetailController> {
                       children: [
                         Text(
                           controller.displayTitle,
-                          style: AppTypography.bodyMedium.copyWith(color: AppColors.textHeadingColor, fontWeight: FontWeight.w700),
+                          style: AppTypography.bodyMedium.copyWith(
+                            color: AppColors.textHeadingColor,
+                            fontWeight: FontWeight.w700,
+                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -151,11 +147,7 @@ class ChatDetailView extends GetView<ChatDetailController> {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(
-                                Icons.access_time_rounded,
-                                size: 12,
-                                color: AppColors.warningColor,
-                              ),
+                              const Icon(Icons.access_time_rounded, size: 12, color: AppColors.warningColor),
                               const SizedBox(width: 4),
                               Text(
                                 _formatTimer(controller.remainingSeconds.value),
@@ -344,16 +336,6 @@ class ChatDetailView extends GetView<ChatDetailController> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          if (!isMine) ...[
-            Container(
-              width: size.width * 0.08,
-              height: size.width * 0.08,
-              margin: const EdgeInsets.only(bottom: AppDimensions.spacingSmall),
-              decoration: BoxDecoration(color: AppColors.primaryColor.withValues(alpha: 0.12), shape: BoxShape.circle),
-              child: const Icon(Icons.person_rounded, color: AppColors.primaryColor, size: AppDimensions.iconSizeSmall),
-            ),
-            AppDimensions.spacingMedium.sw,
-          ],
           Flexible(
             child: Column(
               crossAxisAlignment: isMine ? CrossAxisAlignment.end : CrossAxisAlignment.start,
@@ -482,6 +464,34 @@ class ChatDetailView extends GetView<ChatDetailController> {
         ],
       ),
     );
+  }
+
+  Widget _typingIndicator(Size size) {
+    return Obx(() {
+      if (!controller.isOtherTyping.value) return const SizedBox.shrink();
+
+      return AnimatedSize(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOut,
+        child: Container(
+          width: double.infinity,
+          padding: EdgeInsets.symmetric(horizontal: size.width * 0.05, vertical: AppDimensions.spacingSmall),
+          child: Row(
+            children: [
+              Text(
+                '${controller.otherTypingName.value} is typing...',
+                style: AppTypography.caption.copyWith(
+                  color: AppColors.textBodyColor.withValues(alpha: 0.6),
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+              const SizedBox(width: 4),
+              const _TypingDots(),
+            ],
+          ),
+        ),
+      );
+    });
   }
 
   Widget _expiredBanner(Size size) {
@@ -759,5 +769,69 @@ class ChatDetailView extends GetView<ChatDetailController> {
     final ss = s.toString().padLeft(2, '0');
 
     return '${ds}d : ${hs}h : ${ms}m : ${ss}s';
+  }
+}
+
+/// Animated three-dot typing indicator widget.
+class _TypingDots extends StatefulWidget {
+  const _TypingDots();
+
+  @override
+  State<_TypingDots> createState() => _TypingDotsState();
+}
+
+class _TypingDotsState extends State<_TypingDots> with TickerProviderStateMixin {
+  late final List<AnimationController> _controllers;
+  late final List<Animation<double>> _animations;
+
+  @override
+  void initState() {
+    super.initState();
+    _controllers = List.generate(3, (i) {
+      return AnimationController(vsync: this, duration: const Duration(milliseconds: 600));
+    });
+
+    _animations =
+        _controllers.map((c) {
+          return Tween<double>(begin: 0.3, end: 1.0).animate(CurvedAnimation(parent: c, curve: Curves.easeInOut));
+        }).toList();
+
+    // Stagger the animations
+    for (int i = 0; i < 3; i++) {
+      Future.delayed(Duration(milliseconds: i * 200), () {
+        if (mounted) _controllers[i].repeat(reverse: true);
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    for (final c in _controllers) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: List.generate(3, (i) {
+        return AnimatedBuilder(
+          animation: _animations[i],
+          builder: (_, __) {
+            return Container(
+              margin: const EdgeInsets.symmetric(horizontal: 1.5),
+              width: 5,
+              height: 5,
+              decoration: BoxDecoration(
+                color: AppColors.primaryColor.withValues(alpha: _animations[i].value),
+                shape: BoxShape.circle,
+              ),
+            );
+          },
+        );
+      }),
+    );
   }
 }

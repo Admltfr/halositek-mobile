@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:halositek/app/data/network/token_service.dart';
+import 'package:halositek/app/data/network/websocket_service.dart';
 import 'app/routes/app_pages.dart';
 import 'app/data/network/api_client.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -10,6 +11,10 @@ Future<void> main() async {
   await dotenv.load(fileName: ".env");
   final ApiClient apiClient = ApiClient();
   final TokenService tokenService = TokenService();
+
+  // Initialize WebSocket service
+  final wsService = WebSocketService();
+  Get.put(wsService, permanent: true);
 
   runApp(
     GetMaterialApp(

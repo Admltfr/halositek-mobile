@@ -4,6 +4,7 @@ import 'package:halositek/app/data/models/chat.dart';
 import 'package:halositek/app/data/network/api_client.dart';
 import 'package:halositek/app/data/network/chat_service.dart';
 import 'package:halositek/app/data/network/token_service.dart';
+import 'package:halositek/app/data/network/websocket_service.dart';
 import 'package:halositek/app/modules/chat_detail/bindings/chat_detail_binding.dart';
 import 'package:halositek/app/modules/chat_detail/views/chat_detail_view.dart';
 import 'package:halositek/app/modules/navigation/controllers/navigation_controller.dart';
@@ -47,6 +48,9 @@ class ChatListController extends GetxController {
   final ScrollController conversationsScrollController = ScrollController();
   final ScrollController reportsScrollController = ScrollController();
 
+  // ── WebSocket channel tracking ─────────────────────────────────────
+  final Set<String> _subscribedConversationIds = {};
+
   // ── Lifecycle ──────────────────────────────────────────────────────
   @override
   void onInit() {
@@ -76,6 +80,7 @@ class ChatListController extends GetxController {
     searchController.dispose();
     conversationsScrollController.dispose();
     reportsScrollController.dispose();
+    _unsubscribeAllConversations();
     super.onClose();
   }
 
@@ -89,6 +94,90 @@ class ChatListController extends GetxController {
     final role = (await tokenService.getRole() ?? '').trim().toLowerCase();
     isArchitect.value = role == 'architect';
     await fetchConversations();
+  }
+
+  // ────────────────────────────────────────────────────────────────────
+  //  WEBSOCKET – subscribe/unsubscribe all conversations
+  // ────────────────────────────────────────────────────────────────────
+
+  void _subscribeConversations(List<ChatConversation> convos) {
+    try {
+      final ws = Get.find<WebSocketService>();
+
+      for (final c in convos) {
+        if (_subscribedConversationIds.contains(c.id)) continue;
+
+        final channel = 'private-chat.conversation.${c.id}';
+        ws.subscribe(channel);
+        ws.on(channel, 'chat.message.sent', (data) => _onWsNewMessage(c.id, data));
+        _subscribedConversationIds.add(c.id);
+      }
+
+      debugPrint('[ChatList] 📡 Subscribed to ${_subscribedConversationIds.length} conversation channels');
+    } catch (e) {
+      debugPrint('[ChatList] ❌ WebSocket subscribe error: $e');
+    }
+  }
+
+  void _unsubscribeAllConversations() {
+    try {
+      final ws = Get.find<WebSocketService>();
+
+      for (final id in _subscribedConversationIds) {
+        final channel = 'private-chat.conversation.$id';
+        ws.unsubscribe(channel);
+      }
+      _subscribedConversationIds.clear();
+
+      debugPrint('[ChatList] 🔕 Unsubscribed from all conversation channels');
+    } catch (e) {
+      debugPrint('[ChatList] ❌ WebSocket unsubscribe error: $e');
+    }
+  }
+
+  void _onWsNewMessage(String conversationId, Map<String, dynamic> data) {
+    try {
+      final messageData = data['message'];
+      if (messageData == null || messageData is! Map) return;
+
+      final message = ChatMessage.fromJson(Map<String, dynamic>.from(messageData));
+
+      // Find the conversation in the list
+      final index = conversations.indexWhere((c) => c.id == conversationId);
+      if (index == -1) return;
+
+      final existing = conversations[index];
+
+      // Create updated conversation with new last message and incremented
+      // unread count (only if the message is NOT from the current user)
+      final newUnread = message.isMine ? existing.unreadCount : existing.unreadCount + 1;
+
+      final updated = ChatConversation(
+        id: existing.id,
+        name: existing.name,
+        isGroup: existing.isGroup,
+        participantIds: existing.participantIds,
+        lastReadAt: existing.lastReadAt,
+        unreadCount: newUnread,
+        lastMessage: message,
+        updatedAt: DateTime.now(),
+        createdAt: existing.createdAt,
+        durationHours: existing.durationHours,
+        status: existing.status,
+        consultationId: existing.consultationId,
+        user: existing.user,
+        architect: existing.architect,
+        session: existing.session,
+      );
+
+      // Replace in list and move to top
+      conversations.removeAt(index);
+      conversations.insert(0, updated);
+
+      debugPrint('[ChatList] 📨 Updated conversation $conversationId with new message');
+    } catch (e) {
+      debugPrint('[ChatList] ❌ Error handling WS message: $e');
+    }
   }
 
   // ── Tab switching ──────────────────────────────────────────────────
@@ -133,6 +222,9 @@ class ChatListController extends GetxController {
       final result = await _chatService.getConversations(page: _conversationsPage, perPage: 10, search: searchQuery.value);
       conversations.assignAll(result.conversations);
       _conversationsLastPage = result.meta.lastPage;
+
+      // Subscribe to WebSocket channels for all loaded conversations
+      _subscribeConversations(result.conversations);
     } catch (e) {
       errorMessage.value = e.toString();
     } finally {
@@ -151,6 +243,9 @@ class ChatListController extends GetxController {
       final result = await _chatService.getConversations(page: _conversationsPage, perPage: 10, search: searchQuery.value);
       conversations.addAll(result.conversations);
       _conversationsLastPage = result.meta.lastPage;
+
+      // Subscribe to newly loaded conversations
+      _subscribeConversations(result.conversations);
     } catch (e) {
       _conversationsPage--;
       Get.snackbar('Error', 'Failed to load more conversations: $e');

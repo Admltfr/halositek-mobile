@@ -5,6 +5,7 @@ import 'package:halositek/app/data/models/user.dart';
 import 'package:halositek/app/data/network/architect_service.dart';
 import 'package:halositek/app/data/network/auth_service.dart';
 import 'package:halositek/app/data/network/token_service.dart';
+import 'package:halositek/app/data/network/websocket_service.dart';
 import 'package:halositek/app/modules/navigation/controllers/navigation_controller.dart';
 
 enum ProfileTab { portfolio, award, earnings }
@@ -218,6 +219,9 @@ class ProfileController extends GetxController {
 
   Future<void> logout() async {
     try {
+      // Disconnect WebSocket before logout
+      Get.find<WebSocketService>().disconnect();
+
       await _authService.logout();
       Get.offAllNamed('/login');
     } catch (e) {

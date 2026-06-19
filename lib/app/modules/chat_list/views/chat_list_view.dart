@@ -322,6 +322,21 @@ class ChatListView extends GetView<ChatListController> {
       }
     }
 
+    String displayName;
+    if (controller.isArchitect.value == false) {
+      if (conversation.architect?.name != null && conversation.architect!.name.isNotEmpty) {
+        displayName = conversation.architect!.name;
+      } else {
+        displayName = 'Architect';
+      }
+    } else {
+      if (conversation.user?.name != null && conversation.user!.name.isNotEmpty) {
+        displayName = conversation.user!.name;
+      } else {
+        displayName = 'User';
+      }
+    }
+
     return InkWell(
       onTap: () => controller.openConversation(conversation),
       borderRadius: BorderRadius.circular(AppDimensions.radiusLarge),
@@ -336,7 +351,7 @@ class ChatListView extends GetView<ChatListController> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    conversation.displayName,
+                    displayName,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: AppTypography.bodyMedium.copyWith(color: AppColors.textHeadingColor, fontWeight: FontWeight.w700),
