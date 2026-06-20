@@ -284,6 +284,21 @@ class ChatListController extends GetxController {
     }
   }
 
+  Future<void> fetchConversationsSilently() async {
+    try {
+      final result = await _chatService.getConversations(page: 1, perPage: 10, search: searchQuery.value);
+      
+      // Reset to page 1 silently to update unread counts and latest messages
+      conversations.assignAll(result.conversations);
+      _conversationsPage = 1;
+      _conversationsLastPage = result.meta.lastPage;
+
+      _subscribeConversations(result.conversations);
+    } catch (e) {
+      debugPrint('[ChatList] ❌ Silent fetch error: $e');
+    }
+  }
+
   // ── Fetch reports ──────────────────────────────────────────────────
   Future<void> fetchReports() async {
     try {
@@ -329,8 +344,22 @@ class ChatListController extends GetxController {
     }
   }
 
+  Future<void> fetchReportsSilently() async {
+    try {
+      final userId = await _tokenService.getUserId();
+      if (userId == null || userId.trim().isEmpty) return;
+
+      final result = await _chatService.getReports(userId, page: 1, perPage: 10, search: searchQuery.value);
+      reports.assignAll(result.reports);
+      _reportsPage = 1;
+      _reportsLastPage = result.meta.lastPage;
+    } catch (e) {
+      debugPrint('[ChatList] ❌ Silent fetch reports error: $e');
+    }
+  }
+
   // ── Navigation ─────────────────────────────────────────────────────
-  void openConversation(ChatConversation conversation) {
+  Future<void> openConversation(ChatConversation conversation) async {
     String? avatarUrl;
 
     if (isArchitect.value) {
@@ -353,7 +382,7 @@ class ChatListController extends GetxController {
       }
     }
 
-    Get.to(
+    await Get.to(
       () => const ChatDetailView(),
       binding: ChatDetailBinding(
         conversationId: conversation.id,
@@ -364,5 +393,13 @@ class ChatListController extends GetxController {
         avatarUrl: avatarUrl,
       ),
     );
+
+    // Refresh conversations silently when returning from chat detail
+    // so that unread counts and latest messages are up to date.
+    if (selectedTab.value == tabConsultation) {
+      await fetchConversationsSilently();
+    } else {
+      await fetchReportsSilently();
+    }
   }
 }

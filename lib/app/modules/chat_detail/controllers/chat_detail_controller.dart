@@ -139,8 +139,8 @@ class ChatDetailController extends GetxController {
       final ws = Get.find<WebSocketService>();
       // Only remove listeners for this controller; don't unsubscribe the
       // channel itself because ChatListController may still be listening.
-      ws.off(_wsChannel, 'chat.message.sent');
-      ws.off(_wsChannel, 'chat.typing');
+      ws.off(_wsChannel, 'chat.message.sent', _onWsMessageReceived);
+      ws.off(_wsChannel, 'chat.typing', _onWsTypingReceived);
       debugPrint('[ChatDetail] 🔕 Removed listeners from $_wsChannel');
     } catch (e) {
       debugPrint('[ChatDetail] ❌ WebSocket unsubscribe error: $e');
