@@ -436,12 +436,9 @@ class DesignView extends GetView<DesignController> {
         );
       }
 
-      // final catalogs =
-      //     hasData
-      //         ? controller.catalogs
-      //         : List.generate(3, (_) => Catalog.dummy());
-
-      final catalogs = controller.catalogs;
+      final catalogs = (isLoading && !hasData)
+          ? List.generate(3, (_) => Catalog.dummy())
+          : controller.catalogs;
 
       if (!isLoading && !hasData) {
         return Container(

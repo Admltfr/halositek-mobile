@@ -153,8 +153,9 @@ class ArchitectView extends GetView<ArchitectController> {
         return _emptyState();
       }
 
-      // final architects = hasData ? controller.architects : List.generate(3, (_) => Architect.dummy());
-      final architects = controller.architects;
+      final architects = (isLoading && !hasData)
+          ? List.generate(3, (_) => Architect.dummy())
+          : controller.architects;
 
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
