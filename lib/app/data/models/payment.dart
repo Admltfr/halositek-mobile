@@ -38,6 +38,7 @@ class PaymentDetails {
 
 class Payment {
   final String paymentId;
+  final String transactionId;
   final String orderId;
   final String status;
   final String snapToken;
@@ -46,6 +47,7 @@ class Payment {
 
   const Payment({
     required this.paymentId,
+    required this.transactionId,
     required this.orderId,
     required this.status,
     required this.snapToken,
@@ -57,14 +59,12 @@ class Payment {
     final detailsRaw = json['consultation_details'];
     return Payment(
       paymentId: (json['payment_id'] ?? '').toString(),
+      transactionId: (json['transaction_id'] ?? '').toString(),
       orderId: (json['order_id'] ?? '').toString(),
       status: (json['status'] ?? '').toString(),
       snapToken: (json['snap_token'] ?? '').toString(),
       redirectUrl: (json['redirect_url'] ?? '').toString(),
-      details:
-          detailsRaw is Map
-              ? PaymentDetails.fromJson(detailsRaw.cast<String, dynamic>())
-              : null,
+      details: detailsRaw is Map ? PaymentDetails.fromJson(detailsRaw.cast<String, dynamic>()) : null,
     );
   }
 }

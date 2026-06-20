@@ -30,8 +30,12 @@ class DesignController extends GetxController {
   final catalogError = ''.obs;
   final imageIndexByCatalog = <String, int>{}.obs;
   final selectedStyle = 'all'.obs;
+  final areaMin = RxnDouble();
+  final areaMax = RxnDouble();
+  final priceMin = RxnDouble();
+  final priceMax = RxnDouble();
+  
   final selectedStatus = 'approved'.obs;
-  final isStyleFilterOpen = false.obs;
   final isArchitect = false.obs;
 
   final likingCatalogIds = <String>{}.obs;
@@ -159,6 +163,10 @@ class DesignController extends GetxController {
         perPage: _perPage,
         search: searchController.text,
         style: selectedStyle.value == 'all' ? null : selectedStyle.value,
+        areaMin: areaMin.value,
+        areaMax: areaMax.value,
+        priceMin: priceMin.value,
+        priceMax: priceMax.value,
         architectId: await _getCurrentArchitectId(),
         status: isArchitect.value ? selectedStatus.value : null,
       );
@@ -189,17 +197,28 @@ class DesignController extends GetxController {
     await fetchCatalogs();
   }
 
-  void toggleStyleFilter() {
-    isStyleFilterOpen.value = !isStyleFilterOpen.value;
+  void applyFilters({
+    String? style,
+    double? minArea,
+    double? maxArea,
+    double? minPrice,
+    double? maxPrice,
+  }) {
+    if (style != null) selectedStyle.value = style;
+    areaMin.value = minArea;
+    areaMax.value = maxArea;
+    priceMin.value = minPrice;
+    priceMax.value = maxPrice;
+    fetchCatalogs(reset: true);
   }
 
-  void changeStyle(String style) {
-    if (!styleFilters.contains(style) || style == selectedStyle.value) {
-      isStyleFilterOpen.value = false;
-      return;
-    }
-    selectedStyle.value = style;
-    isStyleFilterOpen.value = false;
+  void resetFilters() {
+    selectedStyle.value = 'all';
+    areaMin.value = null;
+    areaMax.value = null;
+    priceMin.value = null;
+    priceMax.value = null;
+    
     fetchCatalogs(reset: true);
   }
 

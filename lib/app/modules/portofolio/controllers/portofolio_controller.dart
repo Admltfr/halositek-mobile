@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:halositek/app/core/constants/app_colors.dart';
 import 'package:halositek/app/data/models/award.dart';
 import 'package:halositek/app/data/models/catalog.dart';
+import 'package:halositek/app/data/models/consultation_status.dart';
 import 'package:halositek/app/data/network/architect_service.dart';
 import 'package:halositek/app/data/network/award_service.dart';
 import 'package:halositek/app/data/network/catalog_service.dart';
@@ -32,6 +33,7 @@ class PortofolioController extends GetxController {
   });
 
   MidtransSDK? _midtrans;
+  String? _pendingTransactionId;
 
   final String? clientKey = dotenv.env['CLIENT_KEY'];
 
@@ -50,6 +52,10 @@ class PortofolioController extends GetxController {
 
   final isStartingChat = false.obs;
   final paymentError = ''.obs;
+  final hasPendingPayment = false.obs;
+
+  final consultationStatus = Rxn<ConsultationCheckStatus>();
+  final isLoadingConsultationStatus = false.obs;
 
   final architectName = 'David Larsson'.obs;
   final architectTitle = 'Principal Architect'.obs;
@@ -70,6 +76,7 @@ class PortofolioController extends GetxController {
     fetchPortfolios();
     fetchAwards();
     fetchArchitect();
+    fetchConsultationStatus();
     _initMidtrans();
   }
 
@@ -81,7 +88,7 @@ class PortofolioController extends GetxController {
   }
 
   Future<void> refreshPortofolio() async {
-    await Future.wait([fetchArchitect(), fetchPortfolios(), fetchAwards()]);
+    await Future.wait([fetchArchitect(), fetchPortfolios(), fetchAwards(), fetchConsultationStatus()]);
   }
 
   Future<void> fetchArchitect() async {
@@ -92,23 +99,15 @@ class PortofolioController extends GetxController {
       final architect = await _architectService.getArchitectById(architectId);
       architectName.value = architect.name;
       architectPhoto.value = architect.profilePicture;
-      architectTitle.value =
-          architect.headline.isNotEmpty
-              ? architect.headline
-              : architectTitle.value;
+      architectTitle.value = architect.headline.isNotEmpty ? architect.headline : architectTitle.value;
       experienceLabel.value =
-          architect.specialization.isNotEmpty
-              ? architect.specialization
-              : '${architect.totalProjects} Projects';
-      architectBio.value =
-          architect.bio.isNotEmpty ? architect.bio : architectBio.value;
+          architect.specialization.isNotEmpty ? architect.specialization : '${architect.totalProjects} Projects';
+      architectBio.value = architect.bio.isNotEmpty ? architect.bio : architectBio.value;
       totalProjects.value = architect.totalProjects;
       totalAwards.value = architect.totalAwards;
       consultationFee.value = architect.consultationFee;
       consultationDuration.value =
-          architect.consultationDuration > 0
-              ? architect.consultationDuration
-              : consultationDuration.value;
+          architect.consultationDuration > 0 ? architect.consultationDuration : consultationDuration.value;
       isWishlisted.value = architect.isWishlisted;
     } catch (e) {
       architectError.value = e.toString();
@@ -147,10 +146,7 @@ class PortofolioController extends GetxController {
     try {
       isLoadingPortfolio.value = true;
       portfolioError.value = '';
-      final result = await _catalogService.getCatalogs(
-        perPage: 12,
-        architectId: architectId,
-      );
+      final result = await _catalogService.getCatalogs(perPage: 12, architectId: architectId);
       portfolios.assignAll(result);
     } catch (e) {
       portfolioError.value = e.toString();
@@ -163,10 +159,7 @@ class PortofolioController extends GetxController {
     try {
       isLoadingAward.value = true;
       awardError.value = '';
-      final result = await _awardService.getAwards(
-        perPage: 12,
-        architectId: architectId,
-      );
+      final result = await _awardService.getAwards(perPage: 12, architectId: architectId);
       awards.assignAll(result);
     } catch (e) {
       awardError.value = e.toString();
@@ -198,6 +191,72 @@ class PortofolioController extends GetxController {
     });
   }
 
+  Future<void> fetchConsultationStatus() async {
+    final architectIdValue = architectId.trim();
+    if (architectIdValue.isEmpty) return;
+
+    try {
+      isLoadingConsultationStatus.value = true;
+      final status = await _paymentService.checkConsultationStatus(architectIdValue);
+      consultationStatus.value = status;
+
+      // Sync pending payment data if status is pending_payment
+      if (status.isPendingPayment && status.transactionId != null) {
+        _pendingTransactionId = status.transactionId;
+        hasPendingPayment.value = true;
+      }
+    } catch (e) {
+      debugPrint('\x1B[31m CHECK STATUS ERROR: $e\x1B[0m');
+    } finally {
+      isLoadingConsultationStatus.value = false;
+    }
+  }
+
+  /// Routes to the correct action based on consultation status
+  void handleChatButtonAction() {
+    final status = consultationStatus.value;
+    if (status == null) return;
+
+    if (status.isSessionActive) {
+      // Open existing chat
+      final conversationId = status.conversationId ?? '';
+      if (conversationId.isNotEmpty) {
+        _openChat(conversationId);
+      } else {
+        Get.snackbar('Gagal', 'Conversation ID tidak ditemukan');
+      }
+    } else if (status.isPendingPayment) {
+      // Resume pending payment via Midtrans
+      _resumePendingPayment(status);
+    } else {
+      // no_session: initiate new payment
+      startConsultationChat();
+    }
+  }
+
+  Future<void> _resumePendingPayment(ConsultationCheckStatus status) async {
+    if (isStartingChat.value) return;
+
+    final snapToken = status.snapToken ?? '';
+    if (snapToken.isEmpty) {
+      Get.snackbar('Gagal', 'Snap token tidak ditemukan');
+      return;
+    }
+
+    isStartingChat.value = true;
+    paymentError.value = '';
+
+    try {
+      _pendingTransactionId = status.transactionId;
+      await _midtrans?.startPaymentUiFlow(token: snapToken);
+    } catch (e) {
+      paymentError.value = e.toString();
+      Get.snackbar('Gagal', e.toString());
+    } finally {
+      isStartingChat.value = false;
+    }
+  }
+
   Future<void> startConsultationChat() async {
     if (isStartingChat.value) return;
 
@@ -211,9 +270,9 @@ class PortofolioController extends GetxController {
     paymentError.value = '';
 
     try {
-      final initiation = await _paymentService.initiate(
-        architectId: architectIdValue,
-      );
+      final initiation = await _paymentService.initiate(architectId: architectIdValue);
+      _pendingTransactionId = initiation.transactionId;
+      hasPendingPayment.value = initiation.transactionId.isNotEmpty;
 
       await _midtrans?.startPaymentUiFlow(token: initiation.snapToken);
     } catch (e) {
@@ -225,12 +284,49 @@ class PortofolioController extends GetxController {
   }
 
   Future<void> _onPaymentFinished(TransactionResult result) async {
-    if (result.status == 'cancel') {
-      Get.snackbar('Dibatalkan', 'Pembayaran dibatalkan.');
+    isStartingChat.value = true;
+    paymentError.value = '';
+
+    try {
+      if (result.status == 'cancel') {
+        Get.snackbar('Dibatalkan', 'Pembayaran dibatalkan.');
+        return;
+      }
+
+      await _checkPaymentStatus();
+    } catch (e) {
+      paymentError.value = e.toString();
+      Get.snackbar('Gagal', e.toString());
+    } finally {
+      isStartingChat.value = false;
+      // Refresh consultation status after payment flow
+      fetchConsultationStatus();
+    }
+  }
+
+  Future<void> checkPaymentStatus() async {
+    if (isStartingChat.value) return;
+
+    final transactionId = _pendingTransactionId?.trim() ?? '';
+    if (transactionId.isEmpty) {
       return;
     }
 
-    final transactionId = result.transactionId ?? '';
+    isStartingChat.value = true;
+    paymentError.value = '';
+
+    try {
+      await _checkPaymentStatus();
+    } catch (e) {
+      paymentError.value = e.toString();
+      Get.snackbar('Gagal', e.toString());
+    } finally {
+      isStartingChat.value = false;
+    }
+  }
+
+  Future<void> _checkPaymentStatus() async {
+    final transactionId = _pendingTransactionId?.trim() ?? '';
     if (transactionId.isEmpty) {
       return;
     }
@@ -238,15 +334,16 @@ class PortofolioController extends GetxController {
     final status = await _paymentService.getStatus(transactionId);
 
     if (status.canEnterConsultation) {
+      hasPendingPayment.value = false;
+      _pendingTransactionId = null;
       final conversationId =
           status.conversationId.isNotEmpty
               ? status.conversationId
-              : (await _chatService.createConversation(
-                participantIds: [architectId],
-              )).id;
+              : (await _chatService.createConversation(participantIds: [architectId])).id;
 
       _openChat(conversationId);
     } else {
+      hasPendingPayment.value = true;
       Get.snackbar('Pending', 'Pembayaran belum selesai.');
     }
   }
@@ -254,10 +351,7 @@ class PortofolioController extends GetxController {
   void _openChat(String conversationId) {
     Get.to(
       () => const ChatDetailView(),
-      binding: ChatDetailBinding(
-        conversationId: conversationId,
-        title: architectName.value,
-      ),
+      binding: ChatDetailBinding(conversationId: conversationId, title: architectName.value),
     );
   }
 }

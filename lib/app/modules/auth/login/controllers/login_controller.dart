@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:halositek/app/data/network/auth_service.dart';
+import 'package:halositek/app/data/network/websocket_service.dart';
 
 class LoginController extends GetxController {
   final AuthService _authService;
@@ -20,6 +21,9 @@ class LoginController extends GetxController {
         email: emailController.text.trim(),
         password: passwordController.text,
       );
+
+      // Connect WebSocket after successful login
+      Get.find<WebSocketService>().connect();
 
       Get.offAllNamed('/navigation', arguments: 0);
     } catch (e) {
