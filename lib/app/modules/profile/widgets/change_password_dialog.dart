@@ -28,6 +28,9 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
   final _confirmPasswordController = TextEditingController();
   final _errors = <String, String>{};
   bool _isSubmitting = false;
+  bool _obscureCurrent = true;
+  bool _obscureNew = true;
+  bool _obscureConfirm = true;
 
   @override
   void dispose() {
@@ -42,9 +45,7 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
     return Dialog(
       insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
       backgroundColor: AppColors.whiteColor,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppDimensions.radiusMedium),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimensions.radiusMedium)),
       child: SingleChildScrollView(
         keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
         child: ConstrainedBox(
@@ -63,11 +64,7 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
                       borderRadius: BorderRadius.circular(18),
                       child: const Padding(
                         padding: EdgeInsets.all(4),
-                        child: Icon(
-                          Icons.close_rounded,
-                          size: 22,
-                          color: AppColors.textHeadingColor,
-                        ),
+                        child: Icon(Icons.close_rounded, size: 22, color: AppColors.textHeadingColor),
                       ),
                     ),
                   ],
@@ -77,15 +74,24 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
                 _input(
                   _currentPasswordController,
                   errorKey: 'current_password',
+                  obscureText: _obscureCurrent,
+                  onToggleObscure: () => setState(() => _obscureCurrent = !_obscureCurrent),
                 ),
                 16.0.sh,
                 _label('New Password'),
-                _input(_newPasswordController, errorKey: 'new_password'),
+                _input(
+                  _newPasswordController,
+                  errorKey: 'new_password',
+                  obscureText: _obscureNew,
+                  onToggleObscure: () => setState(() => _obscureNew = !_obscureNew),
+                ),
                 16.0.sh,
                 _label('Confirm Password'),
                 _input(
                   _confirmPasswordController,
                   errorKey: 'new_password_confirmation',
+                  obscureText: _obscureConfirm,
+                  onToggleObscure: () => setState(() => _obscureConfirm = !_obscureConfirm),
                 ),
                 40.0.sh,
                 _actions(),
@@ -100,11 +106,7 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
   Widget _sectionTitle(String text) {
     return Text(
       text.toUpperCase(),
-      style: AppTypography.bodySmall.copyWith(
-        color: AppColors.primaryColor,
-        fontWeight: FontWeight.w900,
-        letterSpacing: 2,
-      ),
+      style: AppTypography.bodySmall.copyWith(color: AppColors.primaryColor, fontWeight: FontWeight.w900, letterSpacing: 2),
     );
   }
 
@@ -113,51 +115,41 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
       padding: const EdgeInsets.only(left: 4, bottom: 7),
       child: Text(
         text.toUpperCase(),
-        style: AppTypography.bodySmall.copyWith(
-          color: AppColors.textBodyColor,
-          fontWeight: FontWeight.w800,
-        ),
+        style: AppTypography.bodySmall.copyWith(color: AppColors.textBodyColor, fontWeight: FontWeight.w800),
       ),
     );
   }
 
-  Widget _input(TextEditingController controller, {required String errorKey}) {
+  Widget _input(
+    TextEditingController controller, {
+    required String errorKey,
+    required bool obscureText,
+    required VoidCallback onToggleObscure,
+  }) {
     final error = _errors[errorKey];
 
     return TextField(
       controller: controller,
-      obscureText: true,
+      obscureText: obscureText,
       enabled: !_isSubmitting,
       onChanged: (_) {
         if (!_errors.containsKey(errorKey)) return;
         setState(() => _errors.remove(errorKey));
       },
-      style: AppTypography.bodyMedium.copyWith(
-        color: AppColors.textHeadingColor,
-        fontSize: 12,
-        height: 1.55,
-      ),
+      style: AppTypography.bodyMedium.copyWith(color: AppColors.textHeadingColor, fontSize: 12, height: 1.55),
       decoration: InputDecoration(
+        suffixIcon: IconButton(
+          onPressed: onToggleObscure,
+          icon: Icon(obscureText ? Icons.visibility_off_outlined : Icons.visibility_outlined, size: 18),
+          color: AppColors.textBodyColor.withValues(alpha: 0.8),
+        ),
         errorText: error,
         errorMaxLines: 3,
-        errorStyle: AppTypography.bodySmall.copyWith(
-          color: AppColors.errorColor,
-        ),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 14,
-        ),
-        enabledBorder: _border(
-          error == null
-              ? AppColors.textBodyColor.withValues(alpha: 0.62)
-              : AppColors.errorColor,
-        ),
-        focusedBorder: _border(
-          error == null ? AppColors.primaryColor : AppColors.errorColor,
-        ),
-        disabledBorder: _border(
-          AppColors.textBodyColor.withValues(alpha: 0.35),
-        ),
+        errorStyle: AppTypography.bodySmall.copyWith(color: AppColors.errorColor),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        enabledBorder: _border(error == null ? AppColors.textBodyColor.withValues(alpha: 0.62) : AppColors.errorColor),
+        focusedBorder: _border(error == null ? AppColors.primaryColor : AppColors.errorColor),
+        disabledBorder: _border(AppColors.textBodyColor.withValues(alpha: 0.35)),
         errorBorder: _border(AppColors.errorColor),
         focusedErrorBorder: _border(AppColors.errorColor),
         border: _border(AppColors.textBodyColor.withValues(alpha: 0.62)),
@@ -180,21 +172,10 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
                   vertical: AppDimensions.spacingSemibold,
                 ),
                 foregroundColor: AppColors.errorColor,
-                side: BorderSide(
-                  color: AppColors.errorColor.withValues(alpha: 0.28),
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(
-                    AppDimensions.radiusMedium,
-                  ),
-                ),
+                side: BorderSide(color: AppColors.errorColor.withValues(alpha: 0.28)),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimensions.radiusMedium)),
               ),
-              child: Text(
-                'Cancel Changes',
-                style: AppTypography.bodySmall.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
+              child: Text('Cancel Changes', style: AppTypography.bodySmall.copyWith(fontWeight: FontWeight.w800)),
             ),
           ),
         ),
@@ -209,18 +190,10 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
                       ? const SizedBox(
                         width: 16,
                         height: 16,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: AppColors.whiteColor,
-                        ),
+                        child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.whiteColor),
                       )
                       : const Icon(Icons.save_outlined, size: 18),
-              label: Text(
-                'Save Changes',
-                style: AppTypography.bodySmall.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
+              label: Text('Save Changes', style: AppTypography.bodySmall.copyWith(fontWeight: FontWeight.w800)),
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(
                   horizontal: AppDimensions.spacingMedium,
@@ -228,14 +201,8 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
                 ),
                 backgroundColor: AppColors.primaryColor,
                 foregroundColor: AppColors.whiteColor,
-                disabledBackgroundColor: AppColors.primaryColor.withValues(
-                  alpha: 0.55,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(
-                    AppDimensions.radiusMedium,
-                  ),
-                ),
+                disabledBackgroundColor: AppColors.primaryColor.withValues(alpha: 0.55),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimensions.radiusMedium)),
               ),
             ),
           ),

@@ -7,6 +7,7 @@ import 'package:halositek/app/core/constants/app_enums.dart';
 import 'package:halositek/app/core/constants/app_extensions.dart';
 import 'package:halositek/app/core/constants/app_typography.dart';
 import 'package:halositek/app/core/widgets/custom_text_button.dart';
+import 'package:halositek/app/modules/auth/widgets/form_button.dart';
 import 'package:halositek/app/modules/auth/widgets/form_label.dart';
 import 'package:halositek/app/modules/auth/widgets/form_text_field.dart';
 import 'package:halositek/app/modules/auth/widgets/hero_bg.dart';
@@ -55,7 +56,7 @@ class ForgotPasswordView extends GetView<ForgotPasswordController> {
       child: Container(
         height: size.height * 0.65,
         width: double.infinity,
-        padding: EdgeInsets.symmetric(horizontal: size.width * 0.075, vertical: size.height * 0.04),
+        padding: EdgeInsets.symmetric(horizontal: size.width * 0.06, vertical: size.height * 0.035),
         decoration: const BoxDecoration(
           color: AppColors.whiteColor,
           borderRadius: BorderRadius.only(
@@ -86,21 +87,21 @@ class ForgotPasswordView extends GetView<ForgotPasswordController> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionTitle('Forgot Password'),
+          _sectionTitle('Forgot Password', 'Please enter your email to receive a verification code.'),
           AppDimensions.spacing2XLarge.sh,
-          const FormLabel(text: 'Email'),
+          FormLabel(text: 'Email'),
           AppDimensions.spacingMedium.sh,
           FormTextField(controller: controller.emailController, isObscure: false, fieldType: FormFieldType.email),
-          AppDimensions.spacingSmall.sh,
-          GestureDetector(
-            onTap: controller.gotoLogin,
-            child: Text(
-              "Back to login?",
-              style: AppTypography.bodySmall.copyWith(color: AppColors.accentColor, fontWeight: FontWeight.w600),
+          AppDimensions.spacingExtraSmall.sh,
+          CustomTextButton(text: "Back to login", onPressed: controller.gotoLogin),
+          AppDimensions.spacingXLarge.sh,
+          Obx(
+            () => FormButton(
+              text: 'Send Verification Code',
+              onPressed: controller.requestOtp,
+              isLoading: controller.isLoading.value,
             ),
           ),
-          AppDimensions.spacingXLarge.sh,
-          _primaryButton(text: 'Send Verification Code', onPressed: controller.requestOtp),
           AppDimensions.spacing2XLarge.sh,
         ],
       ),
@@ -111,12 +112,12 @@ class ForgotPasswordView extends GetView<ForgotPasswordController> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _sectionTitle('Verification'),
+        _sectionTitle('Verification', 'Enter the verification code we just sent to your email.'),
         AppDimensions.spacing2XLarge.sh,
         Center(
           child: Text(
             'Verification Code',
-            style: AppTypography.bodySmall.copyWith(
+            style: AppTypography.bodyMedium.copyWith(
               color: AppColors.textBodyColor,
               fontWeight: FontWeight.w800,
               letterSpacing: .3,
@@ -128,18 +129,25 @@ class ForgotPasswordView extends GetView<ForgotPasswordController> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: List.generate(
             controller.otpControllers.length,
-            (index) => Padding(padding: const EdgeInsets.symmetric(horizontal: 5), child: _otpField(index)),
+            (index) => Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppDimensions.spacingMedium),
+              child: _otpField(index),
+            ),
           ),
         ),
-        AppDimensions.spacing4XLarge.sh,
-        _primaryButton(text: 'Verify', onPressed: controller.verifyOtp),
-        AppDimensions.spacingSmall.sh,
+        AppDimensions.spacing5XLarge.sh,
+        Obx(() => FormButton(text: 'Verify', onPressed: controller.verifyOtp, isLoading: controller.isLoading.value)),
+        AppDimensions.spacingLarge.sh,
         Center(
           child: Obx(() {
             if (controller.resendSeconds.value > 0) {
               return Text(
                 'Resend code in ${controller.resendSeconds.value}s',
-                style: AppTypography.bodySmall.copyWith(color: AppColors.textBodyColor),
+                style: AppTypography.bodySmall.copyWith(
+                  color: AppColors.textBodyColor,
+                  fontWeight: FontWeight.w500,
+                  fontSize: 13,
+                ),
               );
             }
 
@@ -157,8 +165,8 @@ class ForgotPasswordView extends GetView<ForgotPasswordController> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionTitle('Create New Password'),
-          AppDimensions.spacing2XLarge.sh,
+          _sectionTitle('Create New Password', 'Please proceed with the exploration.'),
+          AppDimensions.spacing5XLarge.sh,
           const FormLabel(text: 'New Password'),
           AppDimensions.spacingMedium.sh,
           FormTextField(controller: controller.passwordController, isObscure: true, fieldType: FormFieldType.password),
@@ -172,16 +180,27 @@ class ForgotPasswordView extends GetView<ForgotPasswordController> {
             validator: controller.confirmPasswordValidator,
           ),
           AppDimensions.spacing5XLarge.sh,
-          _primaryButton(text: 'Submit', onPressed: controller.resetPassword),
+          Obx(() => FormButton(text: 'Submit', onPressed: controller.resetPassword, isLoading: controller.isLoading.value)),
         ],
       ),
     );
   }
 
-  Widget _sectionTitle(String title) {
-    return Text(
-      title.toUpperCase(),
-      style: AppTypography.bodySmall.copyWith(color: AppColors.primaryColor, fontWeight: FontWeight.w800, letterSpacing: 3),
+  Widget _sectionTitle(String title, String description) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: AppTypography.headingMedium.copyWith(
+            color: AppColors.primaryColor,
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        AppDimensions.spacingXSmall.sh,
+        Text(description, style: AppTypography.bodyMedium.copyWith(color: AppColors.textLabelColor)),
+      ],
     );
   }
 
@@ -212,42 +231,6 @@ class ForgotPasswordView extends GetView<ForgotPasswordController> {
           ),
         ),
         onChanged: (value) => controller.onOtpChanged(value, index),
-      ),
-    );
-  }
-
-  Widget _primaryButton({required String text, required Future<void> Function() onPressed}) {
-    return Center(
-      child: Obx(
-        () => SizedBox(
-          width: 220,
-          child: ElevatedButton(
-            onPressed: controller.isLoading.value ? null : onPressed,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primaryColor,
-              disabledBackgroundColor: AppColors.formBorderColor,
-              foregroundColor: AppColors.whiteColor,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimensions.radiusLarge)),
-              padding: const EdgeInsets.symmetric(vertical: 13),
-              elevation: 0,
-            ),
-            child:
-                controller.isLoading.value
-                    ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(AppColors.whiteColor),
-                      ),
-                    )
-                    : Text(
-                      text,
-                      textAlign: TextAlign.center,
-                      style: AppTypography.bodySmall.copyWith(color: AppColors.whiteColor, fontWeight: FontWeight.w500),
-                    ),
-          ),
-        ),
       ),
     );
   }

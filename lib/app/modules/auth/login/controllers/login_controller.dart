@@ -5,8 +5,10 @@ import 'package:halositek/app/data/network/websocket_service.dart';
 
 class LoginController extends GetxController {
   final AuthService _authService;
+  final GlobalKey<FormState> formKey = GlobalKey<FormState>();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+  final RxBool isLoading = false.obs;
 
   LoginController(this._authService);
 
@@ -16,7 +18,10 @@ class LoginController extends GetxController {
   }
 
   Future<void> login() async {
+    if (!formKey.currentState!.validate()) return;
+    
     try {
+      isLoading.value = true;
       await _authService.login(
         email: emailController.text.trim(),
         password: passwordController.text,
@@ -28,6 +33,8 @@ class LoginController extends GetxController {
       Get.offAllNamed('/navigation', arguments: 0);
     } catch (e) {
       Get.snackbar('Login Failed', e.toString());
+    } finally {
+      isLoading.value = false;
     }
   }
 

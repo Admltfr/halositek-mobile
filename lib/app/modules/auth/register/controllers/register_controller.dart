@@ -6,12 +6,14 @@ import 'package:halositek/app/data/network/auth_service.dart';
 
 class RegisterController extends GetxController {
   final AuthService _authService;
+  final GlobalKey<FormState> formKey = GlobalKey<FormState>();
   final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController passwordConfirmationController =
       TextEditingController();
   final RxString role = (UserRole.user.text).obs;
+  final RxBool isLoading = false.obs;
 
   RegisterController(this._authService);
 
@@ -21,7 +23,10 @@ class RegisterController extends GetxController {
   }
 
   Future<void> register() async {
+    if (!formKey.currentState!.validate()) return;
+
     try {
+      isLoading.value = true;
       await _authService.register(
         name: nameController.text.trim(),
         email: emailController.text.trim(),
@@ -33,6 +38,8 @@ class RegisterController extends GetxController {
       Get.offAllNamed('/navigation', arguments: 0);
     } catch (e) {
       Get.snackbar('Registration Failed', e.toString());
+    } finally {
+      isLoading.value = false;
     }
   }
 

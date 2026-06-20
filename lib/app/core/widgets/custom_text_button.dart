@@ -8,30 +8,17 @@ class CustomTextButton extends StatelessWidget {
   final Color? color;
   final TextStyle? style;
 
-  const CustomTextButton({
-    super.key,
-    required this.text,
-    required this.onPressed,
-    this.color,
-    this.style,
-  });
+  const CustomTextButton({super.key, required this.text, required this.onPressed, this.color, this.style});
 
   @override
   Widget build(BuildContext context) {
     return TextButton(
       onPressed: onPressed,
-      style: TextButton.styleFrom(
-        padding: EdgeInsets.zero,
-        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-      ),
+      style: TextButton.styleFrom(padding: EdgeInsets.zero, tapTargetSize: MaterialTapTargetSize.shrinkWrap),
       child: Text(
         text,
         style:
-            style ??
-            AppTypography.bodyMedium.copyWith(
-              color: color ?? AppColors.secondaryColor,
-              fontWeight: FontWeight.w600,
-            ),
+            style ?? AppTypography.bodyMedium.copyWith(color: color ?? AppColors.primaryColor, fontWeight: FontWeight.w600),
       ),
     );
   }
