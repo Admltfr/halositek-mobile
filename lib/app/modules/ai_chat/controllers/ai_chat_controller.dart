@@ -18,6 +18,15 @@ class AiChatController extends GetxController {
   final TextEditingController messageController = TextEditingController();
   final ScrollController scrollController = ScrollController();
 
+  final isSearching = false.obs;
+  final searchQuery = ''.obs;
+  final searchResults = <int>[].obs;
+  final currentSearchIndex = (-1).obs;
+  final TextEditingController searchInputController = TextEditingController();
+  final FocusNode searchFocusNode = FocusNode();
+
+  final Map<int, GlobalKey> messageKeys = {};
+
   Timer? _thinkingTimer;
   String? _nextCursor;
   bool _hasMore = true;
@@ -46,6 +55,8 @@ class AiChatController extends GetxController {
     _thinkingTimer?.cancel();
     messageController.dispose();
     scrollController.dispose();
+    searchInputController.dispose();
+    searchFocusNode.dispose();
     super.onClose();
   }
 
@@ -87,6 +98,95 @@ class AiChatController extends GetxController {
   void selectSuggestion(String suggestion) {
     if (isAiThinking.value) return;
     sendMessage(customText: suggestion);
+  }
+
+  GlobalKey getKeyForMessage(int index) {
+    if (!messageKeys.containsKey(index)) {
+      messageKeys[index] = GlobalKey();
+    }
+    return messageKeys[index]!;
+  }
+
+  void toggleSearch() {
+    isSearching.value = !isSearching.value;
+    if (!isSearching.value) {
+      searchInputController.clear();
+      searchQuery.value = '';
+      searchResults.clear();
+      currentSearchIndex.value = -1;
+    } else {
+      searchFocusNode.requestFocus();
+    }
+  }
+
+  void performSearch(String query) {
+    searchQuery.value = query;
+    if (query.isEmpty) {
+      searchResults.clear();
+      currentSearchIndex.value = -1;
+      return;
+    }
+    
+    final results = <int>[];
+    for (int i = 0; i < messages.length; i++) {
+      if (messages[i].displayBody.toLowerCase().contains(query.toLowerCase())) {
+        results.add(i);
+      }
+    }
+    
+    searchResults.assignAll(results);
+    if (results.isNotEmpty) {
+      currentSearchIndex.value = 0;
+      _scrollToSearchResult(results[0]);
+    } else {
+      currentSearchIndex.value = -1;
+    }
+  }
+
+  void nextSearchResult() {
+    if (searchResults.isEmpty || currentSearchIndex.value >= searchResults.length - 1) return;
+    currentSearchIndex.value++;
+    _scrollToSearchResult(searchResults[currentSearchIndex.value]);
+  }
+
+  void previousSearchResult() {
+    if (searchResults.isEmpty || currentSearchIndex.value <= 0) return;
+    currentSearchIndex.value--;
+    _scrollToSearchResult(searchResults[currentSearchIndex.value]);
+  }
+
+  void _scrollToSearchResult(int index) {
+    final key = messageKeys[index];
+    if (key?.currentContext != null) {
+      Scrollable.ensureVisible(key!.currentContext!, duration: const Duration(milliseconds: 300), alignment: 0.5);
+    } else {
+      if (scrollController.hasClients) {
+        final total = messages.length;
+        if (total == 0) return;
+        final maxOffset = scrollController.position.maxScrollExtent;
+        final offset = (index / total) * maxOffset;
+        scrollController.animateTo(offset, duration: const Duration(milliseconds: 300), curve: Curves.easeInOut).then((_) {
+          if (key?.currentContext != null) {
+            Scrollable.ensureVisible(key!.currentContext!, duration: const Duration(milliseconds: 300), alignment: 0.5);
+          }
+        });
+      }
+    }
+  }
+
+  Future<void> clearChat() async {
+    try {
+      await _chatService.clearAiMessages();
+      messages.clear();
+      _nextCursor = null;
+      _hasMore = true;
+      _canLoadMoreHistory = false;
+      messageKeys.clear();
+      if (isSearching.value) toggleSearch();
+      await fetchHistory();
+    } catch (e) {
+      Get.snackbar('Failed', e.toString());
+    }
   }
 
   Future<void> fetchHistory() async {

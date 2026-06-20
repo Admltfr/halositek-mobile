@@ -37,7 +37,16 @@ class ProfileTopBar extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: 28),
+          if (onLogout != null)
+            InkWell(
+              onTap: onLogout,
+              child: const Padding(
+                padding: EdgeInsets.all(6),
+                child: Icon(Icons.logout_rounded, size: 18, color: AppColors.errorColor),
+              ),
+            )
+          else
+            const SizedBox(width: 28),
         ],
       ),
     );

@@ -19,7 +19,7 @@ class AwardController extends GetxController {
   final isLoadingMore = false.obs;
   final hasMore = true.obs;
   final errorMessage = ''.obs;
-  final selectedStatus = 'approved'.obs;
+  final selectedStatus = 'all'.obs;
   final totalApproved = 0.obs;
   final totalPending = 0.obs;
   final searchController = TextEditingController();
@@ -136,9 +136,9 @@ class AwardController extends GetxController {
     }
   }
 
-  String get _statusQuery {
-    if (selectedStatus.value == 'approved') return 'approved';
-    return 'pending';
+  String? get _statusQuery {
+    if (selectedStatus.value == 'all') return null;
+    return selectedStatus.value;
   }
 
   Future<void> _fetchAwardTotals({

@@ -1,51 +1,91 @@
+import 'dart:async';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:halositek/app/data/models/chat.dart';
+import 'package:halositek/app/data/network/api_client.dart';
 import 'package:halositek/app/data/network/chat_service.dart';
+import 'package:halositek/app/data/network/token_service.dart';
+import 'package:halositek/app/data/network/websocket_service.dart';
 import 'package:halositek/app/modules/chat_detail/bindings/chat_detail_binding.dart';
 import 'package:halositek/app/modules/chat_detail/views/chat_detail_view.dart';
 import 'package:halositek/app/modules/navigation/controllers/navigation_controller.dart';
 
 class ChatListController extends GetxController {
   final ChatService _chatService;
+  final TokenService _tokenService;
 
-  ChatListController(this._chatService);
+  ChatListController(this._chatService, this._tokenService);
 
+  final isArchitect = false.obs;
+
+  // ── Tab / dropdown state ───────────────────────────────────────────
+  static const String tabConsultation = 'consultation';
+  static const String tabReport = 'report';
+
+  final selectedTab = tabConsultation.obs;
+  final isDropdownOpen = false.obs;
+
+  // ── Consultation data ──────────────────────────────────────────────
   final conversations = <ChatConversation>[].obs;
   final isLoading = false.obs;
   final errorMessage = ''.obs;
+  final isLoadingMoreConversations = false.obs;
+  int _conversationsPage = 1;
+  int _conversationsLastPage = 1;
+
+  // ── Report data ────────────────────────────────────────────────────
+  final reports = <ChatReport>[].obs;
+  final isLoadingReports = false.obs;
+  final errorReports = ''.obs;
+  final isLoadingMoreReports = false.obs;
+  int _reportsPage = 1;
+  int _reportsLastPage = 1;
+
+  // ── Search ─────────────────────────────────────────────────────────
   final searchQuery = ''.obs;
+  final TextEditingController searchController = TextEditingController();
 
-  final statusFilter = ''.obs;
+  // Scroll controllers for infinite scroll
+  final ScrollController conversationsScrollController = ScrollController();
+  final ScrollController reportsScrollController = ScrollController();
 
-  static const _filterCycle = ['', 'approved', 'declined', 'new'];
+  // ── WebSocket channel tracking ─────────────────────────────────────
+  final Set<String> _subscribedConversationIds = {};
+  final typingConversations = <String, bool>{}.obs;
+  final Map<String, Timer> _typingTimers = {};
+  String _currentUserId = '';
 
-  void cycleStatusFilter() {
-    final current = statusFilter.value;
-    final idx = _filterCycle.indexOf(current);
-    final next = (idx + 1) % _filterCycle.length;
-    statusFilter.value = _filterCycle[next];
-  }
-
-  List<ChatConversation> get filteredConversations {
-    final query = searchQuery.value.trim().toLowerCase();
-    final filter = statusFilter.value.toLowerCase();
-
-    return conversations.where((c) {
-      final matchesSearch =
-          query.isEmpty ||
-          c.displayName.toLowerCase().contains(query) ||
-          c.lastMessagePreview.toLowerCase().contains(query);
-
-      final matchesFilter = filter.isEmpty || c.status.toLowerCase() == filter;
-
-      return matchesSearch && matchesFilter;
-    }).toList();
-  }
-
+  // ── Lifecycle ──────────────────────────────────────────────────────
   @override
   void onInit() {
     super.onInit();
-    fetchConversations();
+
+    // Setup debounce for search
+    debounce(searchQuery, (_) => refreshData(), time: const Duration(milliseconds: 500));
+
+    // Setup infinite scroll listeners
+    conversationsScrollController.addListener(() {
+      if (conversationsScrollController.position.pixels >= conversationsScrollController.position.maxScrollExtent - 200) {
+        loadMoreConversations();
+      }
+    });
+
+    reportsScrollController.addListener(() {
+      if (reportsScrollController.position.pixels >= reportsScrollController.position.maxScrollExtent - 200) {
+        loadMoreReports();
+      }
+    });
+
+    _bootstrap();
+  }
+
+  @override
+  void onClose() {
+    searchController.dispose();
+    conversationsScrollController.dispose();
+    reportsScrollController.dispose();
+    _unsubscribeAllConversations();
+    super.onClose();
   }
 
   void goBack() {
@@ -53,12 +93,168 @@ class ChatListController extends GetxController {
     nav.onPop();
   }
 
+  Future<void> _bootstrap() async {
+    final tokenService = Get.find<TokenService>();
+    final role = (await tokenService.getRole() ?? '').trim().toLowerCase();
+    isArchitect.value = role == 'architect';
+    _currentUserId = (await tokenService.getUserId()) ?? '';
+    await fetchConversations();
+  }
+
+  // ────────────────────────────────────────────────────────────────────
+  //  WEBSOCKET – subscribe/unsubscribe all conversations
+  // ────────────────────────────────────────────────────────────────────
+
+  void _subscribeConversations(List<ChatConversation> convos) {
+    try {
+      final ws = Get.find<WebSocketService>();
+
+      for (final c in convos) {
+        if (_subscribedConversationIds.contains(c.id)) continue;
+
+        final channel = 'private-chat.conversation.${c.id}';
+        ws.subscribe(channel);
+        ws.on(channel, 'chat.message.sent', (data) => _onWsNewMessage(c.id, data));
+        ws.on(channel, 'chat.typing', (data) => _onWsTyping(c.id, data));
+        _subscribedConversationIds.add(c.id);
+      }
+
+      debugPrint('[ChatList] 📡 Subscribed to ${_subscribedConversationIds.length} conversation channels');
+    } catch (e) {
+      debugPrint('[ChatList] ❌ WebSocket subscribe error: $e');
+    }
+  }
+
+  void _unsubscribeAllConversations() {
+    try {
+      final ws = Get.find<WebSocketService>();
+
+      for (final id in _subscribedConversationIds) {
+        final channel = 'private-chat.conversation.$id';
+        ws.unsubscribe(channel);
+      }
+      _subscribedConversationIds.clear();
+
+      debugPrint('[ChatList] 🔕 Unsubscribed from all conversation channels');
+    } catch (e) {
+      debugPrint('[ChatList] ❌ WebSocket unsubscribe error: $e');
+    }
+  }
+
+  void _onWsNewMessage(String conversationId, Map<String, dynamic> data) {
+    try {
+      final messageData = data['message'];
+      if (messageData == null || messageData is! Map) return;
+
+      final message = ChatMessage.fromJson(Map<String, dynamic>.from(messageData));
+
+      // Find the conversation in the list
+      final index = conversations.indexWhere((c) => c.id == conversationId);
+      if (index == -1) return;
+
+      final existing = conversations[index];
+
+      // Create updated conversation with new last message and incremented
+      // unread count (only if the message is NOT from the current user)
+      final isMine = message.userId == _currentUserId;
+      final newUnread = isMine ? existing.unreadCount : existing.unreadCount + 1;
+      final updatedMessage = message.copyWith(isMine: isMine);
+
+      final updated = ChatConversation(
+        id: existing.id,
+        name: existing.name,
+        isGroup: existing.isGroup,
+        participantIds: existing.participantIds,
+        lastReadAt: existing.lastReadAt,
+        unreadCount: newUnread,
+        lastMessage: updatedMessage,
+        updatedAt: DateTime.now(),
+        createdAt: existing.createdAt,
+        durationHours: existing.durationHours,
+        status: existing.status,
+        consultationId: existing.consultationId,
+        user: existing.user,
+        architect: existing.architect,
+        session: existing.session,
+      );
+
+      // Replace in list and move to top
+      conversations.removeAt(index);
+      conversations.insert(0, updated);
+
+      debugPrint('[ChatList] 📨 Updated conversation $conversationId with new message');
+    } catch (e) {
+      debugPrint('[ChatList] ❌ Error handling WS message: $e');
+    }
+  }
+
+  void _onWsTyping(String conversationId, Map<String, dynamic> data) {
+    try {
+      final userId = data['user_id']?.toString() ?? '';
+      final isTyping = data['is_typing'] == true;
+
+      // Ignore own typing events
+      if (userId == _currentUserId) return;
+
+      typingConversations[conversationId] = isTyping;
+
+      // Auto-reset typing after 4 seconds if no update received
+      _typingTimers[conversationId]?.cancel();
+      if (isTyping) {
+        _typingTimers[conversationId] = Timer(const Duration(seconds: 4), () {
+          typingConversations[conversationId] = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('[ChatList] ❌ Error handling WS typing: $e');
+    }
+  }
+
+  // ── Tab switching ──────────────────────────────────────────────────
+  void toggleDropdown() {
+    isDropdownOpen.value = !isDropdownOpen.value;
+  }
+
+  void changeTab(String tab) {
+    if (selectedTab.value == tab) {
+      isDropdownOpen.value = false;
+      return;
+    }
+    selectedTab.value = tab;
+    isDropdownOpen.value = false;
+
+    // Reset search when switching tabs? Let's keep it, but trigger refresh
+    refreshData();
+  }
+
+  void onSearchChanged(String query) {
+    searchQuery.value = query;
+  }
+
+  Future<void> refreshData() async {
+    if (selectedTab.value == tabConsultation) {
+      _conversationsPage = 1;
+      await fetchConversations();
+    } else {
+      _reportsPage = 1;
+      await fetchReports();
+    }
+  }
+
+  // ── Fetch conversations ────────────────────────────────────────────
   Future<void> fetchConversations() async {
     try {
       isLoading.value = true;
       errorMessage.value = '';
-      final result = await _chatService.getConversations();
-      conversations.assignAll(result);
+      if (_conversationsPage == 1) {
+        conversations.clear();
+      }
+      final result = await _chatService.getConversations(page: _conversationsPage, perPage: 10, search: searchQuery.value);
+      conversations.assignAll(result.conversations);
+      _conversationsLastPage = result.meta.lastPage;
+
+      // Subscribe to WebSocket channels for all loaded conversations
+      _subscribeConversations(result.conversations);
     } catch (e) {
       errorMessage.value = e.toString();
     } finally {
@@ -66,8 +262,127 @@ class ChatListController extends GetxController {
     }
   }
 
-  void openConversation(ChatConversation conversation) {
-    Get.to(
+  Future<void> loadMoreConversations() async {
+    if (isLoading.value || isLoadingMoreConversations.value || _conversationsPage >= _conversationsLastPage) {
+      return;
+    }
+
+    try {
+      isLoadingMoreConversations.value = true;
+      _conversationsPage++;
+      final result = await _chatService.getConversations(page: _conversationsPage, perPage: 10, search: searchQuery.value);
+      conversations.addAll(result.conversations);
+      _conversationsLastPage = result.meta.lastPage;
+
+      // Subscribe to newly loaded conversations
+      _subscribeConversations(result.conversations);
+    } catch (e) {
+      _conversationsPage--;
+      Get.snackbar('Error', 'Failed to load more conversations: $e');
+    } finally {
+      isLoadingMoreConversations.value = false;
+    }
+  }
+
+  Future<void> fetchConversationsSilently() async {
+    try {
+      final result = await _chatService.getConversations(page: 1, perPage: 10, search: searchQuery.value);
+      
+      // Reset to page 1 silently to update unread counts and latest messages
+      conversations.assignAll(result.conversations);
+      _conversationsPage = 1;
+      _conversationsLastPage = result.meta.lastPage;
+
+      _subscribeConversations(result.conversations);
+    } catch (e) {
+      debugPrint('[ChatList] ❌ Silent fetch error: $e');
+    }
+  }
+
+  // ── Fetch reports ──────────────────────────────────────────────────
+  Future<void> fetchReports() async {
+    try {
+      isLoadingReports.value = true;
+      errorReports.value = '';
+      if (_reportsPage == 1) {
+        reports.clear();
+      }
+      final userId = await _tokenService.getUserId();
+      if (userId == null || userId.trim().isEmpty) {
+        errorReports.value = 'User ID not found';
+        return;
+      }
+      final result = await _chatService.getReports(userId, page: _reportsPage, perPage: 10, search: searchQuery.value);
+      reports.assignAll(result.reports);
+      _reportsLastPage = result.meta.lastPage;
+    } catch (e) {
+      errorReports.value = e.toString();
+    } finally {
+      isLoadingReports.value = false;
+    }
+  }
+
+  Future<void> loadMoreReports() async {
+    if (isLoadingReports.value || isLoadingMoreReports.value || _reportsPage >= _reportsLastPage) {
+      return;
+    }
+
+    try {
+      isLoadingMoreReports.value = true;
+      final userId = await _tokenService.getUserId();
+      if (userId == null || userId.trim().isEmpty) return;
+
+      _reportsPage++;
+      final result = await _chatService.getReports(userId, page: _reportsPage, perPage: 10, search: searchQuery.value);
+      reports.addAll(result.reports);
+      _reportsLastPage = result.meta.lastPage;
+    } catch (e) {
+      _reportsPage--;
+      Get.snackbar('Error', 'Failed to load more reports: $e');
+    } finally {
+      isLoadingMoreReports.value = false;
+    }
+  }
+
+  Future<void> fetchReportsSilently() async {
+    try {
+      final userId = await _tokenService.getUserId();
+      if (userId == null || userId.trim().isEmpty) return;
+
+      final result = await _chatService.getReports(userId, page: 1, perPage: 10, search: searchQuery.value);
+      reports.assignAll(result.reports);
+      _reportsPage = 1;
+      _reportsLastPage = result.meta.lastPage;
+    } catch (e) {
+      debugPrint('[ChatList] ❌ Silent fetch reports error: $e');
+    }
+  }
+
+  // ── Navigation ─────────────────────────────────────────────────────
+  Future<void> openConversation(ChatConversation conversation) async {
+    String? avatarUrl;
+
+    if (isArchitect.value) {
+      if (conversation.user?.profilePicture != null && conversation.user!.profilePicture!.isNotEmpty) {
+        if (conversation.user!.profilePicture!.startsWith('http')) {
+          avatarUrl = conversation.user!.profilePicture;
+        } else {
+          final base = ApiClient.baseUrl?.replaceAll(RegExp(r'/$'), '') ?? '';
+          avatarUrl = '$base/storage/${conversation.user!.profilePicture}';
+        }
+      }
+    } else {
+      if (conversation.architect?.profilePicture != null && conversation.architect!.profilePicture!.isNotEmpty) {
+        if (conversation.architect!.profilePicture!.startsWith('http')) {
+          avatarUrl = conversation.architect!.profilePicture;
+        } else {
+          final base = ApiClient.baseUrl?.replaceAll(RegExp(r'/$'), '') ?? '';
+          avatarUrl = '$base/storage/${conversation.architect!.profilePicture}';
+        }
+      }
+    }
+
+    await Get.to(
       () => const ChatDetailView(),
       binding: ChatDetailBinding(
         conversationId: conversation.id,
@@ -75,7 +390,16 @@ class ChatListController extends GetxController {
         title: conversation.displayName,
         durationHours: conversation.durationHours,
         conversationStatus: conversation.status,
+        avatarUrl: avatarUrl,
       ),
     );
+
+    // Refresh conversations silently when returning from chat detail
+    // so that unread counts and latest messages are up to date.
+    if (selectedTab.value == tabConsultation) {
+      await fetchConversationsSilently();
+    } else {
+      await fetchReportsSilently();
+    }
   }
 }

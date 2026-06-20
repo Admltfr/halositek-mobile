@@ -7,6 +7,7 @@ import 'package:halositek/app/core/constants/app_extensions.dart';
 import 'package:halositek/app/core/constants/app_typography.dart';
 import 'package:halositek/app/data/models/architect.dart';
 import 'package:halositek/app/data/models/catalog.dart';
+import 'package:halositek/app/data/models/consultation_status.dart';
 import 'package:halositek/app/data/network/architect_service.dart';
 import 'package:halositek/app/data/network/catalog_service.dart';
 import 'package:halositek/app/data/network/chat_service.dart';
@@ -51,6 +52,11 @@ class DetailController extends GetxController {
   bool _hasCatalogChange = false;
   final architect = Rxn<Architect>();
 
+  final consultationStatus = Rxn<ConsultationCheckStatus>();
+  final isLoadingConsultationStatus = false.obs;
+  String? _pendingTransactionId;
+  final hasPendingPayment = false.obs;
+
   @override
   void onInit() {
     super.onInit();
@@ -81,6 +87,9 @@ class DetailController extends GetxController {
       catalog.value = result;
       activeImageIndex.value = 0;
       activeLayoutIndex.value = 0;
+      
+      // Fetch consultation status
+      await fetchConsultationStatus();
     } catch (e) {
       errorMessage.value = e.toString();
     } finally {
@@ -271,6 +280,71 @@ class DetailController extends GetxController {
     }
   }
 
+  Future<void> fetchConsultationStatus() async {
+    final architectIdValue = catalog.value?.architectId.trim() ?? '';
+    if (architectIdValue.isEmpty) return;
+
+    try {
+      isLoadingConsultationStatus.value = true;
+      final status = await _paymentService.checkConsultationStatus(architectIdValue);
+      consultationStatus.value = status;
+
+      // Sync pending payment data if status is pending_payment
+      if (status.isPendingPayment && status.transactionId != null) {
+        _pendingTransactionId = status.transactionId;
+        hasPendingPayment.value = true;
+      }
+    } catch (e) {
+      debugPrint('\x1B[31m CHECK STATUS ERROR: $e\x1B[0m');
+    } finally {
+      isLoadingConsultationStatus.value = false;
+    }
+  }
+
+  void handleChatButtonAction() {
+    final status = consultationStatus.value;
+    if (status == null) return;
+
+    if (status.isSessionActive) {
+      // Open existing chat
+      final conversationId = status.conversationId ?? '';
+      if (conversationId.isNotEmpty) {
+        _openChat(conversationId);
+      } else {
+        Get.snackbar('Gagal', 'Conversation ID tidak ditemukan');
+      }
+    } else if (status.isPendingPayment) {
+      // Resume pending payment via Midtrans
+      _resumePendingPayment(status);
+    } else {
+      // no_session: initiate new payment
+      startConsultationChat();
+    }
+  }
+
+  Future<void> _resumePendingPayment(ConsultationCheckStatus status) async {
+    if (isStartingChat.value) return;
+
+    final snapToken = status.snapToken ?? '';
+    if (snapToken.isEmpty) {
+      Get.snackbar('Gagal', 'Snap token tidak ditemukan');
+      return;
+    }
+
+    isStartingChat.value = true;
+    paymentError.value = '';
+
+    try {
+      _pendingTransactionId = status.transactionId;
+      await _midtrans?.startPaymentUiFlow(token: snapToken);
+    } catch (e) {
+      paymentError.value = e.toString();
+      Get.snackbar('Gagal', e.toString());
+    } finally {
+      isStartingChat.value = false;
+    }
+  }
+
   Future<void> startConsultationChat() async {
     if (isStartingChat.value) return;
 
@@ -287,6 +361,9 @@ class DetailController extends GetxController {
       final initiation = await _paymentService.initiate(
         architectId: architectIdValue,
       );
+
+      _pendingTransactionId = initiation.transactionId;
+      hasPendingPayment.value = initiation.transactionId.isNotEmpty;
 
       await _midtrans?.startPaymentUiFlow(token: initiation.snapToken);
     } catch (e) {
@@ -358,27 +435,42 @@ class DetailController extends GetxController {
   }
 
   Future<void> _onPaymentFinished(TransactionResult result) async {
-    if (result.status == 'cancel') {
-      Get.snackbar('Dibatalkan', 'Pembayaran dibatalkan.');
-      return;
-    }
+    isStartingChat.value = true;
+    paymentError.value = '';
 
-    final transactionId = result.transactionId ?? '';
-    if (transactionId.isEmpty) return;
+    try {
+      if (result.status == 'cancel') {
+        Get.snackbar('Dibatalkan', 'Pembayaran dibatalkan.');
+        return;
+      }
 
-    final status = await _paymentService.getStatus(transactionId);
+      final transactionId = _pendingTransactionId?.trim() ?? '';
+      if (transactionId.isEmpty) return;
 
-    if (status.canEnterConsultation) {
-      final conversationId =
-          status.conversationId.isNotEmpty
-              ? status.conversationId
-              : (await _chatService.createConversation(
-                participantIds: [catalog.value?.architectId ?? ''],
-              )).id;
+      final status = await _paymentService.getStatus(transactionId);
 
-      _openChat(conversationId);
-    } else {
-      Get.snackbar('Pending', 'Pembayaran belum selesai.');
+      if (status.canEnterConsultation) {
+        hasPendingPayment.value = false;
+        _pendingTransactionId = null;
+        final conversationId =
+            status.conversationId.isNotEmpty
+                ? status.conversationId
+                : (await _chatService.createConversation(
+                  participantIds: [catalog.value?.architectId ?? ''],
+                )).id;
+
+        _openChat(conversationId);
+      } else {
+        hasPendingPayment.value = true;
+        Get.snackbar('Pending', 'Pembayaran belum selesai.');
+      }
+    } catch (e) {
+      paymentError.value = e.toString();
+      Get.snackbar('Gagal', e.toString());
+    } finally {
+      isStartingChat.value = false;
+      // Refresh consultation status after payment flow
+      fetchConsultationStatus();
     }
   }
 

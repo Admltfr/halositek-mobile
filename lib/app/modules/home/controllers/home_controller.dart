@@ -2,9 +2,12 @@ import 'package:get/get.dart';
 import 'package:halositek/app/data/models/catalog.dart';
 import 'package:halositek/app/data/models/architect.dart';
 import 'package:halositek/app/data/models/chat.dart';
+import 'package:halositek/app/data/models/user.dart';
 import 'package:halositek/app/data/network/catalog_service.dart';
 import 'package:halositek/app/data/network/architect_service.dart';
+import 'package:halositek/app/data/network/auth_service.dart';
 import 'package:halositek/app/data/network/chat_service.dart';
+import 'package:halositek/app/data/network/dashboard_service.dart';
 import 'package:halositek/app/data/network/token_service.dart';
 import 'package:halositek/app/modules/navigation/controllers/navigation_controller.dart';
 import 'dart:async';
@@ -16,11 +19,15 @@ class HomeController extends GetxController {
   final CatalogService _catalogService;
   final ArchitectService _architectService;
   final ChatService _chatService;
+  final DashboardService _dashboardService;
+  final AuthService _authService;
 
   HomeController(
     this._catalogService,
     this._architectService,
     this._chatService,
+    this._dashboardService,
+    this._authService,
   );
 
   final catalogs = <Catalog>[].obs;
@@ -35,7 +42,6 @@ class HomeController extends GetxController {
   final isLoadingChat = false.obs;
   final chatError = ''.obs;
   final conversations = <ChatConversation>[].obs;
-  // final totalUnread = 0.obs;
 
   final isArchitect = false.obs;
   final currentArchitectId = ''.obs;
@@ -57,6 +63,22 @@ class HomeController extends GetxController {
   final searchQuery = ''.obs;
   final hasSearched = false.obs;
 
+  // New dashboard state
+  final userProfile = Rxn<UserProfile>();
+  final isLoadingProfile = false.obs;
+
+  final dashboardSummary = Rxn<DashboardSummary>();
+  final isLoadingSummary = false.obs;
+
+  final featuredDesign = Rxn<Catalog>();
+  final isLoadingFeatured = false.obs;
+  final selectedFeaturedStyle = 'all'.obs;
+
+  final recommendedDesigns = <Catalog>[].obs;
+  final isLoadingRecommended = false.obs;
+
+  final isSearchVisible = false.obs;
+
   Timer? _searchDebounce;
 
   bool isCatalogLiking(String catalogId) =>
@@ -72,6 +94,16 @@ class HomeController extends GetxController {
 
   void setImageIndex(String catalogId, int index) {
     imageIndexByCatalog[catalogId] = index;
+  }
+
+  void toggleSearchVisibility() {
+    isSearchVisible.toggle();
+    if (!isSearchVisible.value) {
+      searchController.clear();
+      searchQuery.value = '';
+      searchedArchitects.clear();
+      searchedCatalogs.clear();
+    }
   }
 
   void openDetailsFromHome(String projectId) {
@@ -131,14 +163,86 @@ class HomeController extends GetxController {
 
   Future<void> _initializeDashboard() async {
     await _loadCurrentRole();
-    // fetchUnreadBadge();
 
     if (isArchitect.value) {
       fetchArchitectPerformance();
       fetchCatalogs();
     } else {
-      fetchCatalogs();
-      fetchArchitects();
+      fetchUserProfile();
+      fetchDashboardSummary();
+      fetchFeaturedDesign();
+      fetchRecommendedDesigns();
+    }
+  }
+
+  Future<void> refreshDashboard() async {
+    await _loadCurrentRole();
+
+    if (isArchitect.value) {
+      await Future.wait([
+        fetchArchitectPerformance(),
+        fetchCatalogs(),
+      ]);
+    } else {
+      await Future.wait([
+        fetchUserProfile(),
+        fetchDashboardSummary(),
+        fetchFeaturedDesign(),
+        fetchRecommendedDesigns(),
+      ]);
+    }
+  }
+
+  Future<void> fetchUserProfile() async {
+    try {
+      isLoadingProfile.value = true;
+      userProfile.value = await _authService.getMe();
+    } catch (e) {
+      debugPrint('Error fetching user profile: $e');
+    } finally {
+      isLoadingProfile.value = false;
+    }
+  }
+
+  Future<void> fetchDashboardSummary() async {
+    try {
+      isLoadingSummary.value = true;
+      dashboardSummary.value = await _dashboardService.getSummary();
+    } catch (e) {
+      debugPrint('Error fetching dashboard summary: $e');
+    } finally {
+      isLoadingSummary.value = false;
+    }
+  }
+
+  Future<void> fetchFeaturedDesign({String? style}) async {
+    try {
+      isLoadingFeatured.value = true;
+      final selectedStyle = style ?? selectedFeaturedStyle.value;
+      featuredDesign.value = await _dashboardService.getFeaturedDesign(
+        style: selectedStyle,
+      );
+    } catch (e) {
+      debugPrint('Error fetching featured design: $e');
+    } finally {
+      isLoadingFeatured.value = false;
+    }
+  }
+
+  void changeFeaturedStyle(String style) {
+    selectedFeaturedStyle.value = style;
+    fetchFeaturedDesign(style: style);
+  }
+
+  Future<void> fetchRecommendedDesigns() async {
+    try {
+      isLoadingRecommended.value = true;
+      final result = await _dashboardService.getRecommendedDesigns();
+      recommendedDesigns.assignAll(result);
+    } catch (e) {
+      debugPrint('Error fetching recommended designs: $e');
+    } finally {
+      isLoadingRecommended.value = false;
     }
   }
 
@@ -273,27 +377,6 @@ class HomeController extends GetxController {
     }
   }
 
-  // Future<void> fetchUnreadBadge() async {
-  //   try {
-  //     int total = 0;
-  //     isLoadingChat.value = true;
-  //     chatError.value = '';
-
-  //     final result = await _chatService.getConversations();
-  //     conversations.assignAll(result);
-
-  //     for (var c in conversations) {
-  //       total += c.unreadCount;
-  //     }
-
-  //     totalUnread.value = total;
-  //   } catch (e) {
-  //     chatError.value = e.toString();
-  //   } finally {
-  //     isLoadingChat.value = false;
-  //   }
-  // }
-
   Future<void> fetchArchitects() async {
     try {
       isLoadingArchitect.value = true;
@@ -322,30 +405,38 @@ class HomeController extends GetxController {
   }
 
   Future<void> toggleCatalogLike(String id) async {
-    final i = catalogs.indexWhere((e) => e.id == id);
+    // Check in recommended designs first
+    var i = recommendedDesigns.indexWhere((e) => e.id == id);
+    final isRecommended = i >= 0;
+
+    if (!isRecommended) {
+      i = catalogs.indexWhere((e) => e.id == id);
+    }
+
     if (i < 0 || likingCatalogIds.contains(id)) return;
 
     likingCatalogIds.add(id);
 
-    final prev = catalogs[i];
+    final list = isRecommended ? recommendedDesigns : catalogs;
+    final prev = list[i];
     final liked = !prev.liked;
 
-    catalogs[i] = prev.copyWith(
+    list[i] = prev.copyWith(
       liked: liked,
       likesCount:
           (prev.likesCount + (liked ? 1 : -1))
               .clamp(0, double.infinity)
               .toInt(),
     );
-    catalogs.refresh();
+    list.refresh();
 
     try {
       await (liked
           ? _catalogService.likeCatalog(id)
           : _catalogService.unlikeCatalog(id));
     } catch (e) {
-      catalogs[i] = prev;
-      catalogs.refresh();
+      list[i] = prev;
+      list.refresh();
     } finally {
       likingCatalogIds.remove(id);
     }

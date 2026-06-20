@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/widgets.dart';
 import 'package:halositek/app/data/models/chat.dart';
+import 'package:halositek/app/data/models/conversation_detail.dart';
 import 'package:halositek/app/data/network/api_client.dart';
 
 class ChatService {
@@ -20,7 +21,7 @@ class ChatService {
         if (cursor != null && cursor.trim().isNotEmpty) 'cursor': cursor,
       },
       options: Options(
-        validateStatus: (status) => status != null && status < 500,
+        validateStatus: (status) => status != null && status < 600,
       ),
     );
 
@@ -56,7 +57,7 @@ class ChatService {
       '/chat/ai/messages',
       data: {'message': message},
       options: Options(
-        validateStatus: (status) => status != null && status < 500,
+        validateStatus: (status) => status != null && status < 600,
       ),
     );
 
@@ -92,30 +93,86 @@ class ChatService {
     }, 'Send AI Message');
   }
 
-  Future<List<ChatConversation>> getConversations() async {
+  Future<void> clearAiMessages() async {
+    final response = await _apiClient.private.delete(
+      '/chat/ai/messages',
+      options: Options(
+        validateStatus: (status) => status != null && status < 600,
+      ),
+    );
+
+    return _apiClient.customResponse(
+      response,
+      () async {},
+      'Clear AI Messages',
+    );
+  }
+
+  Future<ConversationsPage> getConversations({
+    int page = 1,
+    int perPage = 10,
+    String search = '',
+  }) async {
     final response = await _apiClient.private.get(
       '/chat/conversations',
+      queryParameters: {
+        'page': page,
+        'per_page': perPage,
+        if (search.trim().isNotEmpty) 'search': search,
+      },
       options: Options(
-        validateStatus: (status) => status != null && status < 500,
+        validateStatus: (status) => status != null && status < 600,
       ),
     );
 
     return _apiClient.customResponse(response, () async {
       final rawList = response.data?['data'];
-      if (rawList is! List) return <ChatConversation>[];
+      final conversations = rawList is List
+          ? rawList
+              .whereType<Map>()
+              .map((e) => ChatConversation.fromJson(Map<String, dynamic>.from(e)))
+              .toList()
+          : <ChatConversation>[];
+          
+      final rawMeta = response.data?['meta'];
+      final meta = rawMeta is Map
+          ? ChatMeta.fromJson(Map<String, dynamic>.from(rawMeta))
+          : const ChatMeta(currentPage: 1, lastPage: 1, perPage: 10, total: 0);
 
-      return rawList
-          .whereType<Map>()
-          .map((e) => ChatConversation.fromJson(Map<String, dynamic>.from(e)))
-          .toList();
+      return ConversationsPage(conversations: conversations, meta: meta);
     }, 'Fetch Conversations');
   }
 
-  Future<List<ChatMessage>> getMessages(String conversationId) async {
+  Future<ConversationDetailModel> getConversationDetail(String conversationId) async {
+    final response = await _apiClient.private.get(
+      '/chat/conversations/$conversationId',
+      options: Options(
+        validateStatus: (status) => status != null && status < 600,
+      ),
+    );
+
+    return _apiClient.customResponse(response, () async {
+      final data = response.data?['data'];
+      if (data == null || data is! Map) {
+        throw Exception('Invalid conversation detail response format');
+      }
+      return ConversationDetailModel.fromJson(Map<String, dynamic>.from(data));
+    }, 'Fetch Conversation Detail');
+  }
+
+  Future<MessagesPage> getMessages(
+    String conversationId, {
+    int page = 1,
+    int perPage = 10,
+  }) async {
     final response = await _apiClient.private.get(
       '/chat/conversations/$conversationId/messages',
+      queryParameters: {
+        'page': page,
+        'per_page': perPage,
+      },
       options: Options(
-        validateStatus: (status) => status != null && status < 500,
+        validateStatus: (status) => status != null && status < 600,
       ),
     );
 
@@ -123,12 +180,19 @@ class ChatService {
 
     return _apiClient.customResponse(response, () async {
       final rawList = response.data?['data'];
-      if (rawList is! List) return <ChatMessage>[];
+      final messages = rawList is List
+          ? rawList
+              .whereType<Map>()
+              .map((e) => ChatMessage.fromJson(Map<String, dynamic>.from(e)))
+              .toList()
+          : <ChatMessage>[];
 
-      return rawList
-          .whereType<Map>()
-          .map((e) => ChatMessage.fromJson(Map<String, dynamic>.from(e)))
-          .toList();
+      final rawMeta = response.data?['meta'];
+      final meta = rawMeta is Map
+          ? ChatMeta.fromJson(Map<String, dynamic>.from(rawMeta))
+          : const ChatMeta(currentPage: 1, lastPage: 1, perPage: 10, total: 0);
+
+      return MessagesPage(messages: messages, meta: meta);
     }, 'Fetch Messages');
   }
 
@@ -140,7 +204,7 @@ class ChatService {
       '/chat/messages',
       data: {'conversation_id': conversationId, 'body': body},
       options: Options(
-        validateStatus: (status) => status != null && status < 500,
+        validateStatus: (status) => status != null && status < 600,
       ),
     );
 
@@ -163,14 +227,32 @@ class ChatService {
     );
   }
 
+  Future<void> sendTypingStatus(String conversationId, bool isTyping) async {
+    final response = await _apiClient.private.post(
+      '/chat/conversations/$conversationId/typing',
+      data: {'is_typing': isTyping},
+      options: Options(
+        validateStatus: (status) => status != null && status < 600,
+      ),
+    );
+
+    return _apiClient.customResponse(
+      response,
+      () async {},
+      'Send Typing Status',
+    );
+  }
+
   Future<ChatMessage> sendImage({
     required String conversationId,
     required File imageFile,
+    String? body,
   }) async {
     final fileName = imageFile.path.split('/').last.split('\\').last;
     final formData = FormData.fromMap({
       'conversation_id': conversationId,
       'type': 'image',
+      if (body != null && body.trim().isNotEmpty) 'body': body.trim(),
       'attachment': await MultipartFile.fromFile(
         imageFile.path,
         filename: fileName,
@@ -181,7 +263,7 @@ class ChatService {
       '/chat/messages',
       data: formData,
       options: Options(
-        validateStatus: (status) => status != null && status < 500,
+        validateStatus: (status) => status != null && status < 600,
         contentType: 'multipart/form-data',
       ),
     );
@@ -217,7 +299,7 @@ class ChatService {
         'participant_ids': participantIds,
       },
       options: Options(
-        validateStatus: (status) => status != null && status < 500,
+        validateStatus: (status) => status != null && status < 600,
       ),
     );
 
@@ -243,7 +325,7 @@ class ChatService {
       '/consultations/$consultationId/reports',
       data: {'consultation_id': consultationId, 'reason': reason},
       options: Options(
-        validateStatus: (status) => status != null && status < 500,
+        validateStatus: (status) => status != null && status < 600,
       ),
     );
 
@@ -263,21 +345,41 @@ class ChatService {
     );
   }
 
-  Future<List<ChatReport>> getReports(String userId) async {
+  Future<ReportsPage> getReports(
+    String userId, {
+    int page = 1,
+    int perPage = 10,
+    String search = '',
+  }) async {
     final response = await _apiClient.private.get(
       '/consultations/reports/users/$userId',
+      queryParameters: {
+        'page': page,
+        'per_page': perPage,
+        if (search.trim().isNotEmpty) 'search': search,
+      },
       options: Options(
-        validateStatus: (status) => status != null && status < 500,
+        validateStatus: (status) => status != null && status < 600,
       ),
     );
 
     return _apiClient.customResponse(response, () async {
-      final rawList = response.data?['data'];
-      if (rawList is! List) return <ChatReport>[];
-      return rawList
-          .whereType<Map>()
-          .map((e) => ChatReport.fromJson(Map<String, dynamic>.from(e)))
-          .toList();
+      final rawList = response.data is List
+          ? response.data
+          : response.data?['data'];
+      final reports = rawList is List
+          ? rawList
+              .whereType<Map>()
+              .map((e) => ChatReport.fromJson(Map<String, dynamic>.from(e)))
+              .toList()
+          : <ChatReport>[];
+
+      final rawMeta = response.data?['meta'];
+      final meta = rawMeta is Map
+          ? ChatMeta.fromJson(Map<String, dynamic>.from(rawMeta))
+          : const ChatMeta(currentPage: 1, lastPage: 1, perPage: 10, total: 0);
+
+      return ReportsPage(reports: reports, meta: meta);
     }, 'Fetch Reports');
   }
 
@@ -285,7 +387,7 @@ class ChatService {
     final response = await _apiClient.private.post(
       '/chat/conversations/$conversationId/read',
       options: Options(
-        validateStatus: (status) => status != null && status < 500,
+        validateStatus: (status) => status != null && status < 600,
       ),
     );
 
@@ -314,4 +416,54 @@ class AiChatMessagesPage {
     required this.nextCursor,
     required this.hasMore,
   });
+}
+
+class ChatMeta {
+  final int currentPage;
+  final int lastPage;
+  final int perPage;
+  final int total;
+
+  const ChatMeta({
+    required this.currentPage,
+    required this.lastPage,
+    required this.perPage,
+    required this.total,
+  });
+
+  factory ChatMeta.fromJson(Map<String, dynamic> json) {
+    return ChatMeta(
+      currentPage: _toInt(json['current_page']),
+      lastPage: _toInt(json['last_page']),
+      perPage: _toInt(json['per_page']),
+      total: _toInt(json['total']),
+    );
+  }
+
+  static int _toInt(dynamic value) {
+    if (value is int) return value;
+    if (value is double) return value.toInt();
+    return int.tryParse(value?.toString() ?? '') ?? 0;
+  }
+}
+
+class ConversationsPage {
+  final List<ChatConversation> conversations;
+  final ChatMeta meta;
+
+  const ConversationsPage({required this.conversations, required this.meta});
+}
+
+class ReportsPage {
+  final List<ChatReport> reports;
+  final ChatMeta meta;
+
+  const ReportsPage({required this.reports, required this.meta});
+}
+
+class MessagesPage {
+  final List<ChatMessage> messages;
+  final ChatMeta meta;
+
+  const MessagesPage({required this.messages, required this.meta});
 }

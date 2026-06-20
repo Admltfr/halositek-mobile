@@ -12,6 +12,10 @@ class CatalogService {
     int perPage = 10,
     String? search,
     String? style,
+    double? areaMin,
+    double? areaMax,
+    double? priceMin,
+    double? priceMax,
     String? architectId,
     String? status,
   }) async {
@@ -20,6 +24,10 @@ class CatalogService {
       perPage: perPage,
       search: search,
       style: style,
+      areaMin: areaMin,
+      areaMax: areaMax,
+      priceMin: priceMin,
+      priceMax: priceMax,
       architectId: architectId,
       status: status,
     );
@@ -32,6 +40,10 @@ class CatalogService {
     int perPage = 10,
     String? search,
     String? style,
+    double? areaMin,
+    double? areaMax,
+    double? priceMin,
+    double? priceMax,
     String? architectId,
     String? status,
   }) async {
@@ -42,6 +54,10 @@ class CatalogService {
         'per_page': perPage,
         if (search != null && search.trim().isNotEmpty) 'search': search.trim(),
         if (style != null && style.trim().isNotEmpty) 'style': style.trim(),
+        if (areaMin != null) 'area_min': areaMin,
+        if (areaMax != null) 'area_max': areaMax,
+        if (priceMin != null) 'price_min': priceMin,
+        if (priceMax != null) 'price_max': priceMax,
         if (architectId != null && architectId.trim().isNotEmpty)
           'architect_id': architectId.trim(),
         if (status != null && status.trim().isNotEmpty) 'status': status.trim(),

@@ -58,33 +58,17 @@ class Catalog {
       style: (json['style'] ?? '').toString(),
       description: (json['description'] ?? '').toString(),
       images: _toStringList(json['images']).map((e) => e.toImageUrl()).toList(),
-      imageUrls:
-          _toStringList(json['image_urls']).map((e) => e.toImageUrl()).toList(),
+      imageUrls: _toStringList(json['image_urls']).map((e) => e.toImageUrl()).toList(),
       estimatedCost: (json['estimated_cost'] ?? '').toString(),
-      layoutImages:
-          _toStringList(
-            json['layout_images'],
-          ).map((e) => e.toImageUrl()).toList(),
-      layoutImageUrls:
-          _toStringList(
-            json['layout_image_urls'],
-          ).map((e) => e.toImageUrl()).toList(),
+      layoutImages: _toStringList(json['layout_images']).map((e) => e.toImageUrl()).toList(),
+      layoutImageUrls: _toStringList(json['layout_image_urls']).map((e) => e.toImageUrl()).toList(),
       highlightFeatures: (json['highlight_features'] ?? '').toString(),
       areaRaw: (json['area'] ?? '').toString(),
       likesCount: _toInt(json['likes_count']),
       liked: _toBool(json['is_liked']) ?? _toBool(json['liked']) ?? false,
-      saved:
-          _toBool(json['is_saved']) ??
-          _toBool(json['saved']) ??
-          _toBool(json['is_wishlisted']) ??
-          false,
+      saved: _toBool(json['is_saved']) ?? _toBool(json['saved']) ?? _toBool(json['is_wishlisted']) ?? false,
       status: (json['status'] ?? '').toString(),
-      architect:
-          json['architect'] is Map
-              ? Architect.fromJson(
-                (json['architect'] as Map).cast<String, dynamic>(),
-              )
-              : null,
+      architect: json['architect'] is Map ? Architect.fromJson((json['architect'] as Map).cast<String, dynamic>()) : null,
       createdAt: DateTime.tryParse((json['created_at'] ?? '').toString()),
       updatedAt: DateTime.tryParse((json['updated_at'] ?? '').toString()),
     );
@@ -200,10 +184,7 @@ class CatalogListResponse {
   const CatalogListResponse({required this.catalogs, required this.meta});
 
   factory CatalogListResponse.empty() {
-    return CatalogListResponse(
-      catalogs: const <Catalog>[],
-      meta: CatalogMeta.empty(),
-    );
+    return CatalogListResponse(catalogs: const <Catalog>[], meta: CatalogMeta.empty());
   }
 }
 
@@ -213,12 +194,7 @@ class CatalogMeta {
   final int perPage;
   final int total;
 
-  const CatalogMeta({
-    required this.currentPage,
-    required this.lastPage,
-    required this.perPage,
-    required this.total,
-  });
+  const CatalogMeta({required this.currentPage, required this.lastPage, required this.perPage, required this.total});
 
   factory CatalogMeta.fromJson(Map<String, dynamic> json) {
     return CatalogMeta(
@@ -230,12 +206,7 @@ class CatalogMeta {
   }
 
   factory CatalogMeta.empty() {
-    return const CatalogMeta(
-      currentPage: 1,
-      lastPage: 1,
-      perPage: 10,
-      total: 0,
-    );
+    return const CatalogMeta(currentPage: 1, lastPage: 1, perPage: 10, total: 0);
   }
 
   static int _toInt(dynamic value) {

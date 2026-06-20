@@ -2,6 +2,8 @@ import 'package:get/get.dart';
 import 'package:halositek/app/data/network/api_client.dart';
 import 'package:halositek/app/data/network/chat_service.dart';
 
+import 'package:halositek/app/data/network/token_service.dart';
+
 import '../controllers/chat_detail_controller.dart';
 
 class ChatDetailBinding extends Bindings {
@@ -10,6 +12,7 @@ class ChatDetailBinding extends Bindings {
   final String title;
   final int durationHours;
   final String conversationStatus;
+  final String? avatarUrl;
 
   ChatDetailBinding({
     this.conversationId = '',
@@ -17,6 +20,7 @@ class ChatDetailBinding extends Bindings {
     this.title = '',
     this.durationHours = 0,
     this.conversationStatus = '',
+    this.avatarUrl,
   });
 
   @override
@@ -26,10 +30,12 @@ class ChatDetailBinding extends Bindings {
     Get.lazyPut<ChatDetailController>(
       () => ChatDetailController(
         Get.find<ChatService>(),
+        Get.find<TokenService>(),
         conversationId: conversationId,
         consultationId: consultationId,
         title: title,
         durationHours: durationHours,
+        avatarUrl: avatarUrl,
         conversationStatus: conversationStatus,
       ),
     );

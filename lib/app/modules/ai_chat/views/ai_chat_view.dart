@@ -8,6 +8,7 @@ import 'package:halositek/app/core/constants/app_extensions.dart';
 import 'package:halositek/app/core/constants/app_typography.dart';
 import 'package:halositek/app/data/models/chat.dart';
 import '../controllers/ai_chat_controller.dart';
+import '../widgets/clear_chat_dialog.dart';
 
 class AiChatView extends GetView<AiChatController> {
   const AiChatView({super.key});
@@ -22,6 +23,7 @@ class AiChatView extends GetView<AiChatController> {
         child: Column(
           children: [
             _topBar(size),
+            Obx(() => controller.isSearching.value ? _searchBar(size) : const SizedBox.shrink()),
             Expanded(child: _messageList(size)),
             _inputBar(size),
           ],
@@ -32,19 +34,10 @@ class AiChatView extends GetView<AiChatController> {
 
   Widget _topBar(Size size) {
     return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: size.width * 0.04,
-        vertical: size.height * 0.012,
-      ),
+      padding: EdgeInsets.symmetric(horizontal: size.width * 0.04, vertical: size.height * 0.012),
       decoration: BoxDecoration(
         color: AppColors.whiteColor,
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.shadowColor,
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        boxShadow: [BoxShadow(color: AppColors.shadowColor, blurRadius: 10, offset: const Offset(0, 2))],
       ),
       child: Row(
         children: [
@@ -73,11 +66,7 @@ class AiChatView extends GetView<AiChatController> {
               ),
               shape: BoxShape.circle,
             ),
-            child: Icon(
-              Icons.smart_toy_rounded,
-              color: AppColors.whiteColor,
-              size: size.width * 0.052,
-            ),
+            child: Icon(Icons.smart_toy_rounded, color: AppColors.whiteColor, size: size.width * 0.052),
           ),
           SizedBox(width: size.width * 0.03),
           Expanded(
@@ -87,20 +76,14 @@ class AiChatView extends GetView<AiChatController> {
               children: [
                 Text(
                   'Sitek AI Assistant',
-                  style: AppTypography.bodyMedium.copyWith(
-                    color: AppColors.textHeadingColor,
-                    fontWeight: FontWeight.w700,
-                  ),
+                  style: AppTypography.bodyMedium.copyWith(color: AppColors.textHeadingColor, fontWeight: FontWeight.w700),
                 ),
                 Row(
                   children: [
                     Container(
                       width: 7,
                       height: 7,
-                      decoration: const BoxDecoration(
-                        color: AppColors.successColor,
-                        shape: BoxShape.circle,
-                      ),
+                      decoration: const BoxDecoration(color: AppColors.successColor, shape: BoxShape.circle),
                     ),
                     const SizedBox(width: 5),
                     Text(
@@ -115,19 +98,30 @@ class AiChatView extends GetView<AiChatController> {
               ],
             ),
           ),
-          // Premium badge label
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: AppColors.primaryColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(AppDimensions.radiusPill),
+          IconButton(
+            icon: const Icon(Icons.search_rounded, color: AppColors.textHeadingColor),
+            onPressed: controller.toggleSearch,
+          ),
+          TextButton(
+            onPressed: () {
+              Get.dialog(
+                ClearChatDialog(
+                  onSubmit: controller.clearChat,
+                ),
+                barrierDismissible: false,
+              );
+            },
+            style: TextButton.styleFrom(
+              backgroundColor: AppColors.primaryColor,
+              foregroundColor: AppColors.whiteColor,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimensions.radiusPill)),
             ),
             child: Text(
-              'BETA',
-              style: AppTypography.captionSmall.copyWith(
-                color: AppColors.primaryColor,
-                fontWeight: FontWeight.bold,
-              ),
+              'Clear Chat',
+              style: AppTypography.captionLarge.copyWith(color: AppColors.whiteColor, fontWeight: FontWeight.bold),
             ),
           ),
         ],
@@ -142,19 +136,14 @@ class AiChatView extends GetView<AiChatController> {
       final isLoadingMore = controller.isLoadingMore.value;
 
       if (controller.isLoadingHistory.value && messages.isEmpty) {
-        return const Center(
-          child: CircularProgressIndicator(color: AppColors.primaryColor),
-        );
+        return const Center(child: CircularProgressIndicator(color: AppColors.primaryColor));
       }
 
       return Stack(
         children: [
           ListView.separated(
             controller: controller.scrollController,
-            padding: EdgeInsets.symmetric(
-              horizontal: size.width * 0.05,
-              vertical: size.height * 0.02,
-            ),
+            padding: EdgeInsets.symmetric(horizontal: size.width * 0.05, vertical: size.height * 0.02),
             itemCount: messages.length + (isThinking ? 1 : 0),
             separatorBuilder: (_, __) => AppDimensions.spacingLarge.sh,
             itemBuilder: (_, index) {
@@ -170,6 +159,14 @@ class AiChatView extends GetView<AiChatController> {
                       ? _userBubbleLayout(size, msg.displayBody, msg.createdAt)
                       : _aiBubbleLayout(size, msg, msg.createdAt);
 
+              final itemWidget = KeyedSubtree(
+                key: controller.getKeyForMessage(index),
+                child:
+                    !showDateSeparator
+                        ? messageWidget
+                        : Column(children: [_dateSeparator(msg.createdAt), AppDimensions.spacingLarge.sh, messageWidget]),
+              );
+
               // If the welcome message is showing and no user message has been sent,
               // render suggestions below it.
               if (index == 0 && messages.length == 1) {
@@ -178,7 +175,7 @@ class AiChatView extends GetView<AiChatController> {
                   children: [
                     if (showDateSeparator) _dateSeparator(msg.createdAt),
                     if (showDateSeparator) AppDimensions.spacingLarge.sh,
-                    _aiBubbleLayout(size, msg, msg.createdAt),
+                    KeyedSubtree(key: controller.getKeyForMessage(index), child: _aiBubbleLayout(size, msg, msg.createdAt)),
                     AppDimensions.spacing5XLarge.sh,
                     _suggestionsHeader(),
                     AppDimensions.spacingMedium.sh,
@@ -187,19 +184,10 @@ class AiChatView extends GetView<AiChatController> {
                 );
               }
 
-              if (!showDateSeparator) return messageWidget;
-
-              return Column(
-                children: [
-                  _dateSeparator(msg.createdAt),
-                  AppDimensions.spacingLarge.sh,
-                  messageWidget,
-                ],
-              );
+              return itemWidget;
             },
           ),
-          if (isLoadingMore)
-            Positioned(top: 0, left: 0, right: 0, child: _historyLoader()),
+          if (isLoadingMore) Positioned(top: 0, left: 0, right: 0, child: _historyLoader()),
         ],
       );
     });
@@ -207,21 +195,13 @@ class AiChatView extends GetView<AiChatController> {
 
   Widget _historyLoader() {
     return Container(
-      padding: const EdgeInsets.only(
-        top: AppDimensions.spacingSmall,
-        bottom: AppDimensions.spacingXLarge,
-      ),
-      decoration: BoxDecoration(
-        color: AppColors.whiteColor.withValues(alpha: 0.92),
-      ),
+      padding: const EdgeInsets.only(top: AppDimensions.spacingSmall, bottom: AppDimensions.spacingXLarge),
+      decoration: BoxDecoration(color: AppColors.whiteColor.withValues(alpha: 0.92)),
       child: const Center(
         child: SizedBox(
           width: 18,
           height: 18,
-          child: CircularProgressIndicator(
-            strokeWidth: 2,
-            color: AppColors.primaryColor,
-          ),
+          child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primaryColor),
         ),
       ),
     );
@@ -250,22 +230,11 @@ class AiChatView extends GetView<AiChatController> {
                 bottomRight: Radius.circular(AppDimensions.radius2XLarge),
               ),
             ),
-            child: Text(
-              text,
-              style: AppTypography.bodySmall.copyWith(
-                color: AppColors.whiteColor,
-                height: 1.4,
-              ),
-            ),
+            child: Text(text, style: AppTypography.bodySmall.copyWith(color: AppColors.whiteColor, height: 1.4)),
           ),
           if (timeText.isNotEmpty) AppDimensions.spacingXSmall.sh,
           if (timeText.isNotEmpty)
-            Text(
-              timeText,
-              style: AppTypography.caption.copyWith(
-                color: AppColors.textBodyColor.withValues(alpha: 0.6),
-              ),
-            ),
+            Text(timeText, style: AppTypography.caption.copyWith(color: AppColors.textBodyColor.withValues(alpha: 0.6))),
         ],
       ),
     );
@@ -293,11 +262,7 @@ class AiChatView extends GetView<AiChatController> {
               ),
               shape: BoxShape.circle,
             ),
-            child: Icon(
-              Icons.smart_toy_rounded,
-              color: AppColors.whiteColor,
-              size: size.width * 0.042,
-            ),
+            child: Icon(Icons.smart_toy_rounded, color: AppColors.whiteColor, size: size.width * 0.042),
           ),
           SizedBox(width: size.width * 0.025),
           Expanded(
@@ -327,10 +292,7 @@ class AiChatView extends GetView<AiChatController> {
                       imageUrl == null
                           ? Text(
                             message.displayBody,
-                            style: AppTypography.bodySmall.copyWith(
-                              color: AppColors.textHeadingColor,
-                              height: 1.45,
-                            ),
+                            style: AppTypography.bodySmall.copyWith(color: AppColors.textHeadingColor, height: 1.45),
                           )
                           : Image.network(
                             imageUrl,
@@ -342,10 +304,7 @@ class AiChatView extends GetView<AiChatController> {
                               return SizedBox(
                                 height: size.width * 0.45,
                                 child: const Center(
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: AppColors.primaryColor,
-                                  ),
+                                  child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primaryColor),
                                 ),
                               );
                             },
@@ -353,10 +312,7 @@ class AiChatView extends GetView<AiChatController> {
                                 (_, __, ___) => SizedBox(
                                   height: size.width * 0.45,
                                   child: const Center(
-                                    child: Icon(
-                                      Icons.broken_image_outlined,
-                                      color: AppColors.textBodyColor,
-                                    ),
+                                    child: Icon(Icons.broken_image_outlined, color: AppColors.textBodyColor),
                                   ),
                                 ),
                           ),
@@ -365,9 +321,7 @@ class AiChatView extends GetView<AiChatController> {
                 if (timeText.isNotEmpty)
                   Text(
                     timeText,
-                    style: AppTypography.caption.copyWith(
-                      color: AppColors.textBodyColor.withValues(alpha: 0.6),
-                    ),
+                    style: AppTypography.caption.copyWith(color: AppColors.textBodyColor.withValues(alpha: 0.6)),
                   ),
               ],
             ),
@@ -380,10 +334,7 @@ class AiChatView extends GetView<AiChatController> {
   String? _resolveAiImageUrl(ChatMessage message) {
     if (message.type.toLowerCase() != 'image') return null;
 
-    final content =
-        message.content.trim().isNotEmpty
-            ? message.content.trim()
-            : message.displayBody.trim();
+    final content = message.content.trim().isNotEmpty ? message.content.trim() : message.displayBody.trim();
     if (content.isEmpty) return null;
     if (content.startsWith('http://') || content.startsWith('https://')) {
       return content;
@@ -392,10 +343,7 @@ class AiChatView extends GetView<AiChatController> {
     final baseUrl = (dotenv.env['BASEURL'] ?? '').trim();
     if (baseUrl.isEmpty) return content;
 
-    final cleanBase =
-        baseUrl.endsWith('/')
-            ? baseUrl.substring(0, baseUrl.length - 1)
-            : baseUrl;
+    final cleanBase = baseUrl.endsWith('/') ? baseUrl.substring(0, baseUrl.length - 1) : baseUrl;
     final cleanContent = content.startsWith('/') ? content : '/$content';
     return '$cleanBase$cleanContent';
   }
@@ -418,11 +366,7 @@ class AiChatView extends GetView<AiChatController> {
               ),
               shape: BoxShape.circle,
             ),
-            child: Icon(
-              Icons.smart_toy_rounded,
-              color: AppColors.whiteColor,
-              size: size.width * 0.042,
-            ),
+            child: Icon(Icons.smart_toy_rounded, color: AppColors.whiteColor, size: size.width * 0.042),
           ),
           SizedBox(width: size.width * 0.025),
           Container(
@@ -447,11 +391,7 @@ class AiChatView extends GetView<AiChatController> {
                 Obx(
                   () => Text(
                     controller.thinkingText.value,
-                    style: const TextStyle(
-                      fontSize: 10,
-                      color: AppColors.textBodyColor,
-                      fontStyle: FontStyle.italic,
-                    ),
+                    style: const TextStyle(fontSize: 10, color: AppColors.textBodyColor, fontStyle: FontStyle.italic),
                   ),
                 ),
               ],
@@ -465,18 +405,11 @@ class AiChatView extends GetView<AiChatController> {
   Widget _suggestionsHeader() {
     return Row(
       children: [
-        const Icon(
-          Icons.lightbulb_outline_rounded,
-          color: AppColors.primaryColor,
-          size: 16,
-        ),
+        const Icon(Icons.lightbulb_outline_rounded, color: AppColors.primaryColor, size: 16),
         const SizedBox(width: 6),
         Text(
           'Rekomendasi Pertanyaan:',
-          style: AppTypography.bodySmall.copyWith(
-            fontWeight: FontWeight.bold,
-            color: AppColors.textHeadingColor,
-          ),
+          style: AppTypography.bodySmall.copyWith(fontWeight: FontWeight.bold, color: AppColors.textHeadingColor),
         ),
       ],
     );
@@ -487,26 +420,18 @@ class AiChatView extends GetView<AiChatController> {
       children:
           controller.suggestions.map((suggestion) {
             return Container(
-              margin: const EdgeInsets.only(
-                bottom: AppDimensions.spacingMedium,
-              ),
+              margin: const EdgeInsets.only(bottom: AppDimensions.spacingMedium),
               child: Material(
                 color: Colors.transparent,
                 child: InkWell(
                   onTap: () => controller.selectSuggestion(suggestion),
-                  borderRadius: BorderRadius.circular(
-                    AppDimensions.radiusLarge,
-                  ),
+                  borderRadius: BorderRadius.circular(AppDimensions.radiusLarge),
                   child: Container(
                     padding: const EdgeInsets.all(AppDimensions.spacingLarge),
                     decoration: BoxDecoration(
                       color: AppColors.primaryColor.withValues(alpha: 0.04),
-                      border: Border.all(
-                        color: AppColors.primaryColor.withValues(alpha: 0.12),
-                      ),
-                      borderRadius: BorderRadius.circular(
-                        AppDimensions.radiusLarge,
-                      ),
+                      border: Border.all(color: AppColors.primaryColor.withValues(alpha: 0.12)),
+                      borderRadius: BorderRadius.circular(AppDimensions.radiusLarge),
                     ),
                     child: Row(
                       children: [
@@ -541,41 +466,20 @@ class AiChatView extends GetView<AiChatController> {
       return SafeArea(
         top: false,
         child: Container(
-          padding: EdgeInsets.fromLTRB(
-            size.width * 0.04,
-            size.height * 0.02,
-            size.width * 0.04,
-            size.height * 0.02,
-          ),
+          padding: EdgeInsets.fromLTRB(size.width * 0.04, size.height * 0.02, size.width * 0.04, size.height * 0.02),
           decoration: BoxDecoration(
             color: AppColors.whiteColor,
-            border: Border(
-              top: BorderSide(
-                color: AppColors.formBorderColor.withValues(alpha: 0.15),
-              ),
-            ),
+            border: Border(top: BorderSide(color: AppColors.formBorderColor.withValues(alpha: 0.15))),
           ),
           child: Row(
             children: [
               Expanded(
                 child: Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: size.width * 0.04,
-                    vertical: AppDimensions.spacingLarge,
-                  ),
+                  padding: EdgeInsets.symmetric(horizontal: size.width * 0.04, vertical: AppDimensions.spacingLarge),
                   decoration: BoxDecoration(
-                    color:
-                        isDisabled
-                            ? AppColors.subtleSurfaceColor.withValues(
-                              alpha: 0.45,
-                            )
-                            : AppColors.whiteColor,
-                    borderRadius: BorderRadius.circular(
-                      AppDimensions.radiusPill,
-                    ),
-                    border: Border.all(
-                      color: AppColors.formBorderColor.withValues(alpha: 0.3),
-                    ),
+                    color: isDisabled ? AppColors.subtleSurfaceColor.withValues(alpha: 0.45) : AppColors.whiteColor,
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusPill),
+                    border: Border.all(color: AppColors.formBorderColor.withValues(alpha: 0.3)),
                   ),
                   child: TextField(
                     controller: controller.messageController,
@@ -583,19 +487,14 @@ class AiChatView extends GetView<AiChatController> {
                     minLines: 1,
                     maxLines: 4,
                     textInputAction: TextInputAction.send,
-                    onSubmitted:
-                        isDisabled ? null : (_) => controller.sendMessage(),
+                    onSubmitted: isDisabled ? null : (_) => controller.sendMessage(),
                     decoration: InputDecoration(
                       isCollapsed: true,
                       border: InputBorder.none,
                       hintText: 'Tanyakan ide arsitektur / estimasi...',
-                      hintStyle: AppTypography.bodySmall.copyWith(
-                        color: AppColors.textBodyColor.withValues(alpha: 0.5),
-                      ),
+                      hintStyle: AppTypography.bodySmall.copyWith(color: AppColors.textBodyColor.withValues(alpha: 0.5)),
                     ),
-                    style: AppTypography.bodyMedium.copyWith(
-                      color: AppColors.textHeadingColor,
-                    ),
+                    style: AppTypography.bodyMedium.copyWith(color: AppColors.textHeadingColor),
                   ),
                 ),
               ),
@@ -604,24 +503,15 @@ class AiChatView extends GetView<AiChatController> {
                 color: Colors.transparent,
                 child: InkWell(
                   onTap: isDisabled ? null : () => controller.sendMessage(),
-                  borderRadius: BorderRadius.circular(
-                    AppDimensions.radiusCircle,
-                  ),
+                  borderRadius: BorderRadius.circular(AppDimensions.radiusCircle),
                   child: Container(
                     width: size.width * 0.11,
                     height: size.width * 0.11,
                     decoration: BoxDecoration(
-                      color:
-                          isDisabled
-                              ? AppColors.formBorderColor.withValues(alpha: 0.6)
-                              : AppColors.primaryColor,
+                      color: isDisabled ? AppColors.formBorderColor.withValues(alpha: 0.6) : AppColors.primaryColor,
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(
-                      Icons.send_rounded,
-                      color: AppColors.whiteColor,
-                      size: size.width * 0.05,
-                    ),
+                    child: Icon(Icons.send_rounded, color: AppColors.whiteColor, size: size.width * 0.05),
                   ),
                 ),
               ),
@@ -662,15 +552,9 @@ class AiChatView extends GetView<AiChatController> {
 
     return Row(
       children: [
-        Expanded(
-          child: Divider(
-            color: AppColors.formBorderColor.withValues(alpha: 0.2),
-          ),
-        ),
+        Expanded(child: Divider(color: AppColors.formBorderColor.withValues(alpha: 0.2))),
         Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppDimensions.spacingMedium,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: AppDimensions.spacingMedium),
           child: Text(
             label,
             style: AppTypography.captionSmall.copyWith(
@@ -679,11 +563,7 @@ class AiChatView extends GetView<AiChatController> {
             ),
           ),
         ),
-        Expanded(
-          child: Divider(
-            color: AppColors.formBorderColor.withValues(alpha: 0.2),
-          ),
-        ),
+        Expanded(child: Divider(color: AppColors.formBorderColor.withValues(alpha: 0.2))),
       ],
     );
   }
@@ -700,22 +580,85 @@ class AiChatView extends GetView<AiChatController> {
     if (difference == 0) return 'Today';
     if (difference == 1) return 'Yesterday';
 
-    const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
     return '${date.day} ${months[date.month - 1]} ${date.year}';
+  }
+
+  Widget _searchBar(Size size) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: size.width * 0.04, vertical: size.height * 0.01),
+      decoration: BoxDecoration(
+        color: AppColors.whiteColor,
+        border: Border(bottom: BorderSide(color: AppColors.formBorderColor.withValues(alpha: 0.2))),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: AppDimensions.spacingMedium),
+              decoration: BoxDecoration(
+                color: AppColors.subtleSurfaceColor.withValues(alpha: 0.5),
+                borderRadius: BorderRadius.circular(AppDimensions.radiusMedium),
+              ),
+              child: TextField(
+                controller: controller.searchInputController,
+                focusNode: controller.searchFocusNode,
+                decoration: InputDecoration(
+                  hintText: 'Search messages...',
+                  border: InputBorder.none,
+                  isDense: true,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                  hintStyle: AppTypography.bodySmall.copyWith(color: AppColors.textBodyColor.withValues(alpha: 0.5)),
+                ),
+                style: AppTypography.bodySmall.copyWith(color: AppColors.textHeadingColor),
+                onChanged: controller.performSearch,
+              ),
+            ),
+          ),
+          Obx(() {
+            final results = controller.searchResults;
+            final currentIndex = controller.currentSearchIndex.value;
+            if (results.isEmpty && controller.searchQuery.value.isNotEmpty) {
+              return Padding(
+                padding: const EdgeInsets.only(left: 8.0),
+                child: Text('0/0', style: AppTypography.captionSmall),
+              );
+            } else if (results.isNotEmpty) {
+              return Row(
+                children: [
+                  const SizedBox(width: 8),
+                  Text('${currentIndex + 1}/${results.length}', style: AppTypography.captionSmall),
+                  const SizedBox(width: 8),
+                  InkWell(
+                    onTap: controller.previousSearchResult,
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusCircle),
+                    child: Container(
+                      width: size.width * 0.08,
+                      height: size.width * 0.08,
+                      decoration: BoxDecoration(color: AppColors.primaryColor, shape: BoxShape.circle),
+                      child: Icon(Icons.keyboard_arrow_up, color: AppColors.whiteColor, size: size.width * 0.05),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  InkWell(
+                    onTap: controller.nextSearchResult,
+                    borderRadius: BorderRadius.circular(AppDimensions.radiusCircle),
+                    child: Container(
+                      width: size.width * 0.08,
+                      height: size.width * 0.08,
+                      decoration: BoxDecoration(color: AppColors.primaryColor, shape: BoxShape.circle),
+                      child: Icon(Icons.keyboard_arrow_down, color: AppColors.whiteColor, size: size.width * 0.05),
+                    ),
+                  ),
+                ],
+              );
+            }
+            return const SizedBox.shrink();
+          }),
+        ],
+      ),
+    );
   }
 }
 
@@ -726,17 +669,13 @@ class _BouncingDots extends StatefulWidget {
   State<_BouncingDots> createState() => _BouncingDotsState();
 }
 
-class _BouncingDotsState extends State<_BouncingDots>
-    with SingleTickerProviderStateMixin {
+class _BouncingDotsState extends State<_BouncingDots> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1000),
-    )..repeat();
+    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 1000))..repeat();
   }
 
   @override
@@ -758,18 +697,14 @@ class _BouncingDotsState extends State<_BouncingDots>
             if (value < 0) value += 1.0;
             // Map 0..1 to smooth sine wave bounce
             final double bounce = math.sin(value * 2 * 3.14159);
-            final double offset =
-                bounce * 3.0; // Translate up and down by 3 pixels
+            final double offset = bounce * 3.0; // Translate up and down by 3 pixels
 
             return Container(
               margin: const EdgeInsets.symmetric(horizontal: 1.5),
               transform: Matrix4.translationValues(0, offset, 0),
               width: 5,
               height: 5,
-              decoration: const BoxDecoration(
-                color: AppColors.primaryColor,
-                shape: BoxShape.circle,
-              ),
+              decoration: const BoxDecoration(color: AppColors.primaryColor, shape: BoxShape.circle),
             );
           },
         );
