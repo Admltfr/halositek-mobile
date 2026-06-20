@@ -21,7 +21,7 @@ class ChatService {
         if (cursor != null && cursor.trim().isNotEmpty) 'cursor': cursor,
       },
       options: Options(
-        validateStatus: (status) => status != null && status < 500,
+        validateStatus: (status) => status != null && status < 600,
       ),
     );
 
@@ -57,7 +57,7 @@ class ChatService {
       '/chat/ai/messages',
       data: {'message': message},
       options: Options(
-        validateStatus: (status) => status != null && status < 500,
+        validateStatus: (status) => status != null && status < 600,
       ),
     );
 
@@ -97,7 +97,7 @@ class ChatService {
     final response = await _apiClient.private.delete(
       '/chat/ai/messages',
       options: Options(
-        validateStatus: (status) => status != null && status < 500,
+        validateStatus: (status) => status != null && status < 600,
       ),
     );
 
@@ -121,7 +121,7 @@ class ChatService {
         if (search.trim().isNotEmpty) 'search': search,
       },
       options: Options(
-        validateStatus: (status) => status != null && status < 500,
+        validateStatus: (status) => status != null && status < 600,
       ),
     );
 
@@ -147,7 +147,7 @@ class ChatService {
     final response = await _apiClient.private.get(
       '/chat/conversations/$conversationId',
       options: Options(
-        validateStatus: (status) => status != null && status < 500,
+        validateStatus: (status) => status != null && status < 600,
       ),
     );
 
@@ -172,7 +172,7 @@ class ChatService {
         'per_page': perPage,
       },
       options: Options(
-        validateStatus: (status) => status != null && status < 500,
+        validateStatus: (status) => status != null && status < 600,
       ),
     );
 
@@ -204,7 +204,7 @@ class ChatService {
       '/chat/messages',
       data: {'conversation_id': conversationId, 'body': body},
       options: Options(
-        validateStatus: (status) => status != null && status < 500,
+        validateStatus: (status) => status != null && status < 600,
       ),
     );
 
@@ -232,7 +232,7 @@ class ChatService {
       '/chat/conversations/$conversationId/typing',
       data: {'is_typing': isTyping},
       options: Options(
-        validateStatus: (status) => status != null && status < 500,
+        validateStatus: (status) => status != null && status < 600,
       ),
     );
 
@@ -263,7 +263,7 @@ class ChatService {
       '/chat/messages',
       data: formData,
       options: Options(
-        validateStatus: (status) => status != null && status < 500,
+        validateStatus: (status) => status != null && status < 600,
         contentType: 'multipart/form-data',
       ),
     );
@@ -299,7 +299,7 @@ class ChatService {
         'participant_ids': participantIds,
       },
       options: Options(
-        validateStatus: (status) => status != null && status < 500,
+        validateStatus: (status) => status != null && status < 600,
       ),
     );
 
@@ -325,7 +325,7 @@ class ChatService {
       '/consultations/$consultationId/reports',
       data: {'consultation_id': consultationId, 'reason': reason},
       options: Options(
-        validateStatus: (status) => status != null && status < 500,
+        validateStatus: (status) => status != null && status < 600,
       ),
     );
 
@@ -359,7 +359,7 @@ class ChatService {
         if (search.trim().isNotEmpty) 'search': search,
       },
       options: Options(
-        validateStatus: (status) => status != null && status < 500,
+        validateStatus: (status) => status != null && status < 600,
       ),
     );
 
@@ -387,7 +387,7 @@ class ChatService {
     final response = await _apiClient.private.post(
       '/chat/conversations/$conversationId/read',
       options: Options(
-        validateStatus: (status) => status != null && status < 500,
+        validateStatus: (status) => status != null && status < 600,
       ),
     );
 
