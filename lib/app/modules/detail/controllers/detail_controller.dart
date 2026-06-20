@@ -87,7 +87,7 @@ class DetailController extends GetxController {
       catalog.value = result;
       activeImageIndex.value = 0;
       activeLayoutIndex.value = 0;
-      
+
       // Fetch consultation status
       await fetchConsultationStatus();
     } catch (e) {
@@ -286,7 +286,9 @@ class DetailController extends GetxController {
 
     try {
       isLoadingConsultationStatus.value = true;
-      final status = await _paymentService.checkConsultationStatus(architectIdValue);
+      final status = await _paymentService.checkConsultationStatus(
+        architectIdValue,
+      );
       consultationStatus.value = status;
 
       // Sync pending payment data if status is pending_payment
@@ -479,6 +481,7 @@ class DetailController extends GetxController {
       () => const ChatDetailView(),
       binding: ChatDetailBinding(
         conversationId: conversationId,
+        consultationId: consultationStatus.value?.consultationId ?? '',
         title: architect.value?.name ?? 'Chat',
       ),
     );

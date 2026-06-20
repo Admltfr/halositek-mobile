@@ -127,23 +127,35 @@ class ChatService {
 
     return _apiClient.customResponse(response, () async {
       final rawList = response.data?['data'];
-      final conversations = rawList is List
-          ? rawList
-              .whereType<Map>()
-              .map((e) => ChatConversation.fromJson(Map<String, dynamic>.from(e)))
-              .toList()
-          : <ChatConversation>[];
-          
+      final conversations =
+          rawList is List
+              ? rawList
+                  .whereType<Map>()
+                  .map(
+                    (e) =>
+                        ChatConversation.fromJson(Map<String, dynamic>.from(e)),
+                  )
+                  .toList()
+              : <ChatConversation>[];
+
       final rawMeta = response.data?['meta'];
-      final meta = rawMeta is Map
-          ? ChatMeta.fromJson(Map<String, dynamic>.from(rawMeta))
-          : const ChatMeta(currentPage: 1, lastPage: 1, perPage: 10, total: 0);
+      final meta =
+          rawMeta is Map
+              ? ChatMeta.fromJson(Map<String, dynamic>.from(rawMeta))
+              : const ChatMeta(
+                currentPage: 1,
+                lastPage: 1,
+                perPage: 10,
+                total: 0,
+              );
 
       return ConversationsPage(conversations: conversations, meta: meta);
     }, 'Fetch Conversations');
   }
 
-  Future<ConversationDetailModel> getConversationDetail(String conversationId) async {
+  Future<ConversationDetailModel> getConversationDetail(
+    String conversationId,
+  ) async {
     final response = await _apiClient.private.get(
       '/chat/conversations/$conversationId',
       options: Options(
@@ -167,10 +179,7 @@ class ChatService {
   }) async {
     final response = await _apiClient.private.get(
       '/chat/conversations/$conversationId/messages',
-      queryParameters: {
-        'page': page,
-        'per_page': perPage,
-      },
+      queryParameters: {'page': page, 'per_page': perPage},
       options: Options(
         validateStatus: (status) => status != null && status < 600,
       ),
@@ -180,17 +189,26 @@ class ChatService {
 
     return _apiClient.customResponse(response, () async {
       final rawList = response.data?['data'];
-      final messages = rawList is List
-          ? rawList
-              .whereType<Map>()
-              .map((e) => ChatMessage.fromJson(Map<String, dynamic>.from(e)))
-              .toList()
-          : <ChatMessage>[];
+      final messages =
+          rawList is List
+              ? rawList
+                  .whereType<Map>()
+                  .map(
+                    (e) => ChatMessage.fromJson(Map<String, dynamic>.from(e)),
+                  )
+                  .toList()
+              : <ChatMessage>[];
 
       final rawMeta = response.data?['meta'];
-      final meta = rawMeta is Map
-          ? ChatMeta.fromJson(Map<String, dynamic>.from(rawMeta))
-          : const ChatMeta(currentPage: 1, lastPage: 1, perPage: 10, total: 0);
+      final meta =
+          rawMeta is Map
+              ? ChatMeta.fromJson(Map<String, dynamic>.from(rawMeta))
+              : const ChatMeta(
+                currentPage: 1,
+                lastPage: 1,
+                perPage: 10,
+                total: 0,
+              );
 
       return MessagesPage(messages: messages, meta: meta);
     }, 'Fetch Messages');
@@ -328,6 +346,7 @@ class ChatService {
         validateStatus: (status) => status != null && status < 600,
       ),
     );
+    debugPrint('\x1B[31m $consultationId\x1B[0m');
 
     debugPrint('\x1B[31m ${response.data}\x1B[0m');
 
@@ -364,20 +383,26 @@ class ChatService {
     );
 
     return _apiClient.customResponse(response, () async {
-      final rawList = response.data is List
-          ? response.data
-          : response.data?['data'];
-      final reports = rawList is List
-          ? rawList
-              .whereType<Map>()
-              .map((e) => ChatReport.fromJson(Map<String, dynamic>.from(e)))
-              .toList()
-          : <ChatReport>[];
+      final rawList =
+          response.data is List ? response.data : response.data?['data'];
+      final reports =
+          rawList is List
+              ? rawList
+                  .whereType<Map>()
+                  .map((e) => ChatReport.fromJson(Map<String, dynamic>.from(e)))
+                  .toList()
+              : <ChatReport>[];
 
       final rawMeta = response.data?['meta'];
-      final meta = rawMeta is Map
-          ? ChatMeta.fromJson(Map<String, dynamic>.from(rawMeta))
-          : const ChatMeta(currentPage: 1, lastPage: 1, perPage: 10, total: 0);
+      final meta =
+          rawMeta is Map
+              ? ChatMeta.fromJson(Map<String, dynamic>.from(rawMeta))
+              : const ChatMeta(
+                currentPage: 1,
+                lastPage: 1,
+                perPage: 10,
+                total: 0,
+              );
 
       return ReportsPage(reports: reports, meta: meta);
     }, 'Fetch Reports');
@@ -391,12 +416,9 @@ class ChatService {
       ),
     );
 
-    return _apiClient.customResponse(
-      response,
-      () async {},
-      'Mark as Read',
-    );
+    return _apiClient.customResponse(response, () async {}, 'Mark as Read');
   }
+
   int _toInt(dynamic value) {
     if (value is int) return value;
     if (value is double) return value.toInt();
