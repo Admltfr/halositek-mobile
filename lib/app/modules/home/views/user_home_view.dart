@@ -7,6 +7,7 @@ import 'package:halositek/app/core/constants/app_typography.dart';
 import 'package:halositek/app/core/widgets/custom_text_button.dart';
 import 'package:halositek/app/data/models/architect.dart';
 import 'package:halositek/app/data/models/catalog.dart';
+import 'package:halositek/app/data/network/api_client.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import '../controllers/home_controller.dart';
 
@@ -16,6 +17,15 @@ class UserHomeView extends GetView<HomeController> {
   static const String _dummyImage = 'assets/images/bg-image.png';
   static const String _dummyAvatar = 'assets/images/logo.png';
 
+  static const List<Map<String, String>> _styleFilters = [
+    {'label': 'All', 'value': 'all'},
+    {'label': 'Modern', 'value': 'modern'},
+    {'label': 'Traditional', 'value': 'traditional'},
+    {'label': 'Minimalist', 'value': 'minimalist'},
+    {'label': 'Futuristik', 'value': 'futuristik'},
+    {'label': 'Industrial', 'value': 'industrial'},
+  ];
+
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
@@ -24,293 +34,180 @@ class UserHomeView extends GetView<HomeController> {
       backgroundColor: AppColors.whiteColor,
       floatingActionButton: _floatingActionButton(),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: EdgeInsets.symmetric(horizontal: size.width * 0.05, vertical: size.height * 0.01),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _headerSection(size),
-              AppDimensions.spacingXLarge.sh,
-              _searchSection(size, hintText: 'Search Design or Architects'),
-              AppDimensions.spacing2XLarge.sh,
-              Obx(() {
-                final isSearchMode = controller.isSearchMode;
+        child: Obx(() {
+          final isSearchMode = controller.isSearchMode;
 
-                if (isSearchMode) {
-                  return _searchResultSection(size);
-                }
-
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _galleryHeaderSection(),
-                    AppDimensions.spacingSemibold.sh,
-                    _catalogSection(size),
-                    AppDimensions.spacingXLarge.sh,
-                    _aiAssistantSection(size),
+          return RefreshIndicator(
+            onRefresh: controller.refreshDashboard,
+            color: AppColors.primaryColor,
+            backgroundColor: AppColors.whiteColor,
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: EdgeInsets.symmetric(horizontal: size.width * 0.05, vertical: size.height * 0.01),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _headerSection(size),
+                  AppDimensions.spacingXLarge.sh,
+                  _searchSection(size, hintText: 'Search Design or Architects'),
+                  if (isSearchMode) ...[
                     AppDimensions.spacing2XLarge.sh,
-                    _architectHeaderSection(),
-                    AppDimensions.spacingLarge.sh,
-                    _architectSection(size),
+                    _searchResultSection(size),
+                  ] else ...[
+                    AppDimensions.spacing4XLarge.sh,
+                    _greetingSection(size),
+                    AppDimensions.spacing4XLarge.sh,
+                    _summaryCardsSection(size),
+                    AppDimensions.spacing4XLarge.sh,
+                    _featuredSection(size),
+                    AppDimensions.spacing4XLarge.sh,
+                    _aiAssistantSection(size),
+                    AppDimensions.spacing4XLarge.sh,
+                    _recommendedSection(size),
+                    32.0.sh,
                   ],
-                );
-              }),
-            ],
-          ),
-        ),
+                ],
+              ),
+            ),
+          );
+        }),
       ),
     );
   }
 
+  // ─── Header ──────────────────────────────────────────────────────────
+
   Widget _headerSection(Size size) {
     return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Expanded(
-          child: Center(
-            child: Text.rich(
-              TextSpan(
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Text.rich(
+            TextSpan(
+              children: [
+                TextSpan(
+                  text: 'Halo',
+                  style: AppTypography.headingMedium.copyWith(
+                    color: AppColors.textHeadingColor,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                TextSpan(
+                  text: 'Sitek',
+                  style: AppTypography.headingMedium.copyWith(color: AppColors.primaryColor, fontWeight: FontWeight.w700),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ─── Greeting ────────────────────────────────────────────────────────
+
+  Widget _greetingSection(Size size) {
+    return Obx(() {
+      final profile = controller.userProfile.value;
+      final isLoading = controller.isLoadingProfile.value;
+      final name = profile?.name ?? '';
+      final firstName = name.isNotEmpty ? name.split(' ').first : (isLoading ? 'User' : '');
+      final baseUrl = ApiClient.baseUrl;
+      final avatarUrl = profile?.photoProfileUrl != null ? "$baseUrl${profile?.photoProfileUrl}" : '';
+
+      return Skeletonizer(
+        enabled: isLoading,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  TextSpan(
-                    text: 'Halo',
-                    style: AppTypography.headingMedium.copyWith(
+                  Text(
+                    firstName.isNotEmpty ? 'Hello, $firstName!' : 'Helloe!',
+                    style: AppTypography.bodyMedium.copyWith(color: AppColors.textBodyColor),
+                  ),
+                  4.0.sh,
+                  Text(
+                    'Ready to design your\ndream home?',
+                    style: AppTypography.headingSmall.copyWith(
                       color: AppColors.textHeadingColor,
                       fontWeight: FontWeight.w700,
+                      height: 1.25,
                     ),
-                  ),
-                  TextSpan(
-                    text: 'Sitek',
-                    style: AppTypography.headingMedium.copyWith(color: AppColors.primaryColor, fontWeight: FontWeight.w700),
                   ),
                 ],
               ),
             ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _floatingActionButton() {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        FloatingActionButton(
-          heroTag: 'ai_chat_fab',
-          onPressed: controller.openAiChatFromHome,
-          backgroundColor: AppColors.primaryColor,
-          elevation: 4,
-          child: const ImageIcon(AssetImage('assets/icons/ai-bot.png'), size: 24, color: AppColors.whiteColor),
-        ),
-        const SizedBox(height: 12),
-
-        Stack(
-          clipBehavior: Clip.none,
-          children: [
-            FloatingActionButton(
-              heroTag: 'chat_fab',
-              onPressed: controller.openChatListFromHome,
-              backgroundColor: AppColors.primaryColor,
-              elevation: 4,
-              child: const Icon(Icons.chat_bubble_rounded, color: AppColors.whiteColor),
+            12.0.sw,
+            CircleAvatar(
+              radius: 32,
+              backgroundColor: Colors.transparent,
+              child: ClipOval(
+                child:
+                    avatarUrl.isNotEmpty
+                        ? Image.network(
+                          avatarUrl,
+                          width: 64,
+                          height: 64,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => Image.asset(_dummyAvatar, width: 64, height: 64, fit: BoxFit.cover),
+                        )
+                        : Image.asset(_dummyAvatar, width: 64, height: 64, fit: BoxFit.cover),
+              ),
             ),
           ],
         ),
-      ],
-    );
-  }
-
-  Widget _searchSection(Size size, {required String hintText}) {
-    return Container(
-      height: size.height * 0.062,
-      padding: EdgeInsets.symmetric(horizontal: size.width * 0.03),
-      decoration: BoxDecoration(
-        color: AppColors.whiteColor,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusXLarge),
-        border: Border.all(color: AppColors.formBorderColor.withValues(alpha: 0.35)),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.search_rounded, color: AppColors.primaryColor, size: size.width * 0.055),
-
-          SizedBox(width: size.width * 0.02),
-
-          Expanded(
-            child: TextField(
-              controller: controller.searchController,
-              decoration: InputDecoration(
-                isCollapsed: true,
-                border: InputBorder.none,
-                hintText: hintText,
-                hintStyle: AppTypography.bodySmall.copyWith(color: AppColors.textBodyColor.withValues(alpha: 0.55)),
-              ),
-              style: AppTypography.bodyMedium.copyWith(color: AppColors.textHeadingColor),
-            ),
-          ),
-
-          Obx(() {
-            if (controller.searchQuery.value.trim().isEmpty) {
-              return const SizedBox.shrink();
-            }
-
-            return GestureDetector(
-              onTap: () {
-                controller.searchController.clear();
-
-                controller.searchQuery.value = '';
-
-                controller.searchedArchitects.clear();
-                controller.searchedCatalogs.clear();
-              },
-              child: Icon(Icons.close_rounded, color: AppColors.textBodyColor, size: size.width * 0.05),
-            );
-          }),
-        ],
-      ),
-    );
-  }
-
-  Widget _searchResultSection(Size size) {
-    return Obx(() {
-      if (!controller.isSearchMode) {
-        return const SizedBox.shrink();
-      }
-
-      if (controller.isSearching.value) {
-        return const Center(child: CircularProgressIndicator());
-      }
-
-      if (controller.searchedArchitects.isEmpty && controller.searchedCatalogs.isEmpty) {
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 40),
-          child: Center(child: Text('No result found', style: AppTypography.bodyMedium)),
-        );
-      }
-
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (controller.searchedArchitects.isNotEmpty) ...[
-            Row(
-              children: [
-                Expanded(child: Text('Architects', style: AppTypography.headingSmall.copyWith(fontWeight: FontWeight.w700))),
-                CustomTextButton(
-                  text: 'See all',
-                  onPressed: () => controller.openArchitectFromHome(),
-                  style: AppTypography.bodyMedium.copyWith(color: AppColors.primaryColor, fontWeight: FontWeight.w700),
-                ),
-              ],
-            ),
-
-            12.0.sh,
-
-            ...controller.searchedArchitects.map(
-              (architect) => Padding(
-                padding: const EdgeInsets.only(bottom: 16),
-                child: _architectCard(size: size, architect: architect),
-              ),
-            ),
-
-            20.0.sh,
-          ],
-
-          if (controller.searchedCatalogs.isNotEmpty) ...[
-            Row(
-              children: [
-                Expanded(child: Text('Designs', style: AppTypography.headingSmall.copyWith(fontWeight: FontWeight.w700))),
-                CustomTextButton(
-                  text: 'See all',
-                  onPressed: () => controller.openDesignFromHome(),
-                  style: AppTypography.bodyMedium.copyWith(color: AppColors.primaryColor, fontWeight: FontWeight.w700),
-                ),
-              ],
-            ),
-
-            12.0.sh,
-
-            ...controller.searchedCatalogs.map(
-              (catalog) => Padding(
-                padding: const EdgeInsets.only(bottom: 16),
-                child: _catalogItem(size: size, catalog: catalog, onTap: () => controller.openDetailsFromHome(catalog.id)),
-              ),
-            ),
-
-            20.0.sh,
-          ],
-        ],
       );
     });
   }
 
-  Widget _galleryHeaderSection() {
-    return Row(
-      children: [
-        Expanded(
-          child: Text(
-            'Design Gallery',
-            style: AppTypography.headingSmall.copyWith(color: AppColors.textHeadingColor, fontWeight: FontWeight.w700),
-          ),
-        ),
-
-        CustomTextButton(
-          text: 'See all',
-          onPressed: () => controller.openDesignFromHome(),
-          style: AppTypography.bodyMedium.copyWith(color: AppColors.primaryColor, fontWeight: FontWeight.w700),
-        ),
-      ],
-    );
-  }
-
-  Widget _catalogSection(Size size, {String emptyMessage = 'Belum ada katalog'}) {
+  Widget _summaryCardsSection(Size size) {
     return Obx(() {
-      final isLoading = controller.isLoadingCatalog.value;
-      final hasError = controller.catalogError.value.isNotEmpty;
-      final hasData = controller.catalogs.isNotEmpty;
+      final summary = controller.dashboardSummary.value;
+      final isLoading = controller.isLoadingSummary.value;
 
-      if (hasError && !hasData) {
-        return Column(
+      return Skeletonizer(
+        enabled: isLoading,
+        child: Row(
           children: [
-            Text(controller.catalogError.value, style: AppTypography.bodySmall.copyWith(color: AppColors.errorColor)),
-            TextButton(onPressed: controller.fetchCatalogs, child: const Text('Coba Lagi')),
+            Expanded(
+              child: _summaryCard(
+                size: size,
+                icon: Icons.bookmark,
+                label: 'SAVED DESIGNS',
+                value: '${summary?.totalSavedDesigns ?? 0}',
+              ),
+            ),
+            const SizedBox(width: 8),
+
+            Expanded(
+              child: _summaryCard(
+                size: size,
+                icon: Icons.people,
+                label: 'SAVED ARCHITECTS',
+                value: '${summary?.totalSavedArchitects ?? 0}',
+              ),
+            ),
+            const SizedBox(width: 8),
+
+            Expanded(
+              child: _summaryCard(
+                size: size,
+                icon: Icons.chat_bubble,
+                label: 'CONSULTATIONS',
+                value: '${summary?.totalConsultations ?? 0}',
+              ),
+            ),
           ],
-        );
-      }
-
-      // final catalogs = hasData ? controller.catalogs.take(3).toList() : List.generate(3, (_) => Catalog.dummy());
-      final catalogs = controller.catalogs.take(3).toList();
-
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Skeletonizer(
-            enabled: isLoading,
-            child: Column(
-              children: List.generate(catalogs.length, (index) {
-                final isLast = index == catalogs.length - 1;
-                return Padding(
-                  padding: EdgeInsets.only(bottom: isLast ? 0 : AppDimensions.spacingXLarge),
-                  child: _catalogItem(
-                    size: size,
-                    catalog: catalogs[index],
-                    // onTap: hasData ? () => controller.openDetailsFromHome(catalogs[index].id) : null,
-                    onTap: () => controller.openDetailsFromHome(catalogs[index].id),
-                  ),
-                );
-              }),
-            ),
-          ),
-
-          if (!isLoading && !hasData)
-            Padding(
-              padding: const EdgeInsets.only(top: AppDimensions.spacingXLarge),
-              child: Text(emptyMessage, style: AppTypography.bodySmall.copyWith(color: AppColors.textBodyColor)),
-            ),
-        ],
+        ),
       );
     });
   }
 
-  Widget _performanceCard({
+  Widget _summaryCard({
     required Size size,
     required IconData icon,
     required String label,
@@ -341,7 +238,8 @@ class UserHomeView extends GetView<HomeController> {
               const SizedBox(height: 12),
               Text(
                 label,
-                style: AppTypography.bodySmall.copyWith(
+                textAlign: TextAlign.center,
+                style: AppTypography.captionLarge.copyWith(
                   color: const Color(0xFF8A9A9E),
                   fontWeight: FontWeight.w700,
                   letterSpacing: 0.5,
@@ -375,6 +273,368 @@ class UserHomeView extends GetView<HomeController> {
       ],
     );
   }
+
+  // ─── Featured of the Week ────────────────────────────────────────────
+
+  Widget _featuredSection(Size size) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Featured of the Week',
+          style: AppTypography.headingSmall.copyWith(color: AppColors.textHeadingColor, fontWeight: FontWeight.w700),
+        ),
+        AppDimensions.spacingLarge.sh,
+        _featuredCard(size),
+        AppDimensions.spacingLarge.sh,
+        _styleFilterChips(),
+      ],
+    );
+  }
+
+  Widget _featuredCard(Size size) {
+    return Obx(() {
+      final featured = controller.featuredDesign.value;
+      final isLoading = controller.isLoadingFeatured.value;
+
+      if (isLoading) {
+        return Skeletonizer(
+          enabled: true,
+          child: Container(
+            height: size.height * 0.24,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: AppColors.subtleSurfaceColor,
+              borderRadius: BorderRadius.circular(AppDimensions.radius2XLarge),
+            ),
+          ),
+        );
+      }
+
+      if (featured == null) {
+        return Container(
+          height: size.height * 0.18,
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: AppColors.subtleSurfaceColor.withValues(alpha: 0.5),
+            borderRadius: BorderRadius.circular(AppDimensions.radius2XLarge),
+          ),
+          child: Center(
+            child: Text(
+              'No featured design this week',
+              style: AppTypography.bodyMedium.copyWith(color: AppColors.textBodyColor),
+            ),
+          ),
+        );
+      }
+
+      final image = featured.images.isNotEmpty ? featured.images.first : '';
+      final style = featured.style.toUpperCase();
+
+      return GestureDetector(
+        onTap: () => controller.openDetailsFromHome(featured.id),
+        child: Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppDimensions.radius2XLarge),
+            boxShadow: const [BoxShadow(color: AppColors.shadowSoftColor, blurRadius: 12, offset: Offset(0, 6))],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(AppDimensions.radius2XLarge),
+            child: Stack(
+              children: [
+                AspectRatio(
+                  aspectRatio: 1.6,
+                  child:
+                      image.isNotEmpty
+                          ? Image.network(
+                            image,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => Image.asset(_dummyImage, fit: BoxFit.cover),
+                          )
+                          : Image.asset(_dummyImage, fit: BoxFit.cover),
+                ),
+                // Gradient overlay
+                Positioned.fill(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [Colors.transparent, Colors.black.withValues(alpha: 0.65)],
+                        stops: const [0.35, 1.0],
+                      ),
+                    ),
+                  ),
+                ),
+                // Style badge
+                Positioned(
+                  top: 12,
+                  left: 12,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(color: AppColors.primaryColor, borderRadius: BorderRadius.circular(6)),
+                    child: Text(
+                      style,
+                      style: AppTypography.bodySmall.copyWith(
+                        color: AppColors.whiteColor,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 10,
+                      ),
+                    ),
+                  ),
+                ),
+                // Bottom info
+                Positioned(
+                  bottom: 14,
+                  left: 14,
+                  right: 14,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        featured.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTypography.bodyLarge.copyWith(
+                          color: AppColors.whiteColor,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 18,
+                        ),
+                      ),
+                      6.0.sh,
+                      Row(
+                        children: [
+                          Icon(Icons.square_foot_rounded, color: AppColors.whiteColor.withValues(alpha: 0.85), size: 14),
+                          4.0.sw,
+                          Text(
+                            featured.areaRaw,
+                            style: AppTypography.bodySmall.copyWith(
+                              color: AppColors.whiteColor.withValues(alpha: 0.85),
+                              fontSize: 12,
+                            ),
+                          ),
+                          12.0.sw,
+                          Icon(Icons.favorite_rounded, color: AppColors.whiteColor.withValues(alpha: 0.85), size: 14),
+                          4.0.sw,
+                          Text(
+                            '${featured.likesCount}',
+                            style: AppTypography.bodySmall.copyWith(
+                              color: AppColors.whiteColor.withValues(alpha: 0.85),
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    });
+  }
+
+  Widget _styleFilterChips() {
+    return Obx(() {
+      final selected = controller.selectedFeaturedStyle.value;
+
+      return SizedBox(
+        height: 36,
+        child: ListView.separated(
+          scrollDirection: Axis.horizontal,
+          clipBehavior: Clip.none,
+          itemCount: _styleFilters.length,
+          separatorBuilder: (_, __) => 8.0.sw,
+          itemBuilder: (_, index) {
+            final filter = _styleFilters[index];
+            final isActive = selected == filter['value'];
+
+            return GestureDetector(
+              onTap: () => controller.changeFeaturedStyle(filter['value']!),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: isActive ? AppColors.primaryColor : AppColors.whiteColor,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: isActive ? AppColors.primaryColor : AppColors.formBorderColor.withValues(alpha: 0.35),
+                  ),
+                ),
+                child: Text(
+                  filter['label']!,
+                  style: AppTypography.bodySmall.copyWith(
+                    color: isActive ? AppColors.whiteColor : AppColors.textBodyColor,
+                    fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      );
+    });
+  }
+
+  // ─── AI Assistant ────────────────────────────────────────────────────
+
+  Widget _aiAssistantSection(Size size) {
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.symmetric(horizontal: size.width * 0.04, vertical: size.height * 0.018),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFFF59E0B), Color(0xFFD97706)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(AppDimensions.radius2XLarge),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: size.width * 0.12,
+            height: size.width * 0.12,
+            decoration: BoxDecoration(color: AppColors.whiteColor.withValues(alpha: 0.22), shape: BoxShape.circle),
+            child: Icon(Icons.smart_toy_outlined, color: AppColors.whiteColor, size: size.width * 0.058),
+          ),
+          SizedBox(width: size.width * 0.03),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'AI Architecture Assistant',
+                  style: AppTypography.bodyLarge.copyWith(
+                    color: AppColors.whiteColor,
+                    fontWeight: FontWeight.w700,
+                    height: 1.12,
+                  ),
+                ),
+                AppDimensions.spacingXSmall.sh,
+                Text(
+                  'Describe your dream home and let\n'
+                  'our pro-level AI engine generate\n'
+                  'architectural concepts for you\n'
+                  'instantly.',
+                  style: AppTypography.bodySmall.copyWith(
+                    color: AppColors.whiteColor.withValues(alpha: 0.88),
+                    height: 1.3,
+                    fontSize: 11,
+                  ),
+                ),
+                AppDimensions.spacingMedium.sh,
+                GestureDetector(
+                  onTap: controller.openAiChatFromHome,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(color: AppColors.whiteColor, borderRadius: BorderRadius.circular(8)),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Chat Now',
+                          style: AppTypography.bodySmall.copyWith(
+                            color: AppColors.primaryColor,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        4.0.sw,
+                        const Icon(Icons.arrow_forward_rounded, color: AppColors.primaryColor, size: 16),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ─── Recommended for You ─────────────────────────────────────────────
+
+  Widget _recommendedSection(Size size) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                'Recommended for You',
+                style: AppTypography.headingSmall.copyWith(color: AppColors.textHeadingColor, fontWeight: FontWeight.w700),
+              ),
+            ),
+            CustomTextButton(
+              text: 'See all design',
+              onPressed: () => controller.openDesignFromHome(),
+              style: AppTypography.bodyMedium.copyWith(color: AppColors.primaryColor, fontWeight: FontWeight.w700),
+            ),
+          ],
+        ),
+        AppDimensions.spacingLarge.sh,
+        _recommendedList(size),
+      ],
+    );
+  }
+
+  Widget _recommendedList(Size size) {
+    return Obx(() {
+      final isLoading = controller.isLoadingRecommended.value;
+      final designs = controller.recommendedDesigns;
+
+      if (isLoading) {
+        return Skeletonizer(
+          enabled: true,
+          child: Column(
+            children: List.generate(
+              2,
+              (i) => Padding(
+                padding: EdgeInsets.only(bottom: i == 0 ? 16 : 0),
+                child: Container(
+                  height: size.height * 0.26,
+                  decoration: BoxDecoration(
+                    color: AppColors.subtleSurfaceColor,
+                    borderRadius: BorderRadius.circular(AppDimensions.radius2XLarge),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      }
+
+      if (designs.isEmpty) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 24),
+          child: Center(
+            child: Text('No recommendations yet', style: AppTypography.bodyMedium.copyWith(color: AppColors.textBodyColor)),
+          ),
+        );
+      }
+
+      return Column(
+        children: List.generate(designs.length, (index) {
+          final isLast = index == designs.length - 1;
+          return Padding(
+            padding: EdgeInsets.only(bottom: isLast ? 0 : AppDimensions.spacingXLarge),
+            child: _catalogItem(
+              size: size,
+              catalog: designs[index],
+              onTap: () => controller.openDetailsFromHome(designs[index].id),
+            ),
+          );
+        }),
+      );
+    });
+  }
+
+  // ─── Catalog Item (design card) ──────────────────────────────────────
 
   Widget _catalogItem({required Size size, required Catalog catalog, VoidCallback? onTap}) {
     final String label = catalog.style.toUpperCase();
@@ -420,24 +680,6 @@ class UserHomeView extends GetView<HomeController> {
                             : Image.asset(_dummyImage, fit: BoxFit.cover),
                   ),
                 ),
-
-                // Positioned(
-                //   top: size.width * 0.02,
-                //   right: size.width * 0.02,
-                //   child: Container(
-                //     width: size.width * 0.085,
-                //     height: size.width * 0.085,
-                //     decoration: const BoxDecoration(
-                //       color: AppColors.whiteColor,
-                //       shape: BoxShape.circle,
-                //     ),
-                //     child: Icon(
-                //       Icons.bookmark_border_rounded,
-                //       size: size.width * 0.05,
-                //       color: AppColors.accentColor,
-                //     ),
-                //   ),
-                // ),
                 Positioned(
                   bottom: size.width * 0.03,
                   left: 0,
@@ -506,9 +748,7 @@ class UserHomeView extends GetView<HomeController> {
                                 ),
                               ],
                             ),
-
                             8.0.sh,
-
                             Text(
                               title,
                               maxLines: 2,
@@ -521,9 +761,7 @@ class UserHomeView extends GetView<HomeController> {
                           ],
                         ),
                       ),
-
                       8.0.sw,
-
                       Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -535,9 +773,7 @@ class UserHomeView extends GetView<HomeController> {
                               size: AppDimensions.iconSizeLarge,
                             ),
                           ),
-
                           2.0.sh,
-
                           Text(
                             likesCount,
                             textAlign: TextAlign.center,
@@ -559,116 +795,119 @@ class UserHomeView extends GetView<HomeController> {
     );
   }
 
-  Widget _aiAssistantSection(Size size) {
-    return Skeletonizer(
-      enabled: controller.isLoadingArchitect.value,
-      child: Container(
-        width: double.infinity,
-        padding: EdgeInsets.symmetric(horizontal: size.width * 0.04, vertical: size.height * 0.018),
-        decoration: BoxDecoration(
-          color: AppColors.primaryColor,
-          borderRadius: BorderRadius.circular(AppDimensions.radius2XLarge),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: size.width * 0.12,
-              height: size.width * 0.12,
-              decoration: BoxDecoration(color: AppColors.whiteColor.withValues(alpha: 0.18), shape: BoxShape.circle),
-              child: Icon(Icons.smart_toy_outlined, color: AppColors.whiteColor, size: size.width * 0.058),
-            ),
-            SizedBox(width: size.width * 0.03),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'AI Architecture\nAssistant',
-                    style: AppTypography.bodyLarge.copyWith(
-                      color: AppColors.whiteColor,
-                      fontWeight: FontWeight.w700,
-                      height: 1.12,
-                    ),
-                  ),
-                  AppDimensions.spacingXSmall.sh,
-                  Text(
-                    'Describe your dream home and let AI\n'
-                    'generate a concept for you.',
-                    style: AppTypography.bodySmall.copyWith(
-                      color: AppColors.whiteColor.withValues(alpha: 0.88),
-                      height: 1.2,
-                    ),
-                  ),
-                ],
+  // ─── Search ──────────────────────────────────────────────────────────
+
+  Widget _searchSection(Size size, {required String hintText}) {
+    return Container(
+      height: size.height * 0.062,
+      padding: EdgeInsets.symmetric(horizontal: size.width * 0.03),
+      decoration: BoxDecoration(
+        color: AppColors.whiteColor,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusXLarge),
+        border: Border.all(color: AppColors.formBorderColor.withValues(alpha: 0.35)),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.search_rounded, color: AppColors.primaryColor, size: size.width * 0.055),
+          SizedBox(width: size.width * 0.02),
+          Expanded(
+            child: TextField(
+              controller: controller.searchController,
+              decoration: InputDecoration(
+                isCollapsed: true,
+                border: InputBorder.none,
+                hintText: hintText,
+                hintStyle: AppTypography.bodySmall.copyWith(color: AppColors.textBodyColor.withValues(alpha: 0.55)),
               ),
+              style: AppTypography.bodyMedium.copyWith(color: AppColors.textHeadingColor),
             ),
-            ElevatedButton(
-              onPressed: controller.openAiChatFromHome,
-              style: ElevatedButton.styleFrom(
-                elevation: 0,
-                backgroundColor: AppColors.whiteColor,
-                foregroundColor: AppColors.primaryColor,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimensions.radiusLarge)),
-                padding: EdgeInsets.symmetric(horizontal: size.width * 0.045, vertical: size.height * 0.012),
-              ),
-              child: Text(
-                'Chat Now',
-                style: AppTypography.bodySmall.copyWith(fontWeight: FontWeight.w700, color: AppColors.primaryColor),
-              ),
-            ),
-          ],
-        ),
+          ),
+          Obx(() {
+            if (controller.searchQuery.value.trim().isEmpty) {
+              return const SizedBox.shrink();
+            }
+
+            return GestureDetector(
+              onTap: () {
+                controller.searchController.clear();
+                controller.searchQuery.value = '';
+                controller.searchedArchitects.clear();
+                controller.searchedCatalogs.clear();
+              },
+              child: Icon(Icons.close_rounded, color: AppColors.textBodyColor, size: size.width * 0.05),
+            );
+          }),
+        ],
       ),
     );
   }
 
-  Widget _architectHeaderSection() {
-    return Text(
-      'Top Architects',
-      style: AppTypography.headingSmall.copyWith(color: AppColors.textHeadingColor, fontWeight: FontWeight.w700),
-    );
-  }
-
-  Widget _architectSection(Size size) {
+  Widget _searchResultSection(Size size) {
     return Obx(() {
-      final isLoading = controller.isLoadingArchitect.value;
-      final hasError = controller.architectError.value.isNotEmpty;
-      final hasData = controller.architects.isNotEmpty;
+      if (!controller.isSearchMode) {
+        return const SizedBox.shrink();
+      }
 
-      if (hasError && !hasData) {
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(controller.architectError.value, style: AppTypography.bodySmall.copyWith(color: AppColors.errorColor)),
-            TextButton(onPressed: controller.fetchArchitects, child: const Text('Coba Lagi')),
-          ],
+      if (controller.isSearching.value) {
+        return const Center(child: CircularProgressIndicator());
+      }
+
+      if (controller.searchedArchitects.isEmpty && controller.searchedCatalogs.isEmpty) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 40),
+          child: Center(child: Text('No result found', style: AppTypography.bodyMedium)),
         );
       }
 
-      final architects = controller.architects.take(3).toList();
-      final showMore = controller.architects.length > 3;
-
-      return Skeletonizer(
-        enabled: isLoading && !hasData,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            ...architects.map(
-              (a) => _architectItem(
-                size: size,
-                name: a.name,
-                avatarUrl: a.profilePicture,
-                onTap: () => controller.openArchitectPortofolio(a),
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (controller.searchedArchitects.isNotEmpty) ...[
+            Row(
+              children: [
+                Expanded(child: Text('Architects', style: AppTypography.headingSmall.copyWith(fontWeight: FontWeight.w700))),
+                CustomTextButton(
+                  text: 'See all',
+                  onPressed: () => controller.openArchitectFromHome(),
+                  style: AppTypography.bodyMedium.copyWith(color: AppColors.primaryColor, fontWeight: FontWeight.w700),
+                ),
+              ],
+            ),
+            12.0.sh,
+            ...controller.searchedArchitects.map(
+              (architect) => Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: _architectCard(size: size, architect: architect),
               ),
             ),
-
-            if (showMore)
-              _architectItem(size: size, name: 'More', isMore: true, onTap: () => controller.openPortofolioFromHome()),
+            20.0.sh,
           ],
-        ),
+          if (controller.searchedCatalogs.isNotEmpty) ...[
+            Row(
+              children: [
+                Expanded(child: Text('Designs', style: AppTypography.headingSmall.copyWith(fontWeight: FontWeight.w700))),
+                CustomTextButton(
+                  text: 'See all',
+                  onPressed: () => controller.openDesignFromHome(),
+                  style: AppTypography.bodyMedium.copyWith(color: AppColors.primaryColor, fontWeight: FontWeight.w700),
+                ),
+              ],
+            ),
+            12.0.sh,
+            ...controller.searchedCatalogs.map(
+              (catalog) => Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: _catalogItem(size: size, catalog: catalog, onTap: () => controller.openDetailsFromHome(catalog.id)),
+              ),
+            ),
+            20.0.sh,
+          ],
+        ],
       );
     });
   }
+
+  // ─── Architect Card (for search results) ─────────────────────────────
 
   Widget _architectCard({required Size size, required Architect architect}) {
     final projectsCount = controller.projectCompletedCount(architect);
@@ -778,66 +1017,48 @@ class UserHomeView extends GetView<HomeController> {
             ),
           );
         }),
-
         if (hiddenCount > 0) Expanded(child: _moreThumb(size: size, label: '+$hiddenCount')),
       ],
     );
   }
 
-  Widget _architectItem({
-    required Size size,
-    required String name,
-    String? avatarUrl,
-    bool isMore = false,
-    VoidCallback? onTap,
-  }) {
-    final imageSize = size.width * 0.116;
+  // ─── Floating Action Buttons ─────────────────────────────────────────
 
-    return SizedBox(
-      width: size.width * 0.19,
-      child: Column(
-        children: [
-          InkWell(
-            borderRadius: BorderRadius.circular(AppDimensions.radiusRound),
-            onTap: onTap,
-            child: CircleAvatar(
-              radius: size.width * 0.058,
-              backgroundColor: isMore ? AppColors.secondaryColor.withValues(alpha: 0.22) : AppColors.whiteColor,
-              child: ClipOval(
-                child:
-                    isMore
-                        ? Icon(Icons.add, color: AppColors.primaryColor, size: size.width * 0.055)
-                        : (avatarUrl != null && avatarUrl.isNotEmpty)
-                        ? Image.network(
-                          avatarUrl,
-                          width: imageSize,
-                          height: imageSize,
-                          fit: BoxFit.cover,
-                          errorBuilder:
-                              (_, __, ___) =>
-                                  Image.asset(_dummyAvatar, width: imageSize, height: imageSize, fit: BoxFit.cover),
-                        )
-                        : Image.asset(_dummyAvatar, width: imageSize, height: imageSize, fit: BoxFit.cover),
-              ),
+  Widget _floatingActionButton() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        FloatingActionButton(
+          heroTag: 'ai_chat_fab',
+          onPressed: controller.openAiChatFromHome,
+          backgroundColor: AppColors.primaryColor,
+          elevation: 4,
+          child: const ImageIcon(AssetImage('assets/icons/ai-bot.png'), size: 24, color: AppColors.whiteColor),
+        ),
+        const SizedBox(height: 12),
+        Stack(
+          clipBehavior: Clip.none,
+          children: [
+            FloatingActionButton(
+              heroTag: 'chat_fab',
+              onPressed: controller.openChatListFromHome,
+              backgroundColor: AppColors.primaryColor,
+              elevation: 4,
+              child: const Icon(Icons.chat_bubble_rounded, color: AppColors.whiteColor),
             ),
-          ),
-          AppDimensions.spacingSmall.sh,
-          Text(
-            name,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: AppTypography.bodySmall.copyWith(color: isMore ? AppColors.textBodyColor : AppColors.textHeadingColor),
-          ),
-        ],
-      ),
+          ],
+        ),
+      ],
     );
   }
+
+  // ─── Helpers ─────────────────────────────────────────────────────────
 
   String _projectImage(Catalog catalog) {
     if (catalog.images.isNotEmpty) {
       return catalog.images.first;
     }
-
     return _dummyImage;
   }
 

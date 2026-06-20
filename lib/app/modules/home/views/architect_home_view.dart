@@ -24,34 +24,40 @@ class ArchitectHomeView extends GetView<HomeController> {
       backgroundColor: AppColors.whiteColor,
       floatingActionButton: _floatingActionButton(),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: EdgeInsets.symmetric(horizontal: size.width * 0.05, vertical: size.height * 0.01),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _headerSection(size),
-              AppDimensions.spacingXLarge.sh,
-              _searchSection(size, hintText: 'Search Design or Architects'),
-              AppDimensions.spacing2XLarge.sh,
-              Obx(() {
-                if (controller.isSearchMode) {
-                  return _searchResultSection(size);
-                }
+        child: RefreshIndicator(
+          onRefresh: controller.refreshDashboard,
+          color: AppColors.primaryColor,
+          backgroundColor: AppColors.whiteColor,
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: EdgeInsets.symmetric(horizontal: size.width * 0.05, vertical: size.height * 0.01),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _headerSection(size),
+                AppDimensions.spacingXLarge.sh,
+                _searchSection(size, hintText: 'Search Design or Architects'),
+                AppDimensions.spacing2XLarge.sh,
+                Obx(() {
+                  if (controller.isSearchMode) {
+                    return _searchResultSection(size);
+                  }
 
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _performanceHeaderSection(),
-                    AppDimensions.spacingSemibold.sh,
-                    _performanceSection(size),
-                    AppDimensions.spacingXLarge.sh,
-                    _activeProjectsHeaderSection(),
-                    AppDimensions.spacingSemibold.sh,
-                    _activeProjectSection(size),
-                  ],
-                );
-              }),
-            ],
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _performanceHeaderSection(),
+                      AppDimensions.spacingSemibold.sh,
+                      _performanceSection(size),
+                      AppDimensions.spacingXLarge.sh,
+                      _activeProjectsHeaderSection(),
+                      AppDimensions.spacingSemibold.sh,
+                      _activeProjectSection(size),
+                    ],
+                  );
+                }),
+              ],
+            ),
           ),
         ),
       ),
@@ -351,7 +357,7 @@ class ArchitectHomeView extends GetView<HomeController> {
               const SizedBox(height: 12),
               Text(
                 label,
-                style: AppTypography.bodySmall.copyWith(
+                style: AppTypography.captionLarge.copyWith(
                   color: const Color(0xFF8A9A9E),
                   fontWeight: FontWeight.w700,
                   letterSpacing: 0.5,
