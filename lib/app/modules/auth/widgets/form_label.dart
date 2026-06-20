@@ -10,10 +10,7 @@ class FormLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       text,
-      style: AppTypography.bodyMedium.copyWith(
-        color: AppColors.textBlackColor,
-        fontWeight: FontWeight.w600,
-      ),
+      style: AppTypography.bodyMedium.copyWith(color: AppColors.textLabelColor, fontWeight: FontWeight.w600),
     );
   }
 }

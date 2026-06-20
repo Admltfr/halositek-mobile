@@ -48,3 +48,4 @@ app.*.map.json
 .flutter
 .flutter_tool_state
 .dart-tool/
+.dart_tool_home/

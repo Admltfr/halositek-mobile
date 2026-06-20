@@ -5,6 +5,14 @@ import 'auth_interceptor.dart';
 import 'auth_service.dart';
 import 'token_service.dart';
 
+class ApiException implements Exception {
+  final String message;
+  ApiException(this.message);
+
+  @override
+  String toString() => message;
+}
+
 class ApiClient {
   static final String? baseUrl = dotenv.env['BASEURL'];
   static final String url = '$baseUrl/api/v1';
@@ -26,23 +34,40 @@ class ApiClient {
     String message, {
     bool isCreated = false,
   }) async {
-    debugPrint('\x1B[31m ${response.data['message']}\x1B[0m');
+    final responseData = response.data;
+    if (responseData is Map) {
+      debugPrint('\x1B[31m ${responseData['message']}\x1B[0m');
+    }
+
     if (isCreated ? response.statusCode == 201 : response.statusCode == 200) {
       return await onSuccess();
     } else if (response.statusCode == 422) {
-      throw Exception('Validation error: ${response.data['message']}');
+      final errors = responseData is Map ? responseData['errors'] : null;
+
+      if (errors is Map && errors.isNotEmpty) {
+        final firstError = errors.values.first;
+
+        if (firstError is List && firstError.isNotEmpty) {
+          throw ApiException(firstError.first.toString());
+        }
+      }
+
+      throw ApiException('Validation error');
     } else if (response.statusCode == 500) {
-      throw Exception('Server error: ${response.data['message']}');
+      throw ApiException('Server error: ${responseData is Map ? responseData['message'] : 'Internal Server Error'}');
     } else if (response.statusCode == 401) {
-      throw Exception('Unauthorized: ${response.data['message']}');
+      throw ApiException('Unauthorized: ${responseData is Map ? responseData['message'] : 'Unauthorized'}');
     } else if (response.statusCode == 403) {
-      throw Exception('Forbidden: ${response.data['message']}');
+      throw ApiException('Forbidden: ${responseData is Map ? responseData['message'] : 'Forbidden'}');
     } else if (response.statusCode == 404) {
-      throw Exception('Not found: ${response.data['message']}');
+      throw ApiException('Not found: ${responseData is Map ? responseData['message'] : 'Not Found'}');
     } else if (response.statusCode == 409) {
-      throw Exception('Conflict: ${response.data['message']}');
+      throw ApiException('Conflict: ${responseData is Map ? responseData['message'] : 'Conflict'}');
+    } else if (response.statusCode == 503) {
+      throw ApiException(responseData is Map ? (responseData['message'] ?? 'Service Unavailable') : 'Service Unavailable');
     } else {
-      throw Exception('Failed to $message');
+      final String errMsg = responseData is Map ? (responseData['message'] ?? 'Failed to $message') : 'Failed to $message';
+      throw ApiException(errMsg);
     }
   }
 }

@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:halositek/app/core/constants/app_colors.dart';
 import 'package:halositek/app/data/models/award.dart';
 import 'package:halositek/app/data/models/catalog.dart';
+import 'package:halositek/app/data/models/consultation_status.dart';
 import 'package:halositek/app/data/network/architect_service.dart';
 import 'package:halositek/app/data/network/award_service.dart';
 import 'package:halositek/app/data/network/catalog_service.dart';
@@ -32,8 +33,9 @@ class PortofolioController extends GetxController {
   });
 
   MidtransSDK? _midtrans;
+  String? _pendingTransactionId;
 
-  final String? client_key = dotenv.env['CLIENT_KEY'];
+  final String? clientKey = dotenv.env['CLIENT_KEY'];
 
   final activeTab = 0.obs;
 
@@ -43,16 +45,30 @@ class PortofolioController extends GetxController {
   final isLoadingPortfolio = false.obs;
   final isLoadingAward = false.obs;
   final isLoadingArchitect = false.obs;
+  final isSavingArchitect = false.obs;
   final portfolioError = ''.obs;
   final awardError = ''.obs;
   final architectError = ''.obs;
 
   final isStartingChat = false.obs;
   final paymentError = ''.obs;
+  final hasPendingPayment = false.obs;
+
+  final consultationStatus = Rxn<ConsultationCheckStatus>();
+  final isLoadingConsultationStatus = false.obs;
 
   final architectName = 'David Larsson'.obs;
   final architectTitle = 'Principal Architect'.obs;
   final experienceLabel = "15 Years Experience".obs;
+  final architectPhoto = ''.obs;
+  final architectBio =
+      'Specializing in sustainable modern residential architecture and urban planning with a focus on minimalist aesthetics and eco-friendly materials.'
+          .obs;
+  final totalProjects = 0.obs;
+  final totalAwards = 0.obs;
+  final consultationFee = 25000.obs;
+  final consultationDuration = 2.obs;
+  final isWishlisted = RxnBool();
 
   @override
   void onInit() {
@@ -60,6 +76,7 @@ class PortofolioController extends GetxController {
     fetchPortfolios();
     fetchAwards();
     fetchArchitect();
+    fetchConsultationStatus();
     _initMidtrans();
   }
 
@@ -70,22 +87,71 @@ class PortofolioController extends GetxController {
     nav.onPop();
   }
 
+  Future<void> refreshPortofolio() async {
+    await Future.wait([
+      fetchArchitect(),
+      fetchPortfolios(),
+      fetchAwards(),
+      fetchConsultationStatus(),
+    ]);
+  }
+
   Future<void> fetchArchitect() async {
-    debugPrint('\x1B[31m ${architectId}\x1B[0m');
+    debugPrint('\x1B[31m $architectId\x1B[0m');
     try {
       isLoadingArchitect.value = true;
       architectError.value = '';
       final architect = await _architectService.getArchitectById(architectId);
       architectName.value = architect.name;
+      architectPhoto.value = architect.profilePicture;
       architectTitle.value =
           architect.headline.isNotEmpty
               ? architect.headline
               : architectTitle.value;
-      experienceLabel.value = '${architect.totalProjects} Projects';
+      experienceLabel.value =
+          architect.specialization.isNotEmpty
+              ? architect.specialization
+              : '${architect.totalProjects} Projects';
+      architectBio.value =
+          architect.bio.isNotEmpty ? architect.bio : architectBio.value;
+      totalProjects.value = architect.totalProjects;
+      totalAwards.value = architect.totalAwards;
+      consultationFee.value = architect.consultationFee;
+      consultationDuration.value =
+          architect.consultationDuration > 0
+              ? architect.consultationDuration
+              : consultationDuration.value;
+      isWishlisted.value = architect.isWishlisted;
     } catch (e) {
       architectError.value = e.toString();
     } finally {
       isLoadingArchitect.value = false;
+    }
+  }
+
+  Future<void> toggleSaveArchitect() async {
+    if (isSavingArchitect.value) return;
+
+    final architectIdValue = architectId.trim();
+    if (architectIdValue.isEmpty) {
+      Get.snackbar('Gagal', 'Architect ID tidak ditemukan');
+      return;
+    }
+
+    isSavingArchitect.value = true;
+
+    try {
+      if (isWishlisted.value == true) {
+        await _architectService.unsaveArchitect(architectIdValue);
+      } else {
+        await _architectService.saveArchitect(architectIdValue);
+      }
+
+      await fetchArchitect();
+    } catch (e) {
+      Get.snackbar('Gagal', e.toString());
+    } finally {
+      isSavingArchitect.value = false;
     }
   }
 
@@ -124,7 +190,7 @@ class PortofolioController extends GetxController {
   Future<void> _initMidtrans() async {
     _midtrans = await MidtransSDK.init(
       config: MidtransConfig(
-        clientKey: client_key ?? '',
+        clientKey: clientKey ?? '',
         merchantBaseUrl: 'https://app.sandbox.midtrans.com/',
         colorTheme: ColorTheme(
           colorPrimary: AppColors.primaryColor,
@@ -144,6 +210,74 @@ class PortofolioController extends GetxController {
     });
   }
 
+  Future<void> fetchConsultationStatus() async {
+    final architectIdValue = architectId.trim();
+    if (architectIdValue.isEmpty) return;
+
+    try {
+      isLoadingConsultationStatus.value = true;
+      final status = await _paymentService.checkConsultationStatus(
+        architectIdValue,
+      );
+      consultationStatus.value = status;
+
+      // Sync pending payment data if status is pending_payment
+      if (status.isPendingPayment && status.transactionId != null) {
+        _pendingTransactionId = status.transactionId;
+        hasPendingPayment.value = true;
+      }
+    } catch (e) {
+      debugPrint('\x1B[31m CHECK STATUS ERROR: $e\x1B[0m');
+    } finally {
+      isLoadingConsultationStatus.value = false;
+    }
+  }
+
+  /// Routes to the correct action based on consultation status
+  void handleChatButtonAction() {
+    final status = consultationStatus.value;
+    if (status == null) return;
+
+    if (status.isSessionActive) {
+      // Open existing chat
+      final conversationId = status.conversationId ?? '';
+      if (conversationId.isNotEmpty) {
+        _openChat(conversationId);
+      } else {
+        Get.snackbar('Gagal', 'Conversation ID tidak ditemukan');
+      }
+    } else if (status.isPendingPayment) {
+      // Resume pending payment via Midtrans
+      _resumePendingPayment(status);
+    } else {
+      // no_session: initiate new payment
+      startConsultationChat();
+    }
+  }
+
+  Future<void> _resumePendingPayment(ConsultationCheckStatus status) async {
+    if (isStartingChat.value) return;
+
+    final snapToken = status.snapToken ?? '';
+    if (snapToken.isEmpty) {
+      Get.snackbar('Gagal', 'Snap token tidak ditemukan');
+      return;
+    }
+
+    isStartingChat.value = true;
+    paymentError.value = '';
+
+    try {
+      _pendingTransactionId = status.transactionId;
+      await _midtrans?.startPaymentUiFlow(token: snapToken);
+    } catch (e) {
+      paymentError.value = e.toString();
+      Get.snackbar('Gagal', e.toString());
+    } finally {
+      isStartingChat.value = false;
+    }
+  }
+
   Future<void> startConsultationChat() async {
     if (isStartingChat.value) return;
 
@@ -160,6 +294,8 @@ class PortofolioController extends GetxController {
       final initiation = await _paymentService.initiate(
         architectId: architectIdValue,
       );
+      _pendingTransactionId = initiation.transactionId;
+      hasPendingPayment.value = initiation.transactionId.isNotEmpty;
 
       await _midtrans?.startPaymentUiFlow(token: initiation.snapToken);
     } catch (e) {
@@ -171,12 +307,49 @@ class PortofolioController extends GetxController {
   }
 
   Future<void> _onPaymentFinished(TransactionResult result) async {
-    if (result.status == 'cancel') {
-      Get.snackbar('Dibatalkan', 'Pembayaran dibatalkan.');
+    isStartingChat.value = true;
+    paymentError.value = '';
+
+    try {
+      if (result.status == 'cancel') {
+        Get.snackbar('Dibatalkan', 'Pembayaran dibatalkan.');
+        return;
+      }
+
+      await _checkPaymentStatus();
+    } catch (e) {
+      paymentError.value = e.toString();
+      Get.snackbar('Gagal', e.toString());
+    } finally {
+      isStartingChat.value = false;
+      // Refresh consultation status after payment flow
+      fetchConsultationStatus();
+    }
+  }
+
+  Future<void> checkPaymentStatus() async {
+    if (isStartingChat.value) return;
+
+    final transactionId = _pendingTransactionId?.trim() ?? '';
+    if (transactionId.isEmpty) {
       return;
     }
 
-    final transactionId = result.transactionId ?? '';
+    isStartingChat.value = true;
+    paymentError.value = '';
+
+    try {
+      await _checkPaymentStatus();
+    } catch (e) {
+      paymentError.value = e.toString();
+      Get.snackbar('Gagal', e.toString());
+    } finally {
+      isStartingChat.value = false;
+    }
+  }
+
+  Future<void> _checkPaymentStatus() async {
+    final transactionId = _pendingTransactionId?.trim() ?? '';
     if (transactionId.isEmpty) {
       return;
     }
@@ -184,6 +357,8 @@ class PortofolioController extends GetxController {
     final status = await _paymentService.getStatus(transactionId);
 
     if (status.canEnterConsultation) {
+      hasPendingPayment.value = false;
+      _pendingTransactionId = null;
       final conversationId =
           status.conversationId.isNotEmpty
               ? status.conversationId
@@ -193,6 +368,7 @@ class PortofolioController extends GetxController {
 
       _openChat(conversationId);
     } else {
+      hasPendingPayment.value = true;
       Get.snackbar('Pending', 'Pembayaran belum selesai.');
     }
   }
@@ -202,6 +378,7 @@ class PortofolioController extends GetxController {
       () => const ChatDetailView(),
       binding: ChatDetailBinding(
         conversationId: conversationId,
+        consultationId: consultationStatus.value?.consultationId ?? '',
         title: architectName.value,
       ),
     );

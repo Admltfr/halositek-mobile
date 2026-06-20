@@ -17,15 +17,7 @@ class RegisterView extends GetView<RegisterController> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    return Scaffold(
-      body: Stack(
-        children: [
-          HeroBg(size: size),
-          _overlayText(size),
-          _registerForm(size, controller),
-        ],
-      ),
-    );
+    return Scaffold(body: Stack(children: [HeroBg(size: size), _overlayText(size), _registerForm(size, controller)]));
   }
 
   Widget _overlayText(Size size) {
@@ -35,19 +27,9 @@ class RegisterView extends GetView<RegisterController> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'HaloSitek',
-            style: AppTypography.headingLarge.copyWith(
-              color: AppColors.primaryColor,
-            ),
-          ),
+          Text('HaloSitek', style: AppTypography.headingLarge.copyWith(color: AppColors.primaryColor)),
           AppDimensions.spacingXSmall.sh,
-          Text(
-            'Create Your Dream Home with Experts',
-            style: AppTypography.bodyMedium.copyWith(
-              color: AppColors.whiteColor,
-            ),
-          ),
+          Text('Create Your Dream Home with Experts', style: AppTypography.bodyMedium.copyWith(color: AppColors.whiteColor)),
         ],
       ),
     );
@@ -59,10 +41,7 @@ class RegisterView extends GetView<RegisterController> {
       child: Container(
         height: size.height * 0.85,
         width: double.infinity,
-        padding: EdgeInsets.symmetric(
-          horizontal: size.width * 0.06,
-          vertical: size.height * 0.035,
-        ),
+        padding: EdgeInsets.symmetric(horizontal: size.width * 0.06, vertical: size.height * 0.035),
         decoration: const BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.only(
@@ -78,39 +57,31 @@ class RegisterView extends GetView<RegisterController> {
                 'Create Your Account Here !',
                 style: AppTypography.headingMedium.copyWith(
                   color: AppColors.primaryColor,
+                  fontSize: 20,
                   fontWeight: FontWeight.w700,
                 ),
               ),
-              AppDimensions.spacingMedium.sh,
+              AppDimensions.spacingXSmall.sh,
               Text(
                 'Please proceed with the exploration',
-                style: AppTypography.bodyMedium.copyWith(
-                  color: AppColors.textBodyColor,
-                ),
+                style: AppTypography.bodyMedium.copyWith(color: AppColors.textLabelColor),
               ),
-              AppDimensions.spacing2XLarge.sh,
+              AppDimensions.spacing5XLarge.sh,
 
               Form(
+                key: controller.formKey,
                 autovalidateMode: AutovalidateMode.onUserInteraction,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     FormLabel(text: 'Email Address'),
                     AppDimensions.spacingMedium.sh,
-                    FormTextField(
-                      controller: controller.emailController,
-                      isObscure: false,
-                      fieldType: FormFieldType.email,
-                    ),
+                    FormTextField(controller: controller.emailController, isObscure: false, fieldType: FormFieldType.email),
                     AppDimensions.spacing3XLarge.sh,
 
                     FormLabel(text: 'Username'),
                     AppDimensions.spacingMedium.sh,
-                    FormTextField(
-                      controller: controller.nameController,
-                      isObscure: false,
-                      fieldType: FormFieldType.text,
-                    ),
+                    FormTextField(controller: controller.nameController, isObscure: false, fieldType: FormFieldType.text),
                     AppDimensions.spacing3XLarge.sh,
 
                     FormLabel(text: 'Password'),
@@ -143,12 +114,16 @@ class RegisterView extends GetView<RegisterController> {
                     FormLabel(text: 'Role'),
                     AppDimensions.spacingMedium.sh,
                     _dropdown(),
-                    AppDimensions.spacingSemibold.sh,
+                    AppDimensions.spacing5XLarge.sh,
                   ],
                 ),
               ),
 
-              FormButton(text: 'REGISTER', onPressed: controller.register),
+              Obx(() => FormButton(
+                text: 'REGISTER',
+                onPressed: controller.register,
+                isLoading: controller.isLoading.value,
+              )),
               AppDimensions.spacingMedium.sh,
 
               Center(
@@ -157,15 +132,9 @@ class RegisterView extends GetView<RegisterController> {
                   children: [
                     Text(
                       "Already have an account? ",
-                      style: AppTypography.bodyMedium.copyWith(
-                        color: AppColors.textBodyColor,
-                      ),
+                      style: AppTypography.bodyMedium.copyWith(color: AppColors.textBodyColor),
                     ),
-                    CustomTextButton(
-                      text: "Login now",
-                      onPressed: controller.gotoLogin,
-                      color: AppColors.infoColor,
-                    ),
+                    CustomTextButton(text: "Login now", onPressed: controller.gotoLogin, color: AppColors.infoColor),
                   ],
                 ),
               ),
@@ -181,10 +150,29 @@ class RegisterView extends GetView<RegisterController> {
       () => DropdownButtonFormField<String>(
         value: controller.role.value,
         items: [
-          DropdownMenuItem(value: UserRole.user.text, child: Text('User')),
+          DropdownMenuItem(
+            value: UserRole.user.text,
+            child: Text(
+              'User',
+              style: AppTypography.bodySmall.copyWith(
+                fontSize: 13,
+                letterSpacing: 1,
+                fontWeight: FontWeight.w700,
+                color: AppColors.blackColor,
+              ),
+            ),
+          ),
           DropdownMenuItem(
             value: UserRole.architect.text,
-            child: Text('Architect'),
+            child: Text(
+              'Architect',
+              style: AppTypography.bodySmall.copyWith(
+                fontSize: 13,
+                letterSpacing: 1,
+                fontWeight: FontWeight.w700,
+                color: AppColors.blackColor,
+              ),
+            ),
           ),
         ],
         onChanged: (value) {
@@ -192,12 +180,10 @@ class RegisterView extends GetView<RegisterController> {
             controller.role.value = value;
           }
         },
+        padding: EdgeInsets.all(AppDimensions.spacingXSmall),
         decoration: InputDecoration(
           isDense: true,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 10,
-            vertical: 10,
-          ),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(0),
             borderSide: const BorderSide(color: AppColors.formBorderColor),
@@ -206,9 +192,7 @@ class RegisterView extends GetView<RegisterController> {
             borderRadius: BorderRadius.circular(0),
             borderSide: const BorderSide(color: AppColors.formBorderColor),
           ),
-          focusedBorder: const OutlineInputBorder(
-            borderSide: BorderSide(color: AppColors.primaryColor, width: 1.4),
-          ),
+          focusedBorder: const OutlineInputBorder(borderSide: BorderSide(color: AppColors.primaryColor, width: 1.4)),
         ),
       ),
     );

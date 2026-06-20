@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart';
 import 'package:halositek/app/core/constants/app_enums.dart';
 import 'package:halositek/app/routes/route_middleware.dart';
@@ -28,5 +29,30 @@ extension CustomGetPage on GetPage {
       transition: transition,
       middlewares: [RoleMiddleware(allowedRoles: allowedRoles)],
     );
+  }
+}
+
+extension ImageUrlExtension on String {
+  String toImageUrl({String? baseUrl}) {
+    if (isEmpty) return '';
+
+    if (startsWith('http://') || startsWith('https://')) {
+      return this;
+    }
+
+    final domain = (baseUrl ?? dotenv.env['BASEURL'] ?? '').trim().replaceAll(
+      RegExp(r'\/+$'),
+      '',
+    );
+
+    if (startsWith('/storage')) {
+      return '$domain$this';
+    }
+
+    if (startsWith('storage/')) {
+      return '$domain/$this';
+    }
+
+    return '$domain/storage/$this';
   }
 }

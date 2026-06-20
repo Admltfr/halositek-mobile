@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import 'package:halositek/app/data/network/auth_service.dart';
 import 'package:halositek/app/data/network/token_service.dart';
+import 'package:halositek/app/data/network/websocket_service.dart';
 
 class SplashController extends GetxController {
   final TokenService _tokenService;
@@ -24,6 +25,7 @@ class SplashController extends GetxController {
       if (accessToken != null && accessToken.isNotEmpty) {
         await _authService.validateSession();
         isLoading.value = false;
+        Get.find<WebSocketService>().connect();
         Get.offAllNamed('/navigation', arguments: 0);
         return;
       }
@@ -33,6 +35,7 @@ class SplashController extends GetxController {
         if (newAccessToken != null) {
           await _authService.validateSession();
           isLoading.value = false;
+          Get.find<WebSocketService>().connect();
           Get.offAllNamed('/navigation', arguments: 0);
           return;
         }

@@ -4,7 +4,9 @@ import 'package:halositek/app/core/constants/app_colors.dart';
 import 'package:halositek/app/core/constants/app_dimensions.dart';
 import 'package:halositek/app/core/constants/app_extensions.dart';
 import 'package:halositek/app/core/constants/app_typography.dart';
+import 'package:halositek/app/data/models/architect.dart';
 import 'package:halositek/app/data/models/catalog.dart';
+import 'package:halositek/app/modules/profile/widgets/profile_formatters.dart';
 import 'package:skeletonizer/skeletonizer.dart';
 import '../controllers/detail_controller.dart';
 
@@ -50,9 +52,15 @@ class DetailView extends GetView<DetailController> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _topBar(size),
+                  8.0.sh,
+                  Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: size.width * 0.05,
+                    ),
+                    child: _topBar(size),
+                  ),
+                  8.0.sh,
                   _heroImage(size),
-                  _mainInfoCard(size, project),
                   Padding(
                     padding: EdgeInsets.symmetric(
                       horizontal: size.width * 0.05,
@@ -60,12 +68,86 @@ class DetailView extends GetView<DetailController> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        16.0.sh,
+                        _mainInfo(size, project),
+
+                        if (!controller.isArchitectRole.value) ...[
+                          Divider(
+                            color: AppColors.formBorderColor.withValues(
+                              alpha: 0.25,
+                            ),
+                          ),
+                          12.0.sh,
+                          _architectChatRow(size),
+                          16.0.sh,
+                        ],
+
                         _priceSection(size),
                         AppDimensions.spacingXLarge.sh,
                         _descriptionSection(project),
                         AppDimensions.spacingXLarge.sh,
                         _layoutSection(size),
-                        AppDimensions.spacing4XLarge.sh,
+                        36.0.sh,
+                        if (controller.isArchitectRole.value) ...[
+                          Row(
+                            children: [
+                              Expanded(
+                                child: OutlinedButton(
+                                  onPressed:
+                                      controller.isDeleting.value
+                                          ? null
+                                          : controller.confirmDeleteCatalog,
+                                  style: OutlinedButton.styleFrom(
+                                    minimumSize: const Size.fromHeight(42),
+                                    side: BorderSide(
+                                      color: AppColors.errorColor,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(
+                                        AppDimensions.radiusMedium,
+                                      ),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    controller.isDeleting.value
+                                        ? "Deleting..."
+                                        : "Delete Design",
+                                    style: AppTypography.bodySmall.copyWith(
+                                      color: AppColors.errorColor,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              12.0.sw,
+                              Expanded(
+                                child: ElevatedButton.icon(
+                                  onPressed: controller.openEdit,
+                                  icon: const Icon(
+                                    Icons.edit_rounded,
+                                    size: 16,
+                                  ),
+                                  label: Text(
+                                    "Edit Design",
+                                    style: AppTypography.bodySmall.copyWith(
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppColors.primaryColor,
+                                    foregroundColor: AppColors.textWhiteColor,
+                                    minimumSize: const Size.fromHeight(42),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(
+                                        AppDimensions.radiusMedium,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          36.0.sh,
+                        ],
                       ],
                     ),
                   ),
@@ -78,42 +160,30 @@ class DetailView extends GetView<DetailController> {
     );
   }
 
-  Widget _topBar(Size size) {
-    return Padding(
-      padding: EdgeInsets.symmetric(
-        horizontal: size.width * 0.04,
-        vertical: size.height * 0.01,
-      ),
-      child: SizedBox(
-        height: size.height * 0.045,
-        child: Row(
-          children: [
-            InkWell(
-              borderRadius: BorderRadius.circular(AppDimensions.radius4XLarge),
-              onTap: controller.goBack,
-              child: const Padding(
-                padding: EdgeInsets.all(AppDimensions.spacingXSmall),
-                child: Icon(
-                  Icons.arrow_back_ios_new_rounded,
-                  size: AppDimensions.iconSizeSmall,
-                  color: AppColors.textHeadingColor,
-                ),
+  Widget _topBar(size) {
+    return SizedBox(
+      height: 40,
+      child: Row(
+        children: [
+          InkWell(
+            onTap: controller.goBack,
+            child: const Padding(
+              padding: EdgeInsets.all(6),
+              child: Icon(Icons.arrow_back_ios_new_rounded, size: 15),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              'Details',
+              textAlign: TextAlign.center,
+              style: AppTypography.bodyMedium.copyWith(
+                color: AppColors.textHeadingColor,
+                fontWeight: FontWeight.w700,
               ),
             ),
-            Expanded(
-              child: Center(
-                child: Text(
-                  'Details',
-                  style: AppTypography.bodyMedium.copyWith(
-                    color: AppColors.textHeadingColor,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ),
-            SizedBox(width: size.width * 0.05),
-          ],
-        ),
+          ),
+          const SizedBox(width: 28),
+        ],
       ),
     );
   }
@@ -126,7 +196,7 @@ class DetailView extends GetView<DetailController> {
       children: [
         SizedBox(
           width: double.infinity,
-          height: size.height * 0.28,
+          height: size.height * 0.475,
           child:
               images.isNotEmpty
                   ? PageView.builder(
@@ -176,135 +246,271 @@ class DetailView extends GetView<DetailController> {
               }),
             ),
           ),
+        Obx(() {
+          if (controller.isArchitectRole.value) return const SizedBox.shrink();
+
+          final project = controller.catalog.value;
+          final isSaved = project?.saved == true;
+          final isSaving = controller.isSaving.value;
+
+          return Positioned(
+            right: size.width * 0.035,
+            bottom: 12,
+            child: InkWell(
+              customBorder: const CircleBorder(),
+              onTap: isSaving ? null : controller.toggleSave,
+              child: Container(
+                width: 38,
+                height: 38,
+                decoration: const BoxDecoration(
+                  color: AppColors.whiteColor,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.shadowSoftColor,
+                      blurRadius: 10,
+                      offset: Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child:
+                    isSaving
+                        ? const Padding(
+                          padding: EdgeInsets.all(10),
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppColors.primaryColor,
+                          ),
+                        )
+                        : Icon(
+                          isSaved
+                              ? Icons.bookmark_rounded
+                              : Icons.bookmark_border_rounded,
+                          color:
+                              isSaved
+                                  ? AppColors.primaryColor
+                                  : AppColors.textHeadingColor,
+                          size: 23,
+                        ),
+              ),
+            ),
+          );
+        }),
       ],
     );
   }
 
-  Widget _mainInfoCard(Size size, Catalog p) {
-    return Container(
-      width: double.infinity,
-      margin: EdgeInsets.symmetric(
-        horizontal: size.width * 0.04,
-        vertical: size.height * 0.012,
-      ),
-      padding: EdgeInsets.all(size.width * 0.03),
-      decoration: BoxDecoration(
-        color: AppColors.whiteColor,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusLarge),
-        border: Border.all(
-          color: AppColors.formBorderColor.withValues(alpha: 0.25),
+  Widget _mainInfo(Size size, Catalog p) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Container(
+              padding: EdgeInsets.symmetric(
+                horizontal: AppDimensions.spacingSmall,
+                vertical: AppDimensions.spacingTiny,
+              ),
+              decoration: BoxDecoration(
+                color: AppColors.secondaryColor.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(AppDimensions.radiusXSmall),
+              ),
+              child: Text(
+                p.style.toUpperCase(),
+                style: AppTypography.bodySmall.copyWith(
+                  fontSize: AppTypography.captionSmall.fontSize,
+                  color: AppColors.primaryColor,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+            8.0.sw,
+            Text(
+              '${controller.areaDisplay}  •  4 Bedrooms',
+              style: AppTypography.bodySmall.copyWith(
+                color: AppColors.textBodyColor,
+                fontSize: AppTypography.caption.fontSize,
+              ),
+            ),
+            const Spacer(),
+            GestureDetector(
+              onTap:
+                  controller.isArchitectRole.value
+                      ? null
+                      : controller.toggleLike,
+              child: Icon(
+                p.liked
+                    ? Icons.favorite_rounded
+                    : Icons.favorite_border_rounded,
+                size: AppDimensions.iconSizeMedium,
+                color: p.liked ? AppColors.errorColor : AppColors.textBodyColor,
+              ),
+            ),
+          ],
         ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: EdgeInsets.symmetric(
-                  horizontal: size.width * 0.017,
-                  vertical: size.height * 0.003,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.secondaryColor.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(
-                    AppDimensions.radiusXSmall,
-                  ),
-                ),
-                child: Text(
-                  p.style.toUpperCase(),
-                  style: AppTypography.bodySmall.copyWith(
-                    fontSize: AppTypography.captionSmall.fontSize,
-                    color: AppColors.primaryColor,
-                    fontWeight: FontWeight.w700,
-                  ),
+        6.0.sh,
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Text(
+                p.name,
+                style: AppTypography.headingSmall.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textHeadingColor,
                 ),
               ),
-              8.0.sw,
-              Text(
-                controller.areaDisplay,
-                style: AppTypography.bodySmall.copyWith(
-                  color: AppColors.textBodyColor,
-                  fontSize: AppTypography.caption.fontSize,
-                ),
+            ),
+            12.0.sw,
+            Text(
+              p.likesCount.toString(),
+              style: AppTypography.bodySmall.copyWith(
+                fontSize: AppTypography.caption.fontSize,
+                color: AppColors.textBodyColor.withValues(alpha: 0.75),
               ),
-              const Spacer(),
-              GestureDetector(
-                onTap: controller.toggleLike,
-                child: Icon(
-                  p.liked
-                      ? Icons.favorite_rounded
-                      : Icons.favorite_border_rounded,
-                  size: AppDimensions.iconSizeMedium,
-                  color:
-                      p.liked
-                          ? AppColors.errorColor
-                          : AppColors.formBorderColor,
-                ),
-              ),
-            ],
-          ),
-          6.0.sh,
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  p.name,
-                  style: AppTypography.bodyMedium.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textHeadingColor,
-                  ),
-                ),
-              ),
-              Text(
-                p.likesCount.toString(),
-                style: AppTypography.bodySmall.copyWith(
-                  fontSize: AppTypography.caption.fontSize,
-                  color: AppColors.textBodyColor.withValues(alpha: 0.75),
-                ),
-              ),
-            ],
-          ),
-          10.0.sh,
-          Row(
-            children: [
-              CircleAvatar(
-                radius: size.width * 0.038,
-                backgroundColor: AppColors.formBorderColor.withValues(
-                  alpha: 0.2,
-                ),
-                child: Icon(
-                  Icons.person,
-                  size: size.width * 0.04,
-                  color: AppColors.accentColor,
-                ),
-              ),
-              8.0.sw,
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      controller.architectName,
-                      style: AppTypography.bodySmall.copyWith(
-                        color: AppColors.textHeadingColor,
-                        fontWeight: FontWeight.w600,
-                      ),
+            ),
+          ],
+        ),
+        18.0.sh,
+      ],
+    );
+  }
+
+  Widget _architectChatRow(Size size) {
+    final architect = controller.architect.value ?? Architect.dummy();
+
+    return Row(
+      children: [
+        CircleAvatar(
+          radius: 18,
+          backgroundColor: AppColors.formBorderColor.withValues(alpha: 0.2),
+          child: ClipOval(
+            child:
+                architect.profilePicture.isNotEmpty
+                    ? Image.network(
+                      architect.profilePicture,
+                      width: 36,
+                      height: 36,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, error, __) {
+                        debugPrint(
+                          'Failed architect image: ${architect.profilePicture}',
+                        );
+
+                        return Icon(
+                          Icons.person,
+                          size: size.width * 0.045,
+                          color: AppColors.accentColor,
+                        );
+                      },
+                    )
+                    : Icon(
+                      Icons.person,
+                      size: size.width * 0.045,
+                      color: AppColors.accentColor,
                     ),
-                    Text(
-                      controller.architectEmail,
-                      style: AppTypography.bodySmall.copyWith(
-                        color: AppColors.textBodyColor,
-                        fontSize: AppTypography.caption.fontSize,
-                      ),
-                    ),
-                  ],
+          ),
+        ),
+        12.0.sw,
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                architect.name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTypography.bodySmall.copyWith(
+                  color: AppColors.textHeadingColor,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              2.0.sh,
+              Text(
+                '${formatCurrency(architect.consultationFee)} / ${architect.consultationDuration} hours',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTypography.bodySmall.copyWith(
+                  color: AppColors.successColor,
+                  fontSize: AppTypography.caption.fontSize,
+                  fontWeight: FontWeight.w800,
                 ),
               ),
             ],
           ),
-        ],
-      ),
+        ),
+        12.0.sw,
+        Obx(() {
+          final status = controller.consultationStatus.value;
+          final isLoading = controller.isLoadingConsultationStatus.value;
+          final isProcessing = controller.isStartingChat.value;
+
+          String buttonText;
+          IconData buttonIcon;
+          Color bgColor;
+          VoidCallback? onTap;
+
+          if (isLoading || status == null) {
+            // Loading / fallback state
+            final canConsult = architect.consultationFee > 0 && architect.consultationDuration > 0;
+            bgColor = canConsult ? AppColors.primaryColor : AppColors.formBorderColor;
+            buttonText = canConsult ? 'Chat Now' : 'Tidak Tersedia';
+            buttonIcon = Icons.chat_bubble_outline_rounded;
+            onTap = canConsult && !isProcessing ? controller.handleChatButtonAction : null;
+          } else if (status.isSessionActive) {
+            // Session active
+            bgColor = AppColors.primaryColor; // green
+            buttonText = 'Open Chat';
+            buttonIcon = Icons.chat_rounded;
+            onTap = !isProcessing ? controller.handleChatButtonAction : null;
+          } else if (status.isPendingPayment) {
+            // Pending payment
+            bgColor = AppColors.primaryColor; // orange
+            buttonText = 'Finish Payment';
+            buttonIcon = Icons.payment_rounded;
+            onTap = !isProcessing ? controller.handleChatButtonAction : null;
+          } else {
+            // no_session
+            final canConsult = architect.consultationFee > 0 && architect.consultationDuration > 0;
+            bgColor = canConsult ? AppColors.primaryColor : AppColors.formBorderColor;
+            buttonText = canConsult ? 'Chat Now' : 'Tidak Tersedia';
+            buttonIcon = Icons.chat_bubble_outline_rounded;
+            onTap = canConsult && !isProcessing ? controller.handleChatButtonAction : null;
+          }
+
+          return InkWell(
+            borderRadius: BorderRadius.circular(AppDimensions.radiusPill),
+            onTap: onTap,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+              decoration: BoxDecoration(
+                color: bgColor,
+                borderRadius: BorderRadius.circular(AppDimensions.radiusPill),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  isProcessing
+                      ? const SizedBox(
+                        width: 17,
+                        height: 17,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.whiteColor),
+                      )
+                      : Icon(buttonIcon, color: AppColors.whiteColor, size: 18),
+                  8.0.sw,
+                  Text(
+                    isProcessing ? 'Loading...' : buttonText,
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.whiteColor,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }),
+      ],
     );
   }
 
@@ -321,7 +527,7 @@ class DetailView extends GetView<DetailController> {
         SizedBox(width: size.width * 0.03),
         Expanded(
           child: _priceBox(
-            title: 'AREA',
+            title: 'ESTIMATED AREA',
             value: controller.areaDisplay,
             valueColor: AppColors.textHeadingColor,
           ),
@@ -335,26 +541,47 @@ class DetailView extends GetView<DetailController> {
     required String value,
     required Color valueColor,
   }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: AppTypography.bodySmall.copyWith(
-            color: AppColors.textBodyColor,
-            fontSize: AppTypography.captionSmall.fontSize,
-            fontWeight: FontWeight.w600,
-          ),
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppDimensions.spacingLarge,
+        vertical: AppDimensions.spacingLarge,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.whiteColor,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusMedium),
+        border: Border.all(
+          color: AppColors.formBorderColor.withValues(alpha: 0.2),
         ),
-        4.0.sh,
-        Text(
-          value,
-          style: AppTypography.bodyMedium.copyWith(
-            color: valueColor,
-            fontWeight: FontWeight.w700,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            title,
+            style: AppTypography.bodySmall.copyWith(
+              color: AppColors.textBodyColor,
+              fontSize: AppTypography.captionSmall.fontSize,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.8,
+            ),
           ),
-        ),
-      ],
+          4.0.sh,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              value,
+              maxLines: 1,
+              style: AppTypography.bodyMedium.copyWith(
+                color: valueColor,
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -404,7 +631,7 @@ class DetailView extends GetView<DetailController> {
         if (layouts.isEmpty)
           Container(
             width: double.infinity,
-            height: size.height * 0.2,
+            height: size.height * 0.285,
             decoration: BoxDecoration(
               color: AppColors.subtleSurfaceColor,
               borderRadius: BorderRadius.circular(AppDimensions.radiusMedium),
@@ -421,7 +648,7 @@ class DetailView extends GetView<DetailController> {
           )
         else
           SizedBox(
-            height: size.height * 0.2,
+            height: size.height * 0.285,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: layouts.length,
@@ -434,7 +661,7 @@ class DetailView extends GetView<DetailController> {
                   ),
                   child: Image.network(
                     layouts[index],
-                    width: size.width * 0.7,
+                    width: size.width * 0.86,
                     fit: BoxFit.cover,
                     errorBuilder:
                         (_, __, ___) => Image.asset(

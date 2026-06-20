@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart';
 import 'package:halositek/app/core/constants/app_colors.dart';
 import 'package:halositek/app/core/constants/app_dimensions.dart';
@@ -24,24 +25,22 @@ class AwardView extends GetView<AwardController> {
           child: SingleChildScrollView(
             controller: controller.scrollController,
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: EdgeInsets.symmetric(
-              horizontal: size.width * 0.05,
-              vertical: size.height * 0.01,
-            ),
+            padding: EdgeInsets.symmetric(horizontal: size.width * 0.05, vertical: size.height * 0.01),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _topBar(),
-                20.0.sh,
-                _search(),
+                18.0.sh,
+                _search(size),
                 18.0.sh,
                 _stats(),
                 14.0.sh,
                 _addButton(),
-                28.0.sh,
+                12.0.sh,
                 _listHeader(),
-                10.0.sh,
+                6.0.sh,
                 _awardList(),
+                36.0.sh,
               ],
             ),
           ),
@@ -58,19 +57,13 @@ class AwardView extends GetView<AwardController> {
           InkWell(
             onTap: controller.goBack,
             borderRadius: BorderRadius.circular(20),
-            child: const Padding(
-              padding: EdgeInsets.all(6),
-              child: Icon(Icons.arrow_back_ios_new_rounded, size: 15),
-            ),
+            child: const Padding(padding: EdgeInsets.all(6), child: Icon(Icons.arrow_back_ios_new_rounded, size: 15)),
           ),
           Expanded(
             child: Text(
               'Awards',
               textAlign: TextAlign.center,
-              style: AppTypography.bodyMedium.copyWith(
-                color: AppColors.textHeadingColor,
-                fontWeight: FontWeight.w700,
-              ),
+              style: AppTypography.bodyMedium.copyWith(color: AppColors.textHeadingColor, fontWeight: FontWeight.w700),
             ),
           ),
           const SizedBox(width: 28),
@@ -79,44 +72,40 @@ class AwardView extends GetView<AwardController> {
     );
   }
 
-  Widget _search() {
-    return Container(
-      height: 56,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: AppColors.whiteColor,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusXLarge),
-        border: Border.all(
-          color: AppColors.formBorderColor.withValues(alpha: 0.28),
-        ),
-        boxShadow: const [
-          BoxShadow(
-            color: AppColors.shadowSoftColor,
-            blurRadius: 18,
-            offset: Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.search_rounded, color: AppColors.primaryColor),
-          10.0.sw,
-          Expanded(
-            child: TextField(
-              controller: controller.searchController,
-              onSubmitted: controller.searchAwards,
-              decoration: InputDecoration(
-                isCollapsed: true,
-                border: InputBorder.none,
-                hintText: 'Search Award',
-                hintStyle: AppTypography.bodyMedium.copyWith(
-                  color: AppColors.textBodyColor.withValues(alpha: 0.55),
+  Widget _search(Size size) {
+    return Row(
+      children: [
+        Expanded(
+          child: Container(
+            height: size.height * 0.062,
+            padding: EdgeInsets.symmetric(horizontal: size.width * 0.04),
+            decoration: BoxDecoration(
+              color: AppColors.whiteColor,
+              borderRadius: BorderRadius.circular(AppDimensions.radiusLarge),
+              border: Border.all(color: AppColors.primaryColor.withValues(alpha: 0.20)),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.search_rounded, color: AppColors.primaryColor, size: size.width * 0.055),
+                SizedBox(width: size.width * 0.025),
+                Expanded(
+                  child: TextField(
+                    controller: controller.searchController,
+                    textInputAction: TextInputAction.search,
+                    decoration: InputDecoration(
+                      isCollapsed: true,
+                      border: InputBorder.none,
+                      hintText: 'Search Award',
+                      hintStyle: AppTypography.bodySmall.copyWith(color: AppColors.textBodyColor.withValues(alpha: 0.55)),
+                    ),
+                    style: AppTypography.bodySmall.copyWith(color: AppColors.textHeadingColor),
+                  ),
                 ),
-              ),
+              ],
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -128,6 +117,7 @@ class AwardView extends GetView<AwardController> {
             child: _statCard(
               controller.approvedCount.toString().padLeft(2, '0'),
               'Total Approved',
+              Icons.check_circle_rounded,
               AppColors.primaryColor,
             ),
           ),
@@ -136,7 +126,8 @@ class AwardView extends GetView<AwardController> {
             child: _statCard(
               controller.pendingCount.toString().padLeft(2, '0'),
               'Pending Review',
-              AppColors.warningColor,
+              Icons.schedule_rounded,
+              AppColors.primaryColor,
             ),
           ),
         ],
@@ -144,29 +135,29 @@ class AwardView extends GetView<AwardController> {
     );
   }
 
-  Widget _statCard(String value, String label, Color color) {
+  Widget _statCard(String value, String label, IconData icon, Color color) {
     return Container(
       padding: const EdgeInsets.all(17),
       decoration: BoxDecoration(
         color: AppColors.whiteColor,
         borderRadius: BorderRadius.circular(AppDimensions.radiusLarge),
-        border: Border.all(
-          color: AppColors.formBorderColor.withValues(alpha: 0.22),
-        ),
+        border: Border.all(color: AppColors.formBorderColor.withValues(alpha: 0.22)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            value,
-            style: AppTypography.headingMedium.copyWith(
-              color: AppColors.textHeadingColor,
-              fontSize: 22,
-            ),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  value,
+                  style: AppTypography.headingMedium.copyWith(color: AppColors.textHeadingColor, fontSize: 22),
+                ),
+              ),
+              Icon(icon, color: color, size: 24),
+            ],
           ),
           Text(label, style: AppTypography.bodySmall),
-          12.0.sh,
-          Container(height: 4, decoration: BoxDecoration(color: color)),
         ],
       ),
     );
@@ -175,17 +166,15 @@ class AwardView extends GetView<AwardController> {
   Widget _addButton() {
     return SizedBox(
       width: double.infinity,
-      height: 52,
+      height: 48,
       child: ElevatedButton.icon(
         onPressed: controller.openAdd,
         icon: const Icon(Icons.add_rounded),
-        label: const Text('Add New Award'),
+        label: Text('Add New Award', style: AppTypography.bodySmall.copyWith(fontWeight: FontWeight.w600)),
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primaryColor,
           foregroundColor: AppColors.textWhiteColor,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppDimensions.radiusMedium),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppDimensions.radiusMedium)),
         ),
       ),
     );
@@ -197,24 +186,32 @@ class AwardView extends GetView<AwardController> {
         Expanded(
           child: Text(
             'Your Award',
-            style: AppTypography.headingSmall.copyWith(
-              color: AppColors.textHeadingColor,
-              fontWeight: FontWeight.w700,
-            ),
+            style: AppTypography.bodyLarge.copyWith(color: AppColors.textHeadingColor, fontWeight: FontWeight.w700),
           ),
         ),
-        Obx(
-          () => DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              value: controller.selectedStatus.value,
-              items: const [
-                DropdownMenuItem(value: 'approved', child: Text('Active')),
-                DropdownMenuItem(
-                  value: 'submission',
-                  child: Text('Submission'),
-                ),
-              ],
-              onChanged: controller.changeStatus,
+
+        Container(
+          height: 32,
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          decoration: BoxDecoration(
+            color: AppColors.secondaryColor.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: AppColors.primaryColor.withValues(alpha: 0.22)),
+          ),
+          child: Obx(
+            () => DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                value: controller.selectedStatus.value,
+                icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 18, color: AppColors.primaryColor),
+                style: AppTypography.captionLarge.copyWith(color: AppColors.primaryColor, fontWeight: FontWeight.w800),
+                items: const [
+                  DropdownMenuItem(value: 'all', child: Text('ALL')),
+                  DropdownMenuItem(value: 'pending', child: Text('PENDING')),
+                  DropdownMenuItem(value: 'approved', child: Text('APPROVED')),
+                  DropdownMenuItem(value: 'declined', child: Text('DECLINED')),
+                ],
+                onChanged: controller.changeStatus,
+              ),
             ),
           ),
         ),
@@ -231,16 +228,8 @@ class AwardView extends GetView<AwardController> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              controller.errorMessage.value,
-              style: AppTypography.bodySmall.copyWith(
-                color: AppColors.errorColor,
-              ),
-            ),
-            TextButton(
-              onPressed: () => controller.fetchAwards(reset: true),
-              child: const Text('Coba Lagi'),
-            ),
+            Text(controller.errorMessage.value, style: AppTypography.bodySmall.copyWith(color: AppColors.errorColor)),
+            TextButton(onPressed: () => controller.fetchAwards(reset: true), child: const Text('Coba Lagi')),
           ],
         );
       }
@@ -252,41 +241,29 @@ class AwardView extends GetView<AwardController> {
           decoration: BoxDecoration(
             color: AppColors.whiteColor,
             borderRadius: BorderRadius.circular(AppDimensions.radiusLarge),
-            border: Border.all(
-              color: AppColors.formBorderColor.withValues(alpha: 0.24),
-            ),
+            border: Border.all(color: AppColors.formBorderColor.withValues(alpha: 0.24)),
           ),
           child: Column(
             children: [
-              const Icon(
-                Icons.inbox_rounded,
-                size: 42,
-                color: AppColors.textBodyColor,
-              ),
+              const Icon(Icons.inbox_rounded, size: 42, color: AppColors.textBodyColor),
               10.0.sh,
               Text(
                 'Belum ada data award tersedia.',
                 textAlign: TextAlign.center,
-                style: AppTypography.bodyMedium.copyWith(
-                  color: AppColors.textHeadingColor,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: AppTypography.bodyMedium.copyWith(color: AppColors.textHeadingColor, fontWeight: FontWeight.w600),
               ),
               6.0.sh,
               Text(
                 'Silakan ubah filter atau tambahkan award baru.',
                 textAlign: TextAlign.center,
-                style: AppTypography.bodySmall.copyWith(
-                  color: AppColors.textBodyColor.withValues(alpha: 0.85),
-                ),
+                style: AppTypography.bodySmall.copyWith(color: AppColors.textBodyColor.withValues(alpha: 0.85)),
               ),
             ],
           ),
         );
       }
 
-      final items =
-          hasData ? controller.awards : List.generate(3, (_) => Award.dummy());
+      final items = hasData ? controller.awards : List.generate(3, (_) => Award.dummy());
 
       return Skeletonizer(
         enabled: controller.isLoading.value && !hasData,
@@ -321,9 +298,7 @@ class AwardView extends GetView<AwardController> {
         decoration: BoxDecoration(
           color: AppColors.whiteColor,
           borderRadius: BorderRadius.circular(AppDimensions.radiusLarge),
-          border: Border.all(
-            color: AppColors.formBorderColor.withValues(alpha: 0.24),
-          ),
+          border: Border.all(color: AppColors.formBorderColor.withValues(alpha: 0.24)),
         ),
         child: Row(
           children: [
@@ -334,11 +309,8 @@ class AwardView extends GetView<AwardController> {
                 color: AppColors.secondaryColor.withValues(alpha: 0.18),
                 borderRadius: BorderRadius.circular(AppDimensions.radiusMedium),
               ),
-              child: const Icon(
-                Icons.workspace_premium_outlined,
-                color: AppColors.primaryColor,
-                size: 34,
-              ),
+              clipBehavior: Clip.antiAlias,
+              child: _awardImage(award),
             ),
             16.0.sw,
             Expanded(
@@ -362,16 +334,12 @@ class AwardView extends GetView<AwardController> {
                     award.projectName,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: AppTypography.bodySmall.copyWith(
-                      color: AppColors.textBodyColor,
-                    ),
+                    style: AppTypography.bodySmall.copyWith(color: AppColors.textBodyColor),
                   ),
                   8.0.sh,
                   Text(
                     'Submitted ${_formatDate(award.createdAt)}',
-                    style: AppTypography.captionLarge.copyWith(
-                      color: AppColors.textBodyColor.withValues(alpha: 0.75),
-                    ),
+                    style: AppTypography.captionLarge.copyWith(color: AppColors.textBodyColor.withValues(alpha: 0.75)),
                   ),
                 ],
               ),
@@ -383,14 +351,35 @@ class AwardView extends GetView<AwardController> {
     );
   }
 
+  Widget _awardImage(Award award) {
+    final url = _awardImageUrl(award);
+    if (url.isEmpty) return _awardImageFallback();
+
+    return Image.network(url, fit: BoxFit.cover, errorBuilder: (_, __, ___) => _awardImageFallback());
+  }
+
+  Widget _awardImageFallback() {
+    return const Center(child: Icon(Icons.workspace_premium_outlined, color: AppColors.primaryColor, size: 34));
+  }
+
+  String _awardImageUrl(Award award) {
+    final path = award.verificationFileUrl.trim();
+    if (path.isEmpty) return '';
+    if (path.startsWith('http://') || path.startsWith('https://')) return path;
+
+    final baseUrl = (dotenv.env['BASEURL'] ?? '').trim();
+    if (baseUrl.isEmpty) return path;
+
+    final normalizedBase = baseUrl.endsWith('/') ? baseUrl.substring(0, baseUrl.length - 1) : baseUrl;
+    final normalizedPath = path.startsWith('/') ? path.substring(1) : path;
+    return '$normalizedBase/$normalizedPath';
+  }
+
   Widget _statusPill(String status) {
     final normalized = status.toLowerCase();
     final approved = normalized == 'approved';
     final declined = normalized == 'declined';
-    final background =
-        approved
-            ? AppColors.successColor
-            : (declined ? AppColors.errorColor : AppColors.warningColor);
+    final background = approved ? AppColors.successColor : (declined ? AppColors.errorColor : AppColors.warningColor);
     final label = approved ? 'APPROVED' : (declined ? 'DECLINED' : 'PENDING');
 
     return Container(
@@ -399,32 +388,13 @@ class AwardView extends GetView<AwardController> {
         color: background.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(AppDimensions.radiusXSmall),
       ),
-      child: Text(
-        label,
-        style: AppTypography.captionLarge.copyWith(
-          color: background,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
+      child: Text(label, style: AppTypography.captionLarge.copyWith(color: background, fontWeight: FontWeight.w700)),
     );
   }
 
   String _formatDate(DateTime? value) {
     if (value == null) return '-';
-    const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     return '${months[value.month - 1]} ${value.day}, ${value.year}';
   }
 }

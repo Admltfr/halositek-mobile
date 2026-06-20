@@ -21,17 +21,7 @@ class LoginView extends GetView<LoginController> {
 
     return Scaffold(
       backgroundColor: AppColors.whiteColor,
-      body: Stack(
-        children: [
-          HeroBg(size: size),
-
-          _trailingIcon(size),
-
-          _overlayText(size),
-
-          _loginForm(size),
-        ],
-      ),
+      body: Stack(children: [HeroBg(size: size), _trailingIcon(size), _overlayText(size), _loginForm(size)]),
     );
   }
 
@@ -39,11 +29,7 @@ class LoginView extends GetView<LoginController> {
     return Positioned(
       top: size.width * 0.05,
       right: size.width * 0.05,
-      child: Image.asset(
-        'assets/images/logo.png',
-        width: size.width * 0.20,
-        height: size.width * 0.20,
-      ),
+      child: Image.asset('assets/images/logo.png', width: size.width * 0.20, height: size.width * 0.20),
     );
   }
 
@@ -54,19 +40,9 @@ class LoginView extends GetView<LoginController> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'HaloSitek',
-            style: AppTypography.headingLarge.copyWith(
-              color: AppColors.primaryColor,
-            ),
-          ),
+          Text('HaloSitek', style: AppTypography.headingLarge.copyWith(color: AppColors.primaryColor)),
           AppDimensions.spacingXSmall.sh,
-          Text(
-            'Please enter your details',
-            style: AppTypography.bodyMedium.copyWith(
-              color: AppColors.whiteColor,
-            ),
-          ),
+          Text('Please enter your details', style: AppTypography.bodyMedium.copyWith(color: AppColors.whiteColor)),
         ],
       ),
     );
@@ -78,10 +54,7 @@ class LoginView extends GetView<LoginController> {
       child: Container(
         height: size.height * 0.65,
         width: double.infinity,
-        padding: EdgeInsets.symmetric(
-          horizontal: size.width * 0.06,
-          vertical: size.height * 0.035,
-        ),
+        padding: EdgeInsets.symmetric(horizontal: size.width * 0.06, vertical: size.height * 0.035),
         decoration: const BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.only(
@@ -95,32 +68,24 @@ class LoginView extends GetView<LoginController> {
             children: [
               Text(
                 'Welcome Back',
-                style: AppTypography.headingMedium.copyWith(
-                  color: AppColors.primaryColor,
-                  fontWeight: FontWeight.w700,
-                ),
+                style: AppTypography.headingMedium.copyWith(color: AppColors.primaryColor, fontWeight: FontWeight.w700),
               ),
-              AppDimensions.spacingMedium.sh,
+              AppDimensions.spacingXSmall.sh,
               Text(
                 'Please proceed with the exploration',
-                style: AppTypography.bodyMedium.copyWith(
-                  color: AppColors.textBodyColor,
-                ),
+                style: AppTypography.bodyMedium.copyWith(color: AppColors.textLabelColor),
               ),
               AppDimensions.spacing5XLarge.sh,
 
               Form(
+                key: controller.formKey,
                 autovalidateMode: AutovalidateMode.onUserInteraction,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     FormLabel(text: 'Email Address'),
                     AppDimensions.spacingMedium.sh,
-                    FormTextField(
-                      controller: controller.emailController,
-                      isObscure: false,
-                      fieldType: FormFieldType.email,
-                    ),
+                    FormTextField(controller: controller.emailController, isObscure: false, fieldType: FormFieldType.email),
                     AppDimensions.spacing3XLarge.sh,
 
                     FormLabel(text: 'Password'),
@@ -130,15 +95,19 @@ class LoginView extends GetView<LoginController> {
                       isObscure: true,
                       fieldType: FormFieldType.password,
                     ),
-                    AppDimensions.spacingSemibold.sh,
+                    AppDimensions.spacingExtraSmall.sh,
                   ],
                 ),
               ),
 
-              CustomTextButton(text: 'Forgot Password', onPressed: () {}),
+              CustomTextButton(text: 'Forgot Password', onPressed: controller.gotoForgotPassword),
               AppDimensions.spacing2XLarge.sh,
 
-              FormButton(text: 'LOGIN', onPressed: controller.login),
+              Obx(() => FormButton(
+                text: 'LOGIN',
+                onPressed: controller.login,
+                isLoading: controller.isLoading.value,
+              )),
               AppDimensions.spacing2XLarge.sh,
 
               Center(
@@ -147,15 +116,9 @@ class LoginView extends GetView<LoginController> {
                   children: [
                     Text(
                       "Don't have any account? ",
-                      style: AppTypography.bodyMedium.copyWith(
-                        color: AppColors.textBodyColor,
-                      ),
+                      style: AppTypography.bodyMedium.copyWith(color: AppColors.textBodyColor),
                     ),
-                    CustomTextButton(
-                      text: "Register now",
-                      onPressed: controller.gotoRegister,
-                      color: AppColors.infoColor,
-                    ),
+                    CustomTextButton(text: "Register now", onPressed: controller.gotoRegister, color: AppColors.infoColor),
                   ],
                 ),
               ),

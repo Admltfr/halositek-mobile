@@ -1,3 +1,4 @@
+import 'package:halositek/app/core/constants/app_extensions.dart';
 import 'package:halositek/app/data/models/architect.dart';
 
 class Catalog {
@@ -20,6 +21,7 @@ class Catalog {
 
   final int likesCount;
   final bool liked;
+  final bool saved;
   final String status;
 
   final Architect? architect;
@@ -41,6 +43,7 @@ class Catalog {
     required this.areaRaw,
     required this.likesCount,
     required this.liked,
+    required this.saved,
     required this.status,
     required this.architect,
     required this.createdAt,
@@ -54,22 +57,18 @@ class Catalog {
       name: (json['name'] ?? '').toString(),
       style: (json['style'] ?? '').toString(),
       description: (json['description'] ?? '').toString(),
-      images: _toStringList(json['images']),
-      imageUrls: _toStringList(json['image_urls']),
+      images: _toStringList(json['images']).map((e) => e.toImageUrl()).toList(),
+      imageUrls: _toStringList(json['image_urls']).map((e) => e.toImageUrl()).toList(),
       estimatedCost: (json['estimated_cost'] ?? '').toString(),
-      layoutImages: _toStringList(json['layout_images']),
-      layoutImageUrls: _toStringList(json['layout_image_urls']),
+      layoutImages: _toStringList(json['layout_images']).map((e) => e.toImageUrl()).toList(),
+      layoutImageUrls: _toStringList(json['layout_image_urls']).map((e) => e.toImageUrl()).toList(),
       highlightFeatures: (json['highlight_features'] ?? '').toString(),
       areaRaw: (json['area'] ?? '').toString(),
-      likesCount: (json['likes_count'] ?? 0) as int,
-      liked: json['liked'] == true,
+      likesCount: _toInt(json['likes_count']),
+      liked: _toBool(json['is_liked']) ?? _toBool(json['liked']) ?? false,
+      saved: _toBool(json['is_saved']) ?? _toBool(json['saved']) ?? _toBool(json['is_wishlisted']) ?? false,
       status: (json['status'] ?? '').toString(),
-      architect:
-          json['architect'] is Map
-              ? Architect.fromJson(
-                (json['architect'] as Map).cast<String, dynamic>(),
-              )
-              : null,
+      architect: json['architect'] is Map ? Architect.fromJson((json['architect'] as Map).cast<String, dynamic>()) : null,
       createdAt: DateTime.tryParse((json['created_at'] ?? '').toString()),
       updatedAt: DateTime.tryParse((json['updated_at'] ?? '').toString()),
     );
@@ -90,6 +89,7 @@ class Catalog {
     String? areaRaw,
     int? likesCount,
     bool? liked,
+    bool? saved,
     String? status,
     Architect? architect,
     DateTime? createdAt,
@@ -110,6 +110,7 @@ class Catalog {
       areaRaw: areaRaw ?? this.areaRaw,
       likesCount: likesCount ?? this.likesCount,
       liked: liked ?? this.liked,
+      saved: saved ?? this.saved,
       status: status ?? this.status,
       architect: architect ?? this.architect,
       createdAt: createdAt ?? this.createdAt,
@@ -133,6 +134,7 @@ class Catalog {
       areaRaw: '0',
       likesCount: 0,
       liked: false,
+      saved: false,
       status: '',
       architect: null,
       createdAt: null,
@@ -155,5 +157,61 @@ class Catalog {
     final match = RegExp(r'[-+]?[0-9]*\.?[0-9]+').firstMatch(raw);
     if (match == null) return 0;
     return double.tryParse(match.group(0) ?? '') ?? 0;
+  }
+
+  static int _toInt(dynamic value) {
+    if (value is int) return value;
+    if (value is double) return value.toInt();
+    return int.tryParse(value?.toString() ?? '') ?? 0;
+  }
+
+  static bool? _toBool(dynamic value) {
+    if (value == null) return null;
+    if (value is bool) return value;
+    if (value is num) return value == 1;
+
+    final normalized = value.toString().toLowerCase().trim();
+    if (normalized == 'true' || normalized == '1') return true;
+    if (normalized == 'false' || normalized == '0') return false;
+    return null;
+  }
+}
+
+class CatalogListResponse {
+  final List<Catalog> catalogs;
+  final CatalogMeta meta;
+
+  const CatalogListResponse({required this.catalogs, required this.meta});
+
+  factory CatalogListResponse.empty() {
+    return CatalogListResponse(catalogs: const <Catalog>[], meta: CatalogMeta.empty());
+  }
+}
+
+class CatalogMeta {
+  final int currentPage;
+  final int lastPage;
+  final int perPage;
+  final int total;
+
+  const CatalogMeta({required this.currentPage, required this.lastPage, required this.perPage, required this.total});
+
+  factory CatalogMeta.fromJson(Map<String, dynamic> json) {
+    return CatalogMeta(
+      currentPage: _toInt(json['current_page']),
+      lastPage: _toInt(json['last_page']),
+      perPage: _toInt(json['per_page']),
+      total: _toInt(json['total']),
+    );
+  }
+
+  factory CatalogMeta.empty() {
+    return const CatalogMeta(currentPage: 1, lastPage: 1, perPage: 10, total: 0);
+  }
+
+  static int _toInt(dynamic value) {
+    if (value is int) return value;
+    if (value is double) return value.toInt();
+    return int.tryParse(value?.toString() ?? '') ?? 0;
   }
 }

@@ -26,11 +26,6 @@ class NavigationController extends GetxController {
     loadRole();
   }
 
-  @override
-  void onReady() {
-    super.onReady();
-  }
-
   Future<void> loadRole() async {
     role.value = (await _tokenService.getRole() ?? '').trim().toLowerCase();
   }
@@ -57,12 +52,15 @@ class NavigationController extends GetxController {
     currentIndex.value = index;
   }
 
-  Future<bool> onPop() async {
-    final nav = keyForTab(currentIndex.value)?.currentState;
+  Future<bool> onPop([Object? result]) async {
+    final navigator = keyForTab(currentIndex.value)?.currentState;
 
-    if (nav != null && nav.canPop()) {
-      nav.pop();
-      return false;
+    if (navigator != null) {
+      final didPop = await navigator.maybePop(result);
+
+      if (didPop) {
+        return false;
+      }
     }
 
     if (currentIndex.value != 0) {
@@ -79,10 +77,5 @@ class NavigationController extends GetxController {
     if (route != null) {
       keyForTab(tabIndex)?.currentState?.pushNamed(route, arguments: arguments);
     }
-  }
-
-  @override
-  void onClose() {
-    super.onClose();
   }
 }

@@ -1,16 +1,21 @@
 // lib/app/modules/architect/controllers/architect_controller.dart
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:halositek/app/data/models/architect.dart';
+import 'package:halositek/app/data/models/catalog.dart';
 import 'package:halositek/app/data/network/architect_service.dart';
+import 'package:halositek/app/data/network/catalog_service.dart';
 import 'package:halositek/app/modules/navigation/controllers/navigation_controller.dart';
 
 class ArchitectController extends GetxController {
   static const int _perPage = 12;
 
   final ArchitectService _architectService;
+  final CatalogService _catalogService;
 
-  ArchitectController(this._architectService);
+  ArchitectController(this._architectService, this._catalogService);
 
   final architects = <Architect>[].obs;
   final isLoading = false.obs;
@@ -19,9 +24,15 @@ class ArchitectController extends GetxController {
   final errorMessage = ''.obs;
   final searchQuery = ''.obs;
 
+  final architectCatalogs = <String, List<Catalog>>{}.obs;
+  final isLoadingCatalog = false.obs;
+  final catalogError = ''.obs;
+
+  final TextEditingController searchController = TextEditingController();
   final ScrollController scrollController = ScrollController();
 
   int _page = 1;
+  Timer? _searchDebounce;
 
   bool get hasData => architects.isNotEmpty;
 
@@ -34,13 +45,17 @@ class ArchitectController extends GetxController {
   void onInit() {
     super.onInit();
     scrollController.addListener(_onScroll);
+    searchController.addListener(_onSearchChanged);
     fetchArchitects(reset: true);
   }
 
   @override
   void onClose() {
     scrollController.removeListener(_onScroll);
+    searchController.removeListener(_onSearchChanged);
+    _searchDebounce?.cancel();
     scrollController.dispose();
+    searchController.dispose();
     super.onClose();
   }
 
@@ -51,6 +66,22 @@ class ArchitectController extends GetxController {
     if (scrollController.position.pixels >= triggerPoint) {
       loadMoreArchitects();
     }
+  }
+
+  void _onSearchChanged() {
+    searchQuery.value = searchController.text;
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(const Duration(milliseconds: 500), () {
+      fetchArchitects(reset: true);
+    });
+  }
+
+  Future<void> refreshArchitects() async {
+    await fetchArchitects(reset: true);
+  }
+
+  List<Catalog> catalogsByArchitect(String architectId) {
+    return architectCatalogs[architectId] ?? [];
   }
 
   Future<void> fetchArchitects({bool reset = false}) async {
@@ -75,6 +106,7 @@ class ArchitectController extends GetxController {
       final result = await _architectService.getArchitects(
         page: _page,
         perPage: _perPage,
+        search: searchController.text,
       );
 
       if (reset) {
@@ -82,6 +114,18 @@ class ArchitectController extends GetxController {
       } else {
         architects.addAll(result);
       }
+
+      await Future.wait(
+        result.map((architect) async {
+          final projects = await _catalogService.getCatalogs(
+            architectId: architect.id,
+            perPage: 30,
+            status: 'approved',
+          );
+
+          architectCatalogs[architect.id] = projects;
+        }),
+      );
 
       hasMore.value = result.length == _perPage;
       if (hasMore.value) {
