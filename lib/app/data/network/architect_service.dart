@@ -11,11 +11,7 @@ class ArchitectService {
 
   ArchitectService(this._apiClient);
 
-  Future<List<Architect>> getArchitects({
-    int page = 1,
-    int perPage = 10,
-    String? search,
-  }) async {
+  Future<List<Architect>> getArchitects({int page = 1, int perPage = 10, String? search}) async {
     final response = await _apiClient.public.get(
       '/architects',
       queryParameters: {
@@ -36,23 +32,17 @@ class ArchitectService {
       final rawList = response.data?['data'];
       if (rawList is! List) return <Architect>[];
 
-      return rawList
-          .whereType<Map>()
-          .map((e) => Architect.fromJson(Map<String, dynamic>.from(e)))
-          .toList();
+      return rawList.whereType<Map>().map((e) => Architect.fromJson(Map<String, dynamic>.from(e))).toList();
     }, 'Fetch Architects');
   }
 
   Future<Architect> getArchitectById(String id) async {
     final useAuthenticatedRequest = await _shouldUseAuthenticatedDetail();
-    final client =
-        useAuthenticatedRequest ? _apiClient.private : _apiClient.public;
+    final client = useAuthenticatedRequest ? _apiClient.private : _apiClient.public;
 
     final response = await client.get(
       '/architects/$id',
-      options: Options(
-        validateStatus: (status) => status != null && status < 500,
-      ),
+      options: Options(validateStatus: (status) => status != null && status < 500),
     );
 
     debugPrint('\x1B[31m ${response.data['data']}\x1B[0m');
@@ -69,9 +59,7 @@ class ArchitectService {
   Future<ArchitectPerformance> getArchitectPerformance(String id) async {
     final response = await _apiClient.public.get(
       '/architects/$id/performance',
-      options: Options(
-        validateStatus: (status) => status != null && status < 500,
-      ),
+      options: Options(validateStatus: (status) => status != null && status < 500),
     );
 
     return _apiClient.customResponse(response, () async {
@@ -93,9 +81,7 @@ class ArchitectService {
   Future<void> saveArchitect(String id) async {
     final response = await _apiClient.private.post(
       '/architects/$id/save',
-      options: Options(
-        validateStatus: (status) => status != null && status < 500,
-      ),
+      options: Options(validateStatus: (status) => status != null && status < 500),
     );
 
     return _apiClient.customResponse(response, () async {}, 'Save Architect');
@@ -104,20 +90,17 @@ class ArchitectService {
   Future<void> unsaveArchitect(String id) async {
     final response = await _apiClient.private.delete(
       '/architects/$id/save',
-      options: Options(
-        validateStatus: (status) => status != null && status < 500,
-      ),
+      options: Options(validateStatus: (status) => status != null && status < 500),
     );
 
     return _apiClient.customResponse(response, () async {}, 'Unsave Architect');
   }
 
-  Future<ArchitectEarnings> getArchitectEarnings() async {
+  Future<ArchitectEarnings> getArchitectEarnings({int page = 1, int perPage = 10}) async {
     final response = await _apiClient.private.get(
       '/architects/earnings',
-      options: Options(
-        validateStatus: (status) => status != null && status < 500,
-      ),
+      queryParameters: {'page': page, 'per_page': perPage},
+      options: Options(validateStatus: (status) => status != null && status < 500),
     );
 
     return _apiClient.customResponse(response, () async {
@@ -129,16 +112,11 @@ class ArchitectService {
     }, 'Fetch Architect Earnings');
   }
 
-  Future<Architect> updateArchitect(
-    String id,
-    Map<String, dynamic> payload,
-  ) async {
+  Future<Architect> updateArchitect(String id, Map<String, dynamic> payload) async {
     final response = await _apiClient.private.put(
       '/architects/$id',
       data: payload,
-      options: Options(
-        validateStatus: (status) => status != null && status < 500,
-      ),
+      options: Options(validateStatus: (status) => status != null && status < 500),
     );
 
     return _apiClient.customResponse(response, () async {
@@ -152,16 +130,11 @@ class ArchitectService {
     }, 'Update Architect');
   }
 
-  Future<Architect> updateArchitectProfile(
-    FormData payload,
-    Architect current,
-  ) async {
+  Future<Architect> updateArchitectProfile(FormData payload, Architect current) async {
     final response = await _apiClient.private.post(
       '/architects/profile',
       data: payload,
-      options: Options(
-        validateStatus: (status) => status != null && status < 500,
-      ),
+      options: Options(validateStatus: (status) => status != null && status < 500),
     );
 
     if (response.statusCode == 200) {
@@ -176,25 +149,16 @@ class ArchitectService {
         email: (data['email'] ?? current.email).toString(),
         headline: (data['headline'] ?? current.headline).toString(),
         bio: (data['bio'] ?? current.bio).toString(),
-        profilePicture:
-            (data['photo_profile_url'] ??
-                    data['profile_picture'] ??
-                    current.profilePicture)
-                .toString(),
+        profilePicture: (data['photo_profile_url'] ?? data['profile_picture'] ?? current.profilePicture).toString(),
         consultationFee:
-            _toInt(data['consultation_fee']) == 0 &&
-                    data['consultation_fee'] == null
+            _toInt(data['consultation_fee']) == 0 && data['consultation_fee'] == null
                 ? current.consultationFee
                 : _toInt(data['consultation_fee']),
         consultationDuration:
-            _toInt(data['consultation_hours']) == 0 &&
-                    data['consultation_hours'] == null
+            _toInt(data['consultation_hours']) == 0 && data['consultation_hours'] == null
                 ? current.consultationDuration
                 : _toInt(data['consultation_hours']),
-        yearOfExperience:
-            data['year_of_experience'] == null
-                ? current.yearOfExperience
-                : _toInt(data['year_of_experience']),
+        yearOfExperience: data['year_of_experience'] == null ? current.yearOfExperience : _toInt(data['year_of_experience']),
       );
     }
 
@@ -202,17 +166,65 @@ class ArchitectService {
       throw ArchitectValidationException.fromResponse(response.data);
     }
 
-    return _apiClient.customResponse(
-      response,
-      () async => current,
-      'Update Architect Profile',
-    );
+    return _apiClient.customResponse(response, () async => current, 'Update Architect Profile');
   }
 
   int _toInt(dynamic value) {
     if (value is int) return value;
     if (value is double) return value.toInt();
     return int.tryParse(value?.toString() ?? '') ?? 0;
+  }
+
+  Future<({List<ArchitectProject> items, int lastPage})> getProjects({
+    required String architectId,
+    int page = 1,
+    int perPage = 10,
+  }) async {
+    final response = await _apiClient.public.get(
+      '/projects',
+      queryParameters: {'architect_id': architectId, 'page': page, 'per_page': perPage},
+      options: Options(validateStatus: (status) => status != null && status < 500),
+    );
+
+    return _apiClient.customResponse(response, () async {
+      final rawList = response.data?['data'];
+      final rawMeta = response.data?['meta'];
+
+      final items =
+          rawList is List
+              ? rawList.whereType<Map>().map((e) => ArchitectProject.fromJson(Map<String, dynamic>.from(e))).toList()
+              : <ArchitectProject>[];
+
+      final lastPage = rawMeta is Map ? _toInt(rawMeta['last_page']) : 1;
+
+      return (items: items, lastPage: lastPage < 1 ? 1 : lastPage);
+    }, 'Fetch Projects');
+  }
+
+  Future<({List<ArchitectAward> items, int lastPage})> getAwards({
+    required String architectId,
+    int page = 1,
+    int perPage = 10,
+  }) async {
+    final response = await _apiClient.private.get(
+      '/awards',
+      queryParameters: {'architect_id': architectId, 'page': page, 'per_page': perPage},
+      options: Options(validateStatus: (status) => status != null && status < 500),
+    );
+
+    return _apiClient.customResponse(response, () async {
+      final rawList = response.data?['data'];
+      final rawMeta = response.data?['meta'];
+
+      final items =
+          rawList is List
+              ? rawList.whereType<Map>().map((e) => ArchitectAward.fromJson(Map<String, dynamic>.from(e))).toList()
+              : <ArchitectAward>[];
+
+      final lastPage = rawMeta is Map ? _toInt(rawMeta['last_page']) : 1;
+
+      return (items: items, lastPage: lastPage < 1 ? 1 : lastPage);
+    }, 'Fetch Awards');
   }
 }
 
@@ -223,9 +235,7 @@ class ArchitectValidationException implements Exception {
   final Map<String, String> errors;
 
   factory ArchitectValidationException.fromResponse(dynamic data) {
-    final fallback =
-        (data is Map ? data['message'] : null)?.toString() ??
-        'Validation failed.';
+    final fallback = (data is Map ? data['message'] : null)?.toString() ?? 'Validation failed.';
     final result = <String, String>{};
     final rawErrors = data is Map ? data['errors'] : null;
 
