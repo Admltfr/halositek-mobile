@@ -78,12 +78,12 @@ class ForgotPasswordController extends GetxController {
         passwordConfirmation: passwordConfirmationController.text,
       );
       Get.snackbar('Berhasil', 'Password berhasil direset.');
-      Get.offAllNamed('/login');
+      Get.until((route) => route.settings.name == '/login');
     }, title: 'Reset Password Gagal');
   }
 
   void gotoLogin() {
-    Get.offNamed('/login');
+    Get.back();
   }
 
   void onOtpChanged(String value, int index) {
@@ -113,7 +113,9 @@ class ForgotPasswordController extends GetxController {
     } catch (e) {
       Get.snackbar(title, e.toString());
     } finally {
-      isLoading.value = false;
+      if (!isClosed) {
+        isLoading.value = false;
+      }
     }
   }
 
